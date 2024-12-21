@@ -72,6 +72,4 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
   return typeof value === 'object' && value !== null && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const unusedVariable = "This will not trigger an ESLint error";
 

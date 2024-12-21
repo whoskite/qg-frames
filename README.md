@@ -1133,3 +1133,11 @@ We've build a simple v2 frame by:
 5. Connecting to the user's wallet using Wagmi and `sdk.wallet.ethProvider`
 
 Happy Framesgiving! 🖼️🦃
+
+
+KV_REST_API_TOKEN
+KV_REST_API_URL=
+NEXT_PUBLIC_URL=
+NEXTAUTH_URL=
+NEXTAUTH_SECERT=
+NEYNAR_API_KEY=
