@@ -12,13 +12,13 @@ export async function GET() {
     frame: {
       version: "1",
       name: "Quote Generator",
-      iconUrl: `https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/icon.png`,
-      homeUrl: "https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/",
-      imageUrl: `https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/image.png`,
+      homeUrl: "https://qg-frames.vercel.app//",
+      iconUrl: `https://qg-frames.vercel.app//icon.png`,
+      imageUrl: `https://qg-frames.vercel.app//image.png`,
       buttonTitle: "Launch Frame",
-      splashImageUrl: "https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/splash.png",
+      splashImageUrl: "https://qg-frames.vercel.app//splash.png",
       splashBackgroundColor: "#f7f7f7",
-      webhookUrl: "https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/api/webhook",
+      webhookUrl: "https://qg-frames.vercel.app//api/webhook",
     },
   };
 
