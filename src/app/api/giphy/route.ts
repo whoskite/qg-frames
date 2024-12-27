@@ -1,24 +1,33 @@
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const searchQuery = searchParams.get('search') || '';
-  
-  console.log('API Key:', process.env.GIPHY_API_KEY ? 'Present' : 'Missing');
-  console.log('Search Query:', searchQuery);
-  
   try {
-    const response = await fetch(
-      `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHY_API_KEY}&q=${searchQuery}&limit=10`
-    );
+    // Get and validate search parameter
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get('search');
+    
+    if (!searchQuery) {
+      return Response.json({ error: 'Search query is required' }, { status: 400 });
+    }
+
+    if (!process.env.GIPHY_API_KEY) {
+      console.error('GIPHY_API_KEY is not defined');
+      return Response.json({ error: 'API configuration error' }, { status: 500 });
+    }
+
+    // Make request to Giphy
+    const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHY_API_KEY}&q=${encodeURIComponent(searchQuery)}&limit=10`;
+    
+    const response = await fetch(giphyUrl);
     
     if (!response.ok) {
-      console.error('Giphy API error:', response.status);
+      console.error(`Giphy API error: ${response.status}`);
       return Response.json({ error: 'Failed to fetch from Giphy' }, { status: response.status });
     }
-    
+
     const data = await response.json();
     return Response.json(data);
+    
   } catch (error) {
-    console.error('Error in Giphy route:', error);
-    return Response.json({ error: 'Failed to fetch gifs' }, { status: 500 });
+    console.error('Server error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 
