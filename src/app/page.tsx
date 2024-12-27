@@ -6,7 +6,7 @@ const appUrl = process.env.NEXT_PUBLIC_URL;
 
 const frame = {
   version: "next",
-  imageUrl: `${appUrl}/opengraph-image`,
+  imageUrl: `${appUrl}/frame-cast.png`,
   button: {
     title: "Create Quote",
     action: {
