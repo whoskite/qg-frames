@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useCallback, useState, useMemo, KeyboardEvent } from "react";
@@ -52,6 +53,7 @@ export default function Demo(
   const [gifUrl, setGifUrl] = useState<string | null>(null)
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<FrameContext>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isContextOpen, setIsContextOpen] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
 
@@ -620,6 +622,7 @@ function SignMessage() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SendEth() {
   const { isConnected, chainId } = useAccount();
   const {
@@ -676,6 +679,7 @@ function SendEth() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SignIn() {
   const [signingIn, setSigningIn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
