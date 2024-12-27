@@ -271,9 +271,11 @@ export default function Demo(
       setQuote(generatedQuote.slice(0, MAX_CHARS))
       setBgColor(getRandomColor())
       
-      // Fetch and set the GIF
-      const gif = await getGifForQuote(generatedQuote)
-      setGifUrl(gif)
+      // Fetch and set the GIF using the new API route
+      const response = await fetch(`/api/giphy?search=${encodeURIComponent(generatedQuote)}`)
+      const data = await response.json()
+      const gifUrl = data.data[0]?.images?.fixed_height?.url || null
+      setGifUrl(gifUrl)
     } catch (error) {
       console.error('Error generating quote:', error)
       setQuote('Failed to generate quote. Please try again.')
