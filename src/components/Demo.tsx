@@ -43,7 +43,7 @@ const getRandomColor = () => {
 }
 
 export default function Demo(
-  { title }: { title?: string } = { title: "Frames v2 Demo" }
+  { title }: { title?: string } = { title: "Quote Generator" }
 ) {
   const [quote, setQuote] = useState('')
   const [userPrompt, setUserPrompt] = useState('')
@@ -52,16 +52,16 @@ export default function Demo(
   const [gifUrl, setGifUrl] = useState<string | null>(null)
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<FrameContext>();
-  // const [isContextOpen, setIsContextOpen] = useState(false);
+  const [isContextOpen, setIsContextOpen] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // const [added, setAdded] = useState(false);
+  const [added, setAdded] = useState(false);
   const [notificationDetails, setNotificationDetails] =
     useState<FrameNotificationDetails | null>(null);
 
-  // const [lastEvent, setLastEvent] = useState("");
-  // const [addFrameResult, setAddFrameResult] = useState("");
-  // const [sendNotificationResult, setSendNotificationResult] = useState("");
+  const [lastEvent, setLastEvent] = useState("");
+  const [addFrameResult, setAddFrameResult] = useState("");
+  const [sendNotificationResult, setSendNotificationResult] = useState("");
 
   useEffect(() => {
     setNotificationDetails(context?.client.notificationDetails ?? null);
@@ -70,196 +70,196 @@ export default function Demo(
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
 
-  // const {
-  //   sendTransaction,
-  //   error: sendTxError,
-  //   isError: isSendTxError,
-  //   isPending: isSendTxPending,
-  // } = useSendTransaction();
+  const {
+    sendTransaction,
+    error: sendTxError,
+    isError: isSendTxError,
+    isPending: isSendTxPending,
+  } = useSendTransaction();
 
-  // const { isLoading: isConfirming, isSuccess: isConfirmed } =
-  //   useWaitForTransactionReceipt({
-  //     hash: txHash as `0x${string}`,
-  //   });
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: txHash as `0x${string}`,
+    });
 
-  // const {
-  //   signTypedData,
-  //   error: signTypedError,
-  //   isError: isSignTypedError,
-  //   isPending: isSignTypedPending,
-  // } = useSignTypedData();
+  const {
+    signTypedData,
+    error: signTypedError,
+    isError: isSignTypedError,
+    isPending: isSignTypedPending,
+  } = useSignTypedData();
 
-  // const { disconnect } = useDisconnect();
-  // const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { connect } = useConnect();
 
-  // const {
-  //   switchChain,
-  //   error: switchChainError,
-  //   isError: isSwitchChainError,
-  //   isPending: isSwitchChainPending,
-  // } = useSwitchChain();
+  const {
+    switchChain,
+    error: switchChainError,
+    isError: isSwitchChainError,
+    isPending: isSwitchChainPending,
+  } = useSwitchChain();
 
-  // const handleSwitchChain = useCallback(() => {
-  //   switchChain({ chainId: chainId === base.id ? optimism.id : base.id });
-  // }, [switchChain, chainId]);
+  const handleSwitchChain = useCallback(() => {
+    switchChain({ chainId: chainId === base.id ? optimism.id : base.id });
+  }, [switchChain, chainId]);
 
-  // useEffect(() => {
-  //   const load = async () => {
-  //     const context = await sdk.context;
-  //     setContext(context);
-  //     setAdded(context.client.added);
+  useEffect(() => {
+    const load = async () => {
+      const context = await sdk.context;
+      setContext(context);
+      setAdded(context.client.added);
 
-  //     sdk.on("frameAdded", ({ notificationDetails }) => {
-  //       setLastEvent(
-  //         `frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`
-  //       );
+      sdk.on("frameAdded", ({ notificationDetails }) => {
+        setLastEvent(
+          `frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`
+        );
 
-  //       setAdded(true);
-  //       if (notificationDetails) {
-  //         setNotificationDetails(notificationDetails);
-  //       }
-  //     });
+        setAdded(true);
+        if (notificationDetails) {
+          setNotificationDetails(notificationDetails);
+        }
+      });
 
-  //     sdk.on("frameAddRejected", ({ reason }) => {
-  //       setLastEvent(`frameAddRejected, reason ${reason}`);
-  //     });
+      sdk.on("frameAddRejected", ({ reason }) => {
+        setLastEvent(`frameAddRejected, reason ${reason}`);
+      });
 
-  //     sdk.on("frameRemoved", () => {
-  //       setLastEvent("frameRemoved");
-  //       setAdded(false);
-  //       setNotificationDetails(null);
-  //     });
+      sdk.on("frameRemoved", () => {
+        setLastEvent("frameRemoved");
+        setAdded(false);
+        setNotificationDetails(null);
+      });
 
-  //     sdk.on("notificationsEnabled", ({ notificationDetails }) => {
-  //       setLastEvent("notificationsEnabled");
-  //       setNotificationDetails(notificationDetails);
-  //     });
-  //     sdk.on("notificationsDisabled", () => {
-  //       setLastEvent("notificationsDisabled");
-  //       setNotificationDetails(null);
-  //     });
+      sdk.on("notificationsEnabled", ({ notificationDetails }) => {
+        setLastEvent("notificationsEnabled");
+        setNotificationDetails(notificationDetails);
+      });
+      sdk.on("notificationsDisabled", () => {
+        setLastEvent("notificationsDisabled");
+        setNotificationDetails(null);
+      });
 
-  //     sdk.on("primaryButtonClicked", () => {
-  //       console.log("primaryButtonClicked");
-  //     });
+      sdk.on("primaryButtonClicked", () => {
+        console.log("primaryButtonClicked");
+      });
 
-  //     sdk.actions.ready({});
-  //   };
-  //   if (sdk && !isSDKLoaded) {
-  //     setIsSDKLoaded(true);
-  //     load();
-  //     return () => {
-  //       sdk.removeAllListeners();
-  //     };
-  //   }
-  // }, [isSDKLoaded]);
+      sdk.actions.ready({});
+    };
+    if (sdk && !isSDKLoaded) {
+      setIsSDKLoaded(true);
+      load();
+      return () => {
+        sdk.removeAllListeners();
+      };
+    }
+  }, [isSDKLoaded]);
 
-  // const openUrl = useCallback(() => {
-  //   sdk.actions.openUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-  // }, []);
+  const openUrl = useCallback(() => {
+    sdk.actions.openUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  }, []);
 
-  // const openWarpcastUrl = useCallback(() => {
-  //   sdk.actions.openUrl("https://warpcast.com/~/compose");
-  // }, []);
+  const openWarpcastUrl = useCallback(() => {
+    sdk.actions.openUrl("https://warpcast.com/~/compose");
+  }, []);
 
-  // const close = useCallback(() => {
-  //   sdk.actions.close();
-  // }, []);
+  const close = useCallback(() => {
+    sdk.actions.close();
+  }, []);
 
-  // const addFrame = useCallback(async () => {
-  //   try {
-  //     setNotificationDetails(null);
+  const addFrame = useCallback(async () => {
+    try {
+      setNotificationDetails(null);
 
-  //     const result = await sdk.actions.addFrame();
+      const result = await sdk.actions.addFrame();
 
-  //     if (result.added) {
-  //       if (result.notificationDetails) {
-  //         setNotificationDetails(result.notificationDetails);
-  //       }
-  //       setAddFrameResult(
-  //         result.notificationDetails
-  //           ? `Added, got notificaton token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
-  //           : "Added, got no notification details"
-  //       );
-  //     } else {
-  //       setAddFrameResult(`Not added: ${result.reason}`);
-  //     }
-  //   } catch (error) {
-  //     setAddFrameResult(`Error: ${error}`);
-  //   }
-  // }, []);
+      if (result.added) {
+        if (result.notificationDetails) {
+          setNotificationDetails(result.notificationDetails);
+        }
+        setAddFrameResult(
+          result.notificationDetails
+            ? `Added, got notificaton token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
+            : "Added, got no notification details"
+        );
+      } else {
+        setAddFrameResult(`Not added: ${result.reason}`);
+      }
+    } catch (error) {
+      setAddFrameResult(`Error: ${error}`);
+    }
+  }, []);
 
-  // const sendNotification = useCallback(async () => {
-  //   setSendNotificationResult("");
-  //   if (!notificationDetails || !context) {
-  //     return;
-  //   }
+  const sendNotification = useCallback(async () => {
+    setSendNotificationResult("");
+    if (!notificationDetails || !context) {
+      return;
+    }
 
-  //   try {
-  //     const response = await fetch("/api/send-notification", {
-  //       method: "POST",
-  //       mode: "same-origin",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         fid: context.user.fid,
-  //         notificationDetails,
-  //       }),
-  //     });
+    try {
+      const response = await fetch("/api/send-notification", {
+        method: "POST",
+        mode: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fid: context.user.fid,
+          notificationDetails,
+        }),
+      });
 
-  //     if (response.status === 200) {
-  //       setSendNotificationResult("Success");
-  //       return;
-  //     } else if (response.status === 429) {
-  //       setSendNotificationResult("Rate limited");
-  //       return;
-  //     }
+      if (response.status === 200) {
+        setSendNotificationResult("Success");
+        return;
+      } else if (response.status === 429) {
+        setSendNotificationResult("Rate limited");
+        return;
+      }
 
-  //     const data = await response.text();
-  //     setSendNotificationResult(`Error: ${data}`);
-  //   } catch (error) {
-  //     setSendNotificationResult(`Error: ${error}`);
-  //   }
-  // }, [context, notificationDetails]);
+      const data = await response.text();
+      setSendNotificationResult(`Error: ${data}`);
+    } catch (error) {
+      setSendNotificationResult(`Error: ${error}`);
+    }
+  }, [context, notificationDetails]);
 
-  // const sendTx = useCallback(() => {
-  //   sendTransaction(
-  //     {
-  //       // call yoink() on Yoink contract
-  //       to: "0x4bBFD120d9f352A0BEd7a014bd67913a2007a878",
-  //       data: "0x9846cd9efc000023c0",
-  //     },
-  //     {
-  //       onSuccess: (hash) => {
-  //         setTxHash(hash);
-  //       },
-  //     }
-  //   );
-  // }, [sendTransaction]);
+  const sendTx = useCallback(() => {
+    sendTransaction(
+      {
+        // call yoink() on Yoink contract
+        to: "0x4bBFD120d9f352A0BEd7a014bd67913a2007a878",
+        data: "0x9846cd9efc000023c0",
+      },
+      {
+        onSuccess: (hash) => {
+          setTxHash(hash);
+        },
+      }
+    );
+  }, [sendTransaction]);
 
-  // const signTyped = useCallback(() => {
-  //   signTypedData({
-  //     domain: {
-  //       name: "Frames v2 Demo",
-  //       version: "1",
-  //       chainId,
-  //     },
-  //     types: {
-  //       Message: [{ name: "content", type: "string" }],
-  //     },
-  //     message: {
-  //       content: "Hello from Frames v2!",
-  //     },
-  //     primaryType: "Message",
-  //   });
-  // }, [chainId, signTypedData]);
+  const signTyped = useCallback(() => {
+    signTypedData({
+      domain: {
+        name: "Frames v2 Demo",
+        version: "1",
+        chainId,
+      },
+      types: {
+        Message: [{ name: "content", type: "string" }],
+      },
+      message: {
+        content: "Hello from Frames v2!",
+      },
+      primaryType: "Message",
+    });
+  }, [chainId, signTypedData]);
 
-  // const toggleContext = useCallback(() => {
-  //   setIsContextOpen((prev) => !prev);
-  // }, []);
+  const toggleContext = useCallback(() => {
+    setIsContextOpen((prev) => !prev);
+  }, []);
 
-  // if (!isSDKLoaded) {
-  //   return <div>Loading...</div>;
-  // }
+  if (!isSDKLoaded) {
+    return <div>Loading...</div>;
+  }
 
   const handleGenerateQuote = async () => {
     if (isLoading) return
@@ -509,6 +509,7 @@ export default function Demo(
                     src={gifUrl}
                     alt="Quote-related GIF"
                     fill
+                    sizes="(max-width: 600px) 100vw, 50vw"
                     className="object-cover rounded-lg"
                   />
                 </div>
