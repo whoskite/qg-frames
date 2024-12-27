@@ -271,8 +271,14 @@ export default function Demo(
       setQuote(generatedQuote.slice(0, MAX_CHARS))
       setBgColor(getRandomColor())
       
-      // Fetch and set the GIF using the new API route
+      // Log the URL being called
+      console.log('Calling:', `/api/giphy?search=${encodeURIComponent(generatedQuote)}`);
+      
       const response = await fetch(`/api/giphy?search=${encodeURIComponent(generatedQuote)}`)
+      if (!response.ok) {
+        console.error('API Error:', response.status);
+        throw new Error(`API error: ${response.status}`);
+      }
       const data = await response.json()
       const gifUrl = data.data[0]?.images?.fixed_height?.url || null
       setGifUrl(gifUrl)
