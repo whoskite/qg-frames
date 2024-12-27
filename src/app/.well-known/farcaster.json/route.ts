@@ -4,21 +4,21 @@ export async function GET() {
   const config = {
     accountAssociation: {
       header:
-        "eyJmaWQiOjM2MjEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgyY2Q4NWEwOTMyNjFmNTkyNzA4MDRBNkVBNjk3Q2VBNENlQkVjYWZFIn0",
-      payload: "eyJkb21haW4iOiJmcmFtZXMtdjIudmVyY2VsLmFwcCJ9",
+        "eyJmaWQiOjE1NDA5LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NjA5NTU5MDYyMUE4YUZGM2ZjOTY0QjEwYzMzN2EzNzVjNTI3OTI0OCJ9",
+      payload: "eyJkb21haW4iOiJxZy1mcmFtZXMtMnRobnRoMjRxLWtpdGVzLXByb2plY3RzLTM4YWJlZGI5LnZlcmNlbC5hcHAifQ",
       signature:
-        "MHhiNDIwMzQ1MGZkNzgzYTExZjRiOTllZTFlYjA3NmMwOTdjM2JkOTY1NGM2ODZjYjkyZTAyMzk2Y2Q0YjU2MWY1MjY5NjI5ZGQ5NTliYjU0YzEwOGI4OGVmNjdjMTVlZTdjZDc2YTRiMGU5NzkzNzA3YzkxYzFkOWFjNTg0YmQzNjFi",
+        "MHhmYjRhNmY1YmEzMWMwNzBmNmM3OWUxN2I3OTJlMWEwYTcwMGIwNzI4OGYzODFmOWMxZTA0YmZjMWYzNzg0ZGEwMWM2NDNjNGYzZTM2N2MwMDg3Yjc4ZGE5OTQ3ODc2NDlmZjAzY2IxNjkwMmQxZmRiM2U0YmRhY2MxNjFjYmU1NDFi",
     },
     frame: {
       version: "1",
       name: "Quote Generator",
-      iconUrl: `${appUrl}/icon.png`,
-      homeUrl: appUrl,
-      imageUrl: `${appUrl}/frames/hello/opengraph-image`,
+      iconUrl: `https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/icon.png`,
+      homeUrl: "https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/",
+      imageUrl: `https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/image.png`,
       buttonTitle: "Launch Frame",
-      splashImageUrl: `${appUrl}/splash.png`,
+      splashImageUrl: "https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/splash.png",
       splashBackgroundColor: "#f7f7f7",
-      webhookUrl: `${appUrl}/api/webhook`,
+      webhookUrl: "https://qg-frames-2thnth24q-kites-projects-38abedb9.vercel.app/api/webhook",
     },
   };
 
