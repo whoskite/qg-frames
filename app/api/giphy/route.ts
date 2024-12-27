@@ -8,8 +8,7 @@ export async function GET(request: Request) {
     );
     const data = await response.json();
     return new Response(JSON.stringify(data));
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+  } catch {
     return new Response(JSON.stringify({ error: 'Failed to fetch gifs' }), { status: 500 });
   }
 } 

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const appUrl = "https://qg-frames.vercel.app/"; // Replace with your actual URL
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const appUrl = process.env.NEXT_PUBLIC_URL || "https://qg-frames.vercel.app"; // Make sure this matches your deployed URL
 
 const nextConfig: NextConfig = {
   /* config options here */
