@@ -17,6 +17,28 @@ const AVAILABLE_ICONS = {
   Smile
 } as const
 
+// Function to fetch quotes from Quotable API
+async function getQuotableQuote(topic?: string) {
+  try {
+    const searchParam = topic ? `?tags=${encodeURIComponent(topic)}` : '/random'
+    const response = await fetch(`https://api.quotable.io/quotes/random${searchParam}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch quote from API')
+    }
+    
+    const data = await response.json()
+    return data[0]?.content || null
+  } catch (error) {
+    console.error('Quotable API error:', error)
+    return null
+  }
+}
+
 export async function generateQuote(prompt: string) {
   try {
     // Add input validation
@@ -24,7 +46,13 @@ export async function generateQuote(prompt: string) {
       throw new Error('Please enter a topic for your quote')
     }
 
-    const basePrompt = "Generate a short, inspiring quote"
+    // 30% chance to fetch a real quote from Quotable API
+    if (Math.random() < 0.3) {
+      const realQuote = await getQuotableQuote(prompt)
+      if (realQuote) return realQuote
+    }
+
+    const basePrompt = "Generate a short, inspiring quote."
     const fullPrompt = prompt 
       ? `${basePrompt} about ${prompt}. Make it unique and different from previous quotes.` 
       : `${basePrompt}. Make it unique and different from previous quotes.`
@@ -36,7 +64,7 @@ export async function generateQuote(prompt: string) {
       prompt: `${fullPrompt} (Random factor: ${randomFactor})`,
     })
 
-    return text
+    return text.replace(/["']/g, '') // Remove any quotation marks from the response
   } catch (error) {
     console.error('Quote generation error:', error)
     throw new Error('Failed to generate quote')
