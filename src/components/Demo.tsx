@@ -506,6 +506,17 @@ export default function Demo(
       
       <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-5">
       <Card className="w-full max-w-md mx-4 overflow-hidden shadow-2xl">
+        {/* Add logo at the top */}
+        <div className="w-full flex justify-center p-4">
+          <Image
+            src="/logo.png"
+            alt="Quote Generator Logo"
+            width={120}
+            height={120}
+            className="object-contain"
+            priority
+          />
+        </div>
         <CardHeader className="bg-white">
           <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
             Fun Quote Generator
