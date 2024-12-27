@@ -510,14 +510,14 @@ export default function Demo(
       <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-5">
         {/* Navigation Bar */}
         <nav className="absolute top-0 left-0 w-full bg-transparent">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-center items-center h-24 p-5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 p-5">
+            <div className="flex justify-center items-center h-24">
               <div className="flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt="FunQuoteLogo"
-                  width={40}
-                  height={40}
+                  width={60}
+                  height={60}
                   className="object-contain"
                 />
               </div>
