@@ -511,12 +511,12 @@ export default function Demo(
         {/* Navigation Bar */}
         <nav className="absolute top-0 left-0 w-full bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-center items-center h-24">
+            <div className="flex justify-center items-center h-24 p-5">
               <div className="flex-shrink-0">
                 <Image
                   src="/logo.png"
-                  alt="Logo"
-                  width={120}
+                  alt="FunQuoteLogo"
+                  width={40}
                   height={40}
                   className="object-contain"
                 />
