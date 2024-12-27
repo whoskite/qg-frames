@@ -267,31 +267,38 @@ export default function Demo(
     if (isLoading) return
     setIsLoading(true)
     try {
+      // First generate the quote
       const generatedQuote = await generateQuote(userPrompt)
+      if (!generatedQuote) {
+        throw new Error('Failed to generate quote')
+      }
+      
       setQuote(generatedQuote.slice(0, MAX_CHARS))
       setBgColor(getRandomColor())
       
-      // Log the URL being called
-      console.log('Calling:', `/api/giphy?search=${encodeURIComponent(generatedQuote)}`);
+      // Then fetch the GIF
+      const searchQuery = encodeURIComponent(generatedQuote.slice(0, 30)) // Use first 30 chars for better GIF matching
+      const response = await fetch(`/api/giphy?search=${searchQuery}`)
       
-      const response = await fetch(`/api/giphy?search=${encodeURIComponent(generatedQuote)}`)
       if (!response.ok) {
-        console.error('API Error:', response.status);
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`GIF API error: ${response.status}`)
       }
+      
       const data = await response.json()
-      const gifUrl = data.data[0]?.images?.fixed_height?.url || null
-      setGifUrl(gifUrl)
+      const gifUrl = data.data[0]?.images?.fixed_height?.url
+      setGifUrl(gifUrl || null)
+      
     } catch (error) {
-      console.error('Error generating quote:', error)
+      console.error('Error:', error)
       setQuote('Failed to generate quote. Please try again.')
       setGifUrl(null)
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
-  const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
       handleGenerateQuote()
     }
   }

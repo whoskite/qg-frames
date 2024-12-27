@@ -17,20 +17,30 @@ const AVAILABLE_ICONS = {
   Smile
 } as const
 
-export async function generateQuote(prompt: string): Promise<string> {
-  const basePrompt = "Generate a short, inspiring quote"
-  const fullPrompt = prompt 
-    ? `${basePrompt} about ${prompt}. Make it unique and different from previous quotes.` 
-    : `${basePrompt}. Make it unique and different from previous quotes.`
+export async function generateQuote(prompt: string) {
+  try {
+    // Add input validation
+    if (!prompt || prompt.trim().length === 0) {
+      throw new Error('Please enter a topic for your quote')
+    }
 
-  const randomFactor = Math.random().toString(36).substring(7)
+    const basePrompt = "Generate a short, inspiring quote"
+    const fullPrompt = prompt 
+      ? `${basePrompt} about ${prompt}. Make it unique and different from previous quotes.` 
+      : `${basePrompt}. Make it unique and different from previous quotes.`
 
-  const { text } = await generateText({
-    model: openai('gpt-3.5-turbo'),
-    prompt: `${fullPrompt} (Random factor: ${randomFactor})`,
-  })
+    const randomFactor = Math.random().toString(36).substring(7)
 
-  return text
+    const { text } = await generateText({
+      model: openai('gpt-3.5-turbo'),
+      prompt: `${fullPrompt} (Random factor: ${randomFactor})`,
+    })
+
+    return text
+  } catch (error) {
+    console.error('Quote generation error:', error)
+    throw new Error('Failed to generate quote')
+  }
 }
 
 export async function generateIcon(quote: string): Promise<keyof typeof AVAILABLE_ICONS> {
