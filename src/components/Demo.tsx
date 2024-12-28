@@ -614,18 +614,22 @@ export default function Demo(
 
         </CardFooter>
         <CardFooter>
-        <motion.div className="w-full"
+          <motion.div className="w-full"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <Button 
-              onClick={openWarpcastUrl} 
-              disabled={isLoading}
+              onClick={() => {
+                const shareText = 'Create "Fun Quotes" by @KITE and /thepod team 🃏';
+                const shareUrl = 'qg-frames.vercel.app';
+                const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
+                sdk.actions.openUrl(url);
+              }}
               className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
             >
               {isLoading ? (
                 <span className="flex items-center">
-                  Generating
+                  Casting
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
@@ -640,8 +644,6 @@ export default function Demo(
                 </span>
               )}
             </Button>
-           
-            
           </motion.div>
         </CardFooter>
       </Card>
