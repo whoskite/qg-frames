@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Quote Generator",
       description: "A quote generator for your Farcaster posts. Created by KITE .// /thepod",
       images: [{
-        url: `${appUrl}/frame-cast.png`,
+        url: `${appUrl}/opengraph-image`,
         width: 1200,
         height: 630,
       }],
