@@ -622,7 +622,7 @@ export default function Demo(
               onClick={() => {
                 const shareText = `"${quote}" - Created by @KITE /thepod)`;
                 const shareUrl = 'https://qg-frames.vercel.app';
-                const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
+                const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
                 sdk.actions.openUrl(url);
               }}
               className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
