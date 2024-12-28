@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import { Share2 } from 'lucide-react'
 import { useEffect, useCallback, useState, useMemo, KeyboardEvent } from "react";
 import { signIn, signOut, getCsrfToken } from "next-auth/react";
 import sdk, {
@@ -507,11 +508,11 @@ export default function Demo(
 
       {/* Main Content */}
     <div className="min-h-screen flex flex-col">
-      <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-5">
+      <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-3">
         {/* Navigation Bar */}
-        <nav className="absolute top-0 left-0 w-full bg-transparent">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 p-5">
-            <div className="flex justify-center items-center h-24">
+        <nav className="top-0 left-0 w-full bg-transparent">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-center items-center">
               <div className="flex-shrink-0">
                 <Image
                   src="/logo.png"
@@ -608,14 +609,39 @@ export default function Demo(
                 </span>
               )}
             </Button>
-            <div className="mb-4">
-          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              sdk.actions.openUrl
-            </pre>
-          </div>
-          <Button onClick={openUrl}>Open Link</Button>
-        </div>
+            
+          </motion.div>
+
+        </CardFooter>
+        <CardFooter>
+        <motion.div className="w-full"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button 
+              onClick={openWarpcastUrl} 
+              disabled={isLoading}
+              className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
+            >
+              {isLoading ? (
+                <span className="flex items-center">
+                  Generating
+                  <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="ml-2"
+                  >
+                    ...
+                  </motion.span>
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  Cast Away <Share2 className="ml-2" size={20} />
+                </span>
+              )}
+            </Button>
+           
+            
           </motion.div>
         </CardFooter>
       </Card>
