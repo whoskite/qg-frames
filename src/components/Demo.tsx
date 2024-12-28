@@ -621,7 +621,7 @@ export default function Demo(
             <Button 
               onClick={() => {
                 const shareText = 'Create "Fun Quotes" by @KITE and /thepod team 🃏';
-                const shareUrl = 'qg-frames.vercel.app';
+                const shareUrl = 'https://qg-frames.vercel.app';
                 const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
                 sdk.actions.openUrl(url);
               }}
