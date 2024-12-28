@@ -14,7 +14,7 @@ const frame = {
       name: "Quote Generator",
       url: appUrl,
       splashImageUrl: `${appUrl}/splash.png`,
-      splashBackgroundColor: "#f7f7f7",
+      splashBackgroundColor: "#F9C001",
     },
   },
 };
