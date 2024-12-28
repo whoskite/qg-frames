@@ -157,16 +157,8 @@ export default function Demo(
     }
   }, [isSDKLoaded]);
 
-  const openUrl = useCallback(() => {
-    sdk.actions.openUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-  }, []);
-
   const openWarpcastUrl = useCallback(() => {
     sdk.actions.openUrl("https://warpcast.com/~/compose?text=%{encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}");
-  }, []);
-
-  const close = useCallback(() => {
-    sdk.actions.close();
   }, []);
 
   const addFrame = useCallback(async () => {
@@ -223,38 +215,6 @@ export default function Demo(
       setSendNotificationResult(`Error: ${error}`);
     }
   }, [context, notificationDetails]);
-
-  const sendTx = useCallback(() => {
-    sendTransaction(
-      {
-        // call yoink() on Yoink contract
-        to: "0x4bBFD120d9f352A0BEd7a014bd67913a2007a878",
-        data: "0x9846cd9efc000023c0",
-      },
-      {
-        onSuccess: (hash) => {
-          setTxHash(hash);
-        },
-      }
-    );
-  }, [sendTransaction]);
-
-  const signTyped = useCallback(() => {
-    signTypedData({
-      domain: {
-        name: "Frames v2 Demo",
-        version: "1",
-        chainId,
-      },
-      types: {
-        Message: [{ name: "content", type: "string" }],
-      },
-      message: {
-        content: "Hello from Frames v2!",
-      },
-      primaryType: "Message",
-    });
-  }, [chainId, signTypedData]);
 
   const toggleContext = useCallback(() => {
     setIsContextOpen((prev) => !prev);
