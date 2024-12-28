@@ -6,7 +6,7 @@ const appUrl = process.env.NEXT_PUBLIC_URL;
 
 const frame = {
   version: "next",
-  imageUrl: `${appUrl}/opengraph-image`,
+  imageUrl: `${appUrl}/frame-cast.png`,
   button: {
     title: "Create FunQuotes",
     action: {
@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Quote Generator",
       description: "A quote generator for your Farcaster posts. Created by KITE .// /thepod",
       images: [{
-        url: `${appUrl}/opengraph-image`,
+        url: `${appUrl}/frame-cast.png`,
         width: 1200,
         height: 630,
       }],
