@@ -162,7 +162,7 @@ export default function Demo(
   }, []);
 
   const openWarpcastUrl = useCallback(() => {
-    sdk.actions.openUrl("https://warpcast.com/~/compose?text=%{encodeURIComponent (shareText)}&embeds[]=${encodeURIComponent (shareUrl)}");
+    sdk.actions.openUrl("https://warpcast.com/~/compose?text=%{encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}");
   }, []);
 
   const close = useCallback(() => {
