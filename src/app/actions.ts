@@ -52,16 +52,19 @@ export async function generateQuote(prompt: string) {
       if (realQuote) return realQuote
     }
 
-    const basePrompt = "Generate a short, inspiring quote."
+    const basePrompt = "Generate a short, inspiring quote. You can add an action or reflection to the quote if you want."
     const fullPrompt = prompt 
-      ? `${basePrompt} about ${prompt}. Make it unique and different from previous quotes.` 
-      : `${basePrompt}. Make it unique and different from previous quotes.`
+      ? `${basePrompt} about ${prompt}. Make it unique, original, and different from previous quotes.` 
+      : `${basePrompt}. Make it unique and different from previous quotes, universally relevant and memoriable`
 
+    const shouldUseRealQuote = Math.random() < 0.3 //30% of using real quotes
     const randomFactor = Math.random().toString(36).substring(7)
 
     const { text } = await generateText({
       model: openai('gpt-3.5-turbo'),
-      prompt: `${fullPrompt} (Random factor: ${randomFactor})`,
+      prompt: shouldUseRealQuote 
+        ? "Return a famous inspirational quote from history, including its author." 
+        : `${fullPrompt} (Random factor: ${randomFactor})`,
     })
 
     return text.replace(/["']/g, '') // Remove any quotation marks from the response

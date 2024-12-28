@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "Quote Generator",
     openGraph: {
       title: "Quote Generator",
-      description: "A quote generator for your Farcaster posts. Created by KITE .// Powered by The POD",
+      description: "A quote generator for your Farcaster posts. Created by KITE .// /thepod",
       images: [{
         url: `${appUrl}/frame-cast.png`,
         width: 1200,
