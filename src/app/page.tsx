@@ -8,7 +8,7 @@ const frame = {
   version: "next",
   imageUrl: `${appUrl}/frame-cast.png`,
   button: {
-    title: "Create Quote",
+    title: "Create FunQuotes",
     action: {
       type: "launch_frame",
       name: "Quote Generator",
