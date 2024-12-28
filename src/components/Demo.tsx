@@ -276,9 +276,13 @@ export default function Demo(
       
       setQuote(generatedQuote.slice(0, MAX_CHARS))
       setBgColor(getRandomColor())
-      
+
+      // Add randomness to GIF search by including a random word from a curated list
+      const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great']
+      const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)]
+
       // Then fetch the GIF
-      const searchQuery = encodeURIComponent(generatedQuote.slice(0, 30)) // Use first 30 chars for better GIF matching
+      const searchQuery = encodeURIComponent(`${generatedQuote.slice(0, 30)} ${randomMood}`) // Use first 30 chars for better GIF matching + random mood
       const response = await fetch(`/api/giphy?search=${searchQuery}`)
       
       if (!response.ok) {
@@ -306,348 +310,149 @@ export default function Demo(
 
   return (
     <div className="mx-auto">
-      {/* <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
-
-      <div className="mb-4">
-        <h2 className="font-2xl font-bold">Context</h2>
-        <button
-          onClick={toggleContext}
-          className="flex items-center gap-2 transition-colors"
-        >
-          <span
-            className={`transform transition-transform ${
-              isContextOpen ? "rotate-90" : ""
-            }`}
-          >
-            ➤
-          </span>
-          Tap to expand
-        </button>
-
-        {isContextOpen && (
-          <div className="p-4 mt-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              {JSON.stringify(context, null, 2)}
-            </pre>
-          </div>
-        )}
-      </div>
-
-      <div>
-        <h2 className="font-2xl font-bold">Actions</h2>
-
-        <div className="mb-4">
-          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              sdk.actions.signIn
-            </pre>
-          </div>
-          <SignIn />
-        </div>
-
-        <div className="mb-4">
-          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              sdk.actions.openUrl
-            </pre>
-          </div>
-          <Button onClick={openUrl}>Open Link</Button>
-        </div>
-
-        <div className="mb-4">
-          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              sdk.actions.openUrl
-            </pre>
-          </div>
-          <Button onClick={openWarpcastUrl}>Open Warpcast Link</Button>
-        </div>
-
-        <div className="mb-4">
-          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              sdk.actions.close
-            </pre>
-          </div>
-          <Button onClick={close}>Close Frame</Button>
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <h2 className="font-2xl font-bold">Last event</h2>
-
-        <div className="p-4 mt-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-          <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-            {lastEvent || "none"}
-          </pre>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="font-2xl font-bold">Add to client & notifications</h2>
-
-        <div className="mt-2 mb-4 text-sm">
-          Client fid {context?.client.clientFid},
-          {added ? " frame added to client," : " frame not added to client,"}
-          {notificationDetails
-            ? " notifications enabled"
-            : " notifications disabled"}
-        </div>
-
-        <div className="mb-4">
-          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              sdk.actions.addFrame
-            </pre>
-          </div>
-          {addFrameResult && (
-            <div className="mb-2 text-sm">
-              Add frame result: {addFrameResult}
-            </div>
-          )}
-          <Button onClick={addFrame} disabled={added}>
-            Add frame to client
-          </Button>
-        </div>
-
-        {sendNotificationResult && (
-          <div className="mb-2 text-sm">
-            Send notification result: {sendNotificationResult}
-          </div>
-        )}
-        <div className="mb-4">
-          <Button onClick={sendNotification} disabled={!notificationDetails}>
-            Send notification
-          </Button>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="font-2xl font-bold">Wallet</h2>
-
-        {address && (
-          <div className="my-2 text-xs">
-            Address: <pre className="inline">{truncateAddress(address)}</pre>
-          </div>
-        )}
-
-        {chainId && (
-          <div className="my-2 text-xs">
-            Chain ID: <pre className="inline">{chainId}</pre>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <Button
-            onClick={() =>
-              isConnected
-                ? disconnect()
-                : connect({ connector: config.connectors[0] })
-            }
-          >
-            {isConnected ? "Disconnect" : "Connect"}
-          </Button>
-        </div>
-
-        <div className="mb-4">
-          <SignMessage />
-        </div>
-
-        {isConnected && (
-          <>
-            <div className="mb-4">
-              <SendEth />
-            </div>
-            <div className="mb-4">
-              <Button
-                onClick={sendTx}
-                disabled={!isConnected || isSendTxPending}
-                isLoading={isSendTxPending}
-              >
-                Send Transaction (contract)
-              </Button>
-              {isSendTxError && renderError(sendTxError)}
-              {txHash && (
-                <div className="mt-2 text-xs">
-                  <div>Hash: {truncateAddress(txHash)}</div>
-                  <div>
-                    Status:{" "}
-                    {isConfirming
-                      ? "Confirming..."
-                      : isConfirmed
-                      ? "Confirmed!"
-                      : "Pending"}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="mb-4">
-              <Button
-                onClick={signTyped}
-                disabled={!isConnected || isSignTypedPending}
-                isLoading={isSignTypedPending}
-              >
-                Sign Typed Data
-              </Button>
-              {isSignTypedError && renderError(signTypedError)}
-            </div>
-            <div className="mb-4">
-              <Button
-                onClick={handleSwitchChain}
-                disabled={isSwitchChainPending}
-                isLoading={isSwitchChainPending}
-              >
-                Switch to {chainId === base.id ? "Optimism" : "Base"}
-              </Button>
-              {isSwitchChainError && renderError(switchChainError)}
-            </div>
-          </>
-        )}
-      </div> */}
-      
-
       {/* Main Content */}
-    <div className="min-h-screen flex flex-col">
-      <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-3">
-        {/* Navigation Bar */}
-        <nav className="top-0 left-0 w-full bg-transparent">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-center items-center">
-              <div className="flex-shrink-0">
-                <Image
-                  src="/logo.png"
-                  alt="FunQuoteLogo"
-                  width={60}
-                  height={60}
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          </div>
-        </nav>
-      
-      {/* Card Content */}
-      <Card className="w-full max-w-md mx-4 overflow-hidden shadow-2xl">
-        <CardHeader className="bg-white">
-          <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-            Fun Quote Generator
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          
-          <AnimatePresence mode="wait">
-            {gifUrl && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="mb-6 rounded-lg overflow-hidden"
-              >
-                <div className="relative w-full h-[200px]">
+      <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-3">
+          {/* Navigation Bar */}
+          <nav className="top-0 left-0 w-full bg-transparent">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-center items-center">
+                <div className="flex-shrink-0">
                   <Image
-                    src={gifUrl}
-                    alt="Quote-related GIF"
-                    fill
-                    sizes="(max-width: 600px) 100vw, 50vw"
-                    className="object-cover rounded-lg"
+                    src="/logo.png"
+                    alt="FunQuoteLogo"
+                    width={60}
+                    height={60}
+                    className="object-contain"
                   />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={quote}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              transition={{ duration: 0.5 }}
-              className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center"
-              style={{ backgroundColor: bgColor }}
-            >
-              <p className="text-center text-white text-lg font-medium">
-                {quote || "Click the magic button to generate an inspiring quote!"}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-          <div className="mb-6">
-            <Input
-              type="text"
-              placeholder="Enter a topic/word for your quote"
-              value={userPrompt}
-              onChange={(e) => setUserPrompt(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="w-full text-lg"
-            />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <motion.div className="w-full"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button 
-              onClick={handleGenerateQuote} 
-              disabled={isLoading}
-              className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-            >
-              {isLoading ? (
-                <span className="flex items-center">
-                  Generating
-                  <motion.span
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="ml-2"
-                  >
-                    ...
-                  </motion.span>
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  Generate Magic Quote <Sparkles className="ml-2" size={20} />
-                </span>
-              )}
-            </Button>
+              </div>
+            </div>
+          </nav>
+        
+        {/* Card Content */}
+        <Card className="w-full max-w-md mx-4 overflow-hidden shadow-2xl">
+          <CardHeader className="bg-white">
+            <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+              Fun Quote Generator
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
             
-          </motion.div>
-
-        </CardFooter>
-        <CardFooter>
-          <motion.div className="w-full"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button 
-              onClick={() => {
-                const shareText = `"${quote}" - Created by @kite /thepod`;
-                const shareUrl = 'https://qg-frames.vercel.app';
-                const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
-                sdk.actions.openUrl(url); 
-              }}
-              className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-            >
-              {isLoading ? (
-                <span className="flex items-center">
-                  Casting
-                  <motion.span
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="ml-2"
-                  >
-                    ...
-                  </motion.span>
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  Cast Away <Share2 className="ml-2" size={20} />
-                </span>
+            <AnimatePresence mode="wait">
+              {gifUrl && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-6 rounded-lg overflow-hidden"
+                >
+                  <div className="relative w-full h-[200px]">
+                    <Image
+                      src={gifUrl}
+                      alt="Quote-related GIF"
+                      fill
+                      sizes="(max-width: 600px) 100vw, 50vw"
+                      className="object-cover rounded-lg"
+                    />
+                  </div>
+                </motion.div>
               )}
-            </Button>
-          </motion.div>
-        </CardFooter>
-      </Card>
-    </div>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={quote}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center"
+                style={{ backgroundColor: bgColor }}
+              >
+                <p className="text-center text-white text-lg font-medium">
+                  {quote || "Click the magic button to generate an inspiring quote!"}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+            <div className="mb-6">
+              <Input
+                type="text"
+                placeholder="Enter a topic/word for your quote"
+                value={userPrompt}
+                onChange={(e) => setUserPrompt(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full text-lg"
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <motion.div className="w-full"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                onClick={handleGenerateQuote} 
+                disabled={isLoading}
+                className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    Generating
+                    <motion.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="ml-2"
+                    >
+                      ...
+                    </motion.span>
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    Generate Magic Quote <Sparkles className="ml-2" size={20} />
+                  </span>
+                )}
+              </Button>
+              
+            </motion.div>
+
+          </CardFooter>
+          
+          <CardFooter>
+            <motion.div className="w-full"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                onClick={() => {
+                  const shareText = `"${quote}" - Created by @kite /thepod`;
+                  const shareUrl = 'https://qg-frames.vercel.app';
+                  const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                  sdk.actions.openUrl(url); 
+                }}
+                className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    Casting
+                    <motion.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="ml-2"
+                    >
+                      ...
+                    </motion.span>
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    Cast Away <Share2 className="ml-2" size={20} />
+                  </span>
+                )}
+              </Button>
+            </motion.div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
     </div>
   );
