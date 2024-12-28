@@ -5,8 +5,8 @@ import "~/app/globals.css";
 import { Providers } from "~/app/providers";
 
 export const metadata: Metadata = {
-  title: "Farcaster Frames v2 Demo",
-  description: "A Farcaster Frames v2 demo app",
+  title: "FunQuotes",
+  description: "A fun quote generator for your Farcaster posts.",
 };
 
 export default async function RootLayout({
