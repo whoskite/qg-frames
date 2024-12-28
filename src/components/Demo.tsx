@@ -44,7 +44,7 @@ const getRandomColor = () => {
 }
 
 export default function Demo(
-  { title }: { title?: string } = { title: "Quote Generator" }
+  { title }: { title?: string } = { title: "Fun Quotes" }
 ) {
   const [quote, setQuote] = useState('')
   const [userPrompt, setUserPrompt] = useState('')
@@ -686,7 +686,7 @@ function SendEth() {
       to: toAddr,
       value: 1n,
     });
-  }, [toAddr, sendTransaction]);
+  }, [toAddr, sendTransaction]);L
 
   return (
     <>
