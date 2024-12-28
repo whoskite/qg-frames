@@ -686,7 +686,7 @@ function SendEth() {
       to: toAddr,
       value: 1n,
     });
-  }, [toAddr, sendTransaction]);L
+  }, [toAddr, sendTransaction]);
 
   return (
     <>
