@@ -12,26 +12,27 @@ export default async function Image() {
   return new ImageResponse(
     (
       <div tw="h-full w-full flex flex-col justify-center items-center relative bg-[#FF9F1C]">
-        <div tw="flex w-full h-full p-8 gap-4">
+        <div tw="flex w-full h-full p-8" style={{ gap: '16px' }}>
           {/* Left side - GIF placeholder */}
           <div tw="flex-1 bg-[#E5E5E5] rounded-3xl flex items-center justify-center">
             <p tw="text-2xl text-gray-600">GIF HERE</p>
           </div>
           
           {/* Right side - Quote */}
-          <div tw="flex-1 bg-[#00FFC2] rounded-3xl flex items-center justify-center p-8">
+          <div tw="flex-1 bg-[#00FFC2] rounded-3xl flex items-center justify-center">
             <p tw="text-2xl text-black text-center">&quot;Insert quote here&quot;</p>
           </div>
         </div>
         
         {/* Logo position */}
-        <div tw="absolute bottom-4">
+        <div tw="absolute bottom-4 flex">
           <p tw="text-xl font-bold">FunQuotes</p>
         </div>
       </div>
     ),
     {
-      ...size,
+      width: 1200,
+      height: 630,
     }
   );
 }
