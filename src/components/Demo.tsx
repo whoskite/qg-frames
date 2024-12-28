@@ -525,7 +525,7 @@ export default function Demo(
             </div>
           </div>
         </nav>
-
+      
       {/* Card Content */}
       <Card className="w-full max-w-md mx-4 overflow-hidden shadow-2xl">
         <CardHeader className="bg-white">
@@ -620,7 +620,7 @@ export default function Demo(
           >
             <Button 
               onClick={() => {
-                const shareText = 'Create "Fun Quotes" by @KITE and /thepod team 👽';
+                const shareText = `"${quote}"<br><br>Create "Fun Quotes" by @KITE and /thepod team 👽`;
                 const shareUrl = 'https://qg-frames.vercel.app';
                 const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
                 sdk.actions.openUrl(url);
