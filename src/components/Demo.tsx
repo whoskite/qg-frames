@@ -268,6 +268,9 @@ export default function Demo(
     if (isLoading) return
     setIsLoading(true)
     try {
+      // Reset the previous GIF while loading
+      setGifUrl(null)
+
       // First generate the quote
       const generatedQuote = await generateQuote(userPrompt)
       if (!generatedQuote) {
@@ -283,15 +286,19 @@ export default function Demo(
 
       // Then fetch the GIF
       const searchQuery = encodeURIComponent(`${generatedQuote.slice(0, 30)} ${randomMood}`) // Use first 30 chars for better GIF matching + random mood
-      const response = await fetch(`/api/giphy?search=${searchQuery}`)
+      const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`) // Add timestamp to prevent caching
       
       if (!response.ok) {
         throw new Error(`GIF API error: ${response.status}`)
       }
       
       const data = await response.json()
-      const gifUrl = data.data[0]?.images?.fixed_height?.url
-      setGifUrl(gifUrl || null)
+      if (data.data && data.data.length > 0) {
+        // Get a random GIF from the first 5 results
+        const randomIndex = Math.floor(Math.random() * Math.min(5, data.data.length))
+        const gifUrl = data.data[randomIndex]?.images?.fixed_height?.url
+        setGifUrl(gifUrl || null)
+      }
       
     } catch (error) {
       console.error('Error:', error)
