@@ -161,7 +161,7 @@ export default function Demo(
   }, []);
 
   const openWarpcastUrl = useCallback(() => {
-    sdk.actions.openUrl("https://warpcast.com/~/compose");
+    sdk.actions.openUrl("https://warpcast.com/~/compose?text=%{encodeURIComponent (shareText)}&embeds[]=${encodeURIComponent (shareUrl)}");
   }, []);
 
   const close = useCallback(() => {
@@ -608,6 +608,14 @@ export default function Demo(
                 </span>
               )}
             </Button>
+            <div className="mb-4">
+          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
+            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
+              sdk.actions.openUrl
+            </pre>
+          </div>
+          <Button onClick={openUrl}>Open Link</Button>
+        </div>
           </motion.div>
         </CardFooter>
       </Card>
