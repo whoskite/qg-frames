@@ -66,6 +66,8 @@ export default function Demo(
   const [addFrameResult, setAddFrameResult] = useState("");
   const [sendNotificationResult, setSendNotificationResult] = useState("");
 
+  const [isCasting, setIsCasting] = useState(false);
+
   useEffect(() => {
     setNotificationDetails(context?.client.notificationDetails ?? null);
   }, [context]);
@@ -350,6 +352,7 @@ export default function Demo(
                       src={gifUrl}
                       alt="Quote-related GIF"
                       fill
+                      unoptimized
                       sizes="(max-width: 600px) 100vw, 50vw"
                       className={`object-cover rounded-lg transition-opacity duration-200 ${
                         isLoading ? 'opacity-50' : 'opacity-100'
@@ -443,14 +446,19 @@ export default function Demo(
             >
               <Button 
                 onClick={() => {
-                  const shareText = `"${quote}" - Created by @kite /thepod`;
-                  const shareUrl = 'https://qg-frames.vercel.app';
-                  const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
-                  sdk.actions.openUrl(url); 
+                  setIsCasting(true);
+                  try {
+                    const shareText = `"${quote}" - Created by @kite /thepod`;
+                    const shareUrl = 'https://qg-frames.vercel.app';
+                    const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                    sdk.actions.openUrl(url);
+                  } finally {
+                    setIsCasting(false);
+                  }
                 }}
                 className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
               >
-                {isLoading ? (
+                {isCasting ? (
                   <span className="flex items-center">
                     Casting
                     <motion.span
