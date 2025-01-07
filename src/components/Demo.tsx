@@ -269,6 +269,36 @@ export default function Demo(
     }
   }
 
+  const handleRegenerateGif = async () => {
+    if (!quote || isLoading) return;
+    setIsLoading(true);
+    try {
+      // Add randomness to GIF search by including a random word from a curated list
+      const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great'];
+      const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)];
+
+      // Then fetch the GIF
+      const searchQuery = encodeURIComponent(`${quote.slice(0, 30)} ${randomMood}`);
+      const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`);
+      
+      if (!response.ok) {
+        throw new Error(`GIF API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.data && data.data.length > 0) {
+        // Get a random GIF from the first 5 results
+        const randomIndex = Math.floor(Math.random() * Math.min(5, data.data.length));
+        const gifUrl = data.data[randomIndex]?.images?.fixed_height?.url;
+        setGifUrl(gifUrl || null);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleGenerateQuote()
@@ -312,7 +342,8 @@ export default function Demo(
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 rounded-lg overflow-hidden"
+                  className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                  onClick={handleRegenerateGif}
                 >
                   <div className="relative w-full h-[200px]">
                     <Image
@@ -320,8 +351,28 @@ export default function Demo(
                       alt="Quote-related GIF"
                       fill
                       sizes="(max-width: 600px) 100vw, 50vw"
-                      className="object-cover rounded-lg"
+                      className={`object-cover rounded-lg transition-opacity duration-200 ${
+                        isLoading ? 'opacity-50' : 'opacity-100'
+                      }`}
                     />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                      <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        Click to regenerate GIF
+                      </span>
+                    </div>
+                    {/* Loading overlay */}
+                    {isLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                        <motion.span
+                          className="text-white"
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        >
+                          Loading...
+                        </motion.span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
