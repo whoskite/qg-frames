@@ -310,89 +310,48 @@ export default function Demo(
       setGifUrl(null);
 
       // First generate the quote with retry logic
-      let generatedQuote = null;
+      let quoteResponse = null;
       let attempts = 0;
       const maxAttempts = 3;
 
-      while (!generatedQuote && attempts < maxAttempts) {
+      while (!quoteResponse && attempts < maxAttempts) {
         try {
-          generatedQuote = await generateQuote(userPrompt);
+          quoteResponse = await generateQuote(userPrompt);
           attempts++;
         } catch (error) {
           if (attempts === maxAttempts) throw error;
-          // Wait 1 second before retrying
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
-      if (!generatedQuote) {
+      if (!quoteResponse) {
         throw new Error('Failed to generate quote after multiple attempts');
       }
       
-      setQuote(generatedQuote.slice(0, MAX_CHARS));
+      setQuote(quoteResponse.text.slice(0, MAX_CHARS));
       setBgColor(getRandomColor());
 
       // Track successful quote generation
       if (analytics) {
         logAnalyticsEvent('quote_generated_success', {
           prompt: userPrompt || 'empty_prompt',
-          quote_length: generatedQuote.length,
-          attempts: attempts
+          quote_length: quoteResponse.text.length,
+          attempts: attempts,
+          style: quoteResponse.style
         });
       }
 
-      // GIF fetching with retry logic
-      try {
-        const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great'];
-        const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)];
-        const searchQuery = encodeURIComponent(`${generatedQuote.slice(0, 30)} ${randomMood}`);
-        
-        const fetchGif = async () => {
-          const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`, {
-            // Add fetch options
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-            },
-            // Add timeout
-            signal: AbortSignal.timeout(5000) // 5 second timeout
-          });
-          
-          if (!response.ok) {
-            throw new Error(`GIF API error: ${response.status}`);
-          }
-          return response.json();
-        };
-
-        // Try to fetch GIF with retries
-        let gifData = null;
-        attempts = 0;
-        
-        while (!gifData && attempts < maxAttempts) {
-          try {
-            gifData = await fetchGif();
-            attempts++;
-          } catch (error) {
-            if (attempts === maxAttempts) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-
-        if (gifData?.data && gifData.data.length > 0) {
-          const randomIndex = Math.floor(Math.random() * Math.min(5, gifData.data.length));
-          const gifUrl = gifData.data[randomIndex]?.images?.fixed_height?.url;
-          setGifUrl(gifUrl || null);
-        }
-      } catch (gifError) {
-        console.error('GIF fetch error:', gifError);
-        // Don't throw here - we still have a quote to show
-        if (analytics) {
-          logAnalyticsEvent('gif_fetch_error', {
-            error: gifError instanceof Error ? gifError.message : 'Unknown error'
-          });
-        }
-      }
+      // Get the GIF using the quote style
+      const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
+      setGifUrl(gifUrl);
       
+      // Track successful GIF fetch
+      if (analytics && gifUrl) {
+        logAnalyticsEvent('gif_fetch_success', {
+          quote_style: quoteResponse.style,
+          quote_text: quoteResponse.text.slice(0, 30) + '...'
+        });
+      }
     } catch (error) {
       console.error('Error:', error);
       setQuote('Failed to generate quote. Please try again.');
