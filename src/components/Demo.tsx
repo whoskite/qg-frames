@@ -36,6 +36,8 @@ import { BaseError, UserRejectedRequestError } from "viem";
 import { useSession } from "next-auth/react"
 import { SignIn as SignInCore } from "@farcaster/frame-core";
 import { SignInResult } from "@farcaster/frame-core/dist/actions/signIn";
+import { app, analytics } from '~/lib/firebase';
+import { logEvent, setUserProperties } from "firebase/analytics";
 
 const MAX_CHARS = 280 // Maximum character limit for the quote
 
@@ -43,6 +45,11 @@ const getRandomColor = () => {
   const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292', '#AEC6CF', '#836FFF', '#77DD77', '#FFB347']
   return colors[Math.floor(Math.random() * colors.length)]
 }
+
+// Add type for analytics events
+type AnalyticsParams = {
+  [key: string]: string | number | boolean | undefined;
+};
 
 export default function Demo(
   { title }: { title?: string } = { title: "Fun Quotes" }
@@ -67,6 +74,45 @@ export default function Demo(
   const [sendNotificationResult, setSendNotificationResult] = useState("");
 
   const [isCasting, setIsCasting] = useState(false);
+
+  const [sessionStartTime, setSessionStartTime] = useState(Date.now());
+
+  const logAnalyticsEvent = (eventName: string, params: AnalyticsParams) => {
+    if (analytics) {
+      logEvent(analytics, eventName, params);
+      console.log('Analytics Event:', { eventName, params });
+    } else {
+      console.warn('Analytics not initialized for event:', eventName);
+    }
+  };
+
+  useEffect(() => {
+    if (analytics) {
+      // Set user properties with typed parameters
+      setUserProperties(analytics, {
+        app_version: '1.0.0',
+        user_type: 'web'
+      });
+      
+      // Track session start
+      logAnalyticsEvent('session_start', {
+        timestamp: new Date().toISOString(),
+        referrer: document.referrer || 'direct'
+      });
+    }
+  }, [analytics]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (analytics) {
+        logAnalyticsEvent('session_duration', {
+          duration_seconds: Math.floor((Date.now() - sessionStartTime) / 1000)
+        });
+      }
+    }, 60000); // Log every minute
+
+    return () => clearInterval(interval);
+  }, [analytics, sessionStartTime]);
 
   useEffect(() => {
     setNotificationDetails(context?.client.notificationDetails ?? null);
@@ -110,46 +156,59 @@ export default function Demo(
 
   useEffect(() => {
     const load = async () => {
-      const context = await sdk.context;
-      setContext(context);
-      setAdded(context.client.added);
-
-      sdk.on("frameAdded", ({ notificationDetails }) => {
-        setLastEvent(
-          `frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`
-        );
-
-        setAdded(true);
-        if (notificationDetails) {
-          setNotificationDetails(notificationDetails);
+      try {
+        const context = await sdk.context;
+        if (!context) {
+          console.log('No context available');
+          return;
         }
-      });
+        
+        setContext(context);
+        // Only set added if context and client exist
+        if (context.client) {
+          setAdded(context.client.added);
+        }
 
-      sdk.on("frameAddRejected", ({ reason }) => {
-        setLastEvent(`frameAddRejected, reason ${reason}`);
-      });
+        sdk.on("frameAdded", ({ notificationDetails }) => {
+          setLastEvent(
+            `frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`
+          );
 
-      sdk.on("frameRemoved", () => {
-        setLastEvent("frameRemoved");
-        setAdded(false);
-        setNotificationDetails(null);
-      });
+          setAdded(true);
+          if (notificationDetails) {
+            setNotificationDetails(notificationDetails);
+          }
+        });
 
-      sdk.on("notificationsEnabled", ({ notificationDetails }) => {
-        setLastEvent("notificationsEnabled");
-        setNotificationDetails(notificationDetails);
-      });
-      sdk.on("notificationsDisabled", () => {
-        setLastEvent("notificationsDisabled");
-        setNotificationDetails(null);
-      });
+        sdk.on("frameAddRejected", ({ reason }) => {
+          setLastEvent(`frameAddRejected, reason ${reason}`);
+        });
 
-      sdk.on("primaryButtonClicked", () => {
-        console.log("primaryButtonClicked");
-      });
+        sdk.on("frameRemoved", () => {
+          setLastEvent("frameRemoved");
+          setAdded(false);
+          setNotificationDetails(null);
+        });
 
-      sdk.actions.ready({});
+        sdk.on("notificationsEnabled", ({ notificationDetails }) => {
+          setLastEvent("notificationsEnabled");
+          setNotificationDetails(notificationDetails);
+        });
+        sdk.on("notificationsDisabled", () => {
+          setLastEvent("notificationsDisabled");
+          setNotificationDetails(null);
+        });
+
+        sdk.on("primaryButtonClicked", () => {
+          console.log("primaryButtonClicked");
+        });
+
+        sdk.actions.ready({});
+      } catch (error) {
+        console.error('Error loading Frame SDK context:', error);
+      }
     };
+
     if (sdk && !isSDKLoaded) {
       setIsSDKLoaded(true);
       load();
@@ -222,58 +281,147 @@ export default function Demo(
     setIsContextOpen((prev) => !prev);
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && analytics) {
+      logAnalyticsEvent('page_view', {
+        page_title: title || 'Fun Quotes',
+        page_location: window.location.href
+      });
+    }
+  }, [title]);
+
   if (!isSDKLoaded) {
     return <div>Loading...</div>;
   }
 
   const handleGenerateQuote = async () => {
-    if (isLoading) return
-    setIsLoading(true)
+    if (isLoading) return;
+    setIsLoading(true);
+    
+    // Track quote generation attempt
+    if (analytics) {
+      logAnalyticsEvent('generate_quote_click', {
+        prompt: userPrompt || 'empty_prompt'
+      });
+    }
+
     try {
       // Reset the previous GIF while loading
-      setGifUrl(null)
+      setGifUrl(null);
 
-      // First generate the quote
-      const generatedQuote = await generateQuote(userPrompt)
+      // First generate the quote with retry logic
+      let generatedQuote = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      while (!generatedQuote && attempts < maxAttempts) {
+        try {
+          generatedQuote = await generateQuote(userPrompt);
+          attempts++;
+        } catch (error) {
+          if (attempts === maxAttempts) throw error;
+          // Wait 1 second before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
       if (!generatedQuote) {
-        throw new Error('Failed to generate quote')
+        throw new Error('Failed to generate quote after multiple attempts');
       }
       
-      setQuote(generatedQuote.slice(0, MAX_CHARS))
-      setBgColor(getRandomColor())
+      setQuote(generatedQuote.slice(0, MAX_CHARS));
+      setBgColor(getRandomColor());
 
-      // Add randomness to GIF search by including a random word from a curated list
-      const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great']
-      const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)]
-
-      // Then fetch the GIF
-      const searchQuery = encodeURIComponent(`${generatedQuote.slice(0, 30)} ${randomMood}`) // Use first 30 chars for better GIF matching + random mood
-      const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`) // Add timestamp to prevent caching
-      
-      if (!response.ok) {
-        throw new Error(`GIF API error: ${response.status}`)
+      // Track successful quote generation
+      if (analytics) {
+        logAnalyticsEvent('quote_generated_success', {
+          prompt: userPrompt || 'empty_prompt',
+          quote_length: generatedQuote.length,
+          attempts: attempts
+        });
       }
-      
-      const data = await response.json()
-      if (data.data && data.data.length > 0) {
-        // Get a random GIF from the first 5 results
-        const randomIndex = Math.floor(Math.random() * Math.min(5, data.data.length))
-        const gifUrl = data.data[randomIndex]?.images?.fixed_height?.url
-        setGifUrl(gifUrl || null)
+
+      // GIF fetching with retry logic
+      try {
+        const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great'];
+        const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)];
+        const searchQuery = encodeURIComponent(`${generatedQuote.slice(0, 30)} ${randomMood}`);
+        
+        const fetchGif = async () => {
+          const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`, {
+            // Add fetch options
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(5000) // 5 second timeout
+          });
+          
+          if (!response.ok) {
+            throw new Error(`GIF API error: ${response.status}`);
+          }
+          return response.json();
+        };
+
+        // Try to fetch GIF with retries
+        let gifData = null;
+        attempts = 0;
+        
+        while (!gifData && attempts < maxAttempts) {
+          try {
+            gifData = await fetchGif();
+            attempts++;
+          } catch (error) {
+            if (attempts === maxAttempts) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+
+        if (gifData?.data && gifData.data.length > 0) {
+          const randomIndex = Math.floor(Math.random() * Math.min(5, gifData.data.length));
+          const gifUrl = gifData.data[randomIndex]?.images?.fixed_height?.url;
+          setGifUrl(gifUrl || null);
+        }
+      } catch (gifError) {
+        console.error('GIF fetch error:', gifError);
+        // Don't throw here - we still have a quote to show
+        if (analytics) {
+          logAnalyticsEvent('gif_fetch_error', {
+            error: gifError instanceof Error ? gifError.message : 'Unknown error'
+          });
+        }
       }
       
     } catch (error) {
-      console.error('Error:', error)
-      setQuote('Failed to generate quote. Please try again.')
-      setGifUrl(null)
+      console.error('Error:', error);
+      setQuote('Failed to generate quote. Please try again.');
+      setGifUrl(null);
+      
+      // Track generation failure
+      if (analytics) {
+        logAnalyticsEvent('quote_generated_error', {
+          prompt: userPrompt || 'empty_prompt',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRegenerateGif = async () => {
     if (!quote || isLoading) return;
     setIsLoading(true);
+    
+    // Track GIF regeneration attempt
+    if (analytics) {
+      logAnalyticsEvent('gif_regenerate_click', {
+        quote_text: quote.slice(0, 30) + '...', // First 30 chars of quote for context
+        current_gif_url: gifUrl || 'none'
+      });
+    }
+
     try {
       // Add randomness to GIF search by including a random word from a curated list
       const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great'];
@@ -294,8 +442,23 @@ export default function Demo(
         const gifUrl = data.data[randomIndex]?.images?.fixed_height?.url;
         setGifUrl(gifUrl || null);
       }
+
+      // Track successful GIF regeneration
+      if (analytics && gifUrl) {
+        logAnalyticsEvent('gif_regenerated_success', {
+          quote_text: quote.slice(0, 30) + '...',
+          new_gif_url: gifUrl
+        });
+      }
     } catch (error) {
       console.error('Error:', error);
+      // Track GIF regeneration failure
+      if (analytics) {
+        logAnalyticsEvent('gif_regenerated_error', {
+          quote_text: quote.slice(0, 30) + '...',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -451,6 +614,13 @@ export default function Demo(
                     const shareText = `"${quote}" - Created by @kite /thepod`;
                     const shareUrl = 'https://qg-frames.vercel.app';
                     const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                    
+                    if (analytics) {
+                      logAnalyticsEvent('cast_created', {
+                        quote: quote
+                      });
+                    }
+                    
                     sdk.actions.openUrl(url);
                   } finally {
                     setIsCasting(false);
