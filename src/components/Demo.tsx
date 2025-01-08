@@ -373,45 +373,31 @@ export default function Demo(
     if (!quote || isLoading) return;
     setIsLoading(true);
     
-    // Track GIF regeneration attempt
-    if (analytics) {
-      logAnalyticsEvent('gif_regenerate_click', {
-        quote_text: quote.slice(0, 30) + '...', // First 30 chars of quote for context
-        current_gif_url: gifUrl || 'none'
-      });
-    }
-
     try {
-      // Add randomness to GIF search by including a random word from a curated list
-      const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great'];
-      const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)];
-
-      // Then fetch the GIF
-      const searchQuery = encodeURIComponent(`${quote.slice(0, 30)} ${randomMood}`);
-      const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`);
+      const searchQuery = encodeURIComponent(quote.slice(0, 30));
+      const response = await fetch(`/api/giphy?search=${searchQuery}`);
       
       if (!response.ok) {
-        throw new Error(`GIF API error: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch GIF');
       }
       
       const data = await response.json();
       if (data.data && data.data.length > 0) {
-        // Get a random GIF from the first 5 results
         const randomIndex = Math.floor(Math.random() * Math.min(5, data.data.length));
-        const gifUrl = data.data[randomIndex]?.images?.fixed_height?.url;
-        setGifUrl(gifUrl || null);
-      }
+        const newGifUrl = data.data[randomIndex]?.images?.fixed_height?.url;
+        setGifUrl(newGifUrl || null);
 
-      // Track successful GIF regeneration
-      if (analytics && gifUrl) {
-        logAnalyticsEvent('gif_regenerated_success', {
-          quote_text: quote.slice(0, 30) + '...',
-          new_gif_url: gifUrl
-        });
+        // Track successful GIF regeneration
+        if (analytics && newGifUrl) {
+          logAnalyticsEvent('gif_regenerated_success', {
+            quote_text: quote.slice(0, 30) + '...',
+            new_gif_url: newGifUrl
+          });
+        }
       }
     } catch (error) {
-      console.error('Error:', error);
-      // Track GIF regeneration failure
+      console.error('Error regenerating GIF:', error);
       if (analytics) {
         logAnalyticsEvent('gif_regenerated_error', {
           quote_text: quote.slice(0, 30) + '...',

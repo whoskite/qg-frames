@@ -33,8 +33,6 @@ const moodCategories: Record<string, MoodCategory> = {
 };
 
 export async function getGifForQuote(quote: string, quoteStyle: string = 'inspirational') {
-  const apiKey = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
-  
   try {
     // Get mood category based on quote style
     const moodCategory = moodCategories[quoteStyle.toLowerCase()] || moodCategories.inspirational;
@@ -54,21 +52,13 @@ export async function getGifForQuote(quote: string, quoteStyle: string = 'inspir
     // Build search query
     const searchQuery = encodeURIComponent(searchTerms.join(' '));
     
-    const response = await fetch(
-      `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchQuery}&limit=10&rating=g&bundle=messaging_non_clips`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
+    // Use the API route instead of direct GIPHY API call
+    const response = await fetch(`/api/giphy?search=${searchQuery}`);
 
     if (!response.ok) {
       // If first attempt fails, try with fallback terms
       const fallbackTerm = moodCategory.fallbackTerms[Math.floor(Math.random() * moodCategory.fallbackTerms.length)];
-      const fallbackResponse = await fetch(
-        `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(fallbackTerm)}&limit=10&rating=g&bundle=messaging_non_clips`
-      );
+      const fallbackResponse = await fetch(`/api/giphy?search=${encodeURIComponent(fallbackTerm)}`);
       
       if (!fallbackResponse.ok) {
         throw new Error('Failed to fetch GIF');

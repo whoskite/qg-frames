@@ -1,33 +1,43 @@
+import { NextResponse } from 'next/server';
+
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.get('search');
+  const apiKey = process.env.GIPHY_API_KEY;
+
+  if (!query) {
+    return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
+  }
+
+  if (!apiKey) {
+    console.error('API Key check:', {
+      keyExists: !!process.env.GIPHY_API_KEY,
+      envKeys: Object.keys(process.env).filter(key => key.includes('GIPHY'))
+    });
+    return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
+  }
+
   try {
-    // Get and validate search parameter
-    const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get('search');
-    
-    if (!searchQuery) {
-      return Response.json({ error: 'Search query is required' }, { status: 400 });
-    }
-
-    if (!process.env.GIPHY_API_KEY) {
-      console.error('GIPHY_API_KEY is not defined');
-      return Response.json({ error: 'API configuration error' }, { status: 500 });
-    }
-
-    // Make request to Giphy
-    const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=${process.env.GIPHY_API_KEY}&q=${encodeURIComponent(searchQuery)}&limit=10`;
+    const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=10&rating=g`;
     
     const response = await fetch(giphyUrl);
-    
+
     if (!response.ok) {
-      console.error(`Giphy API error: ${response.status}`);
-      return Response.json({ error: 'Failed to fetch from Giphy' }, { status: response.status });
+      const errorText = await response.text();
+      console.error('GIPHY API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`GIPHY API error: ${response.status}`);
     }
 
     const data = await response.json();
-    return Response.json(data);
-    
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Server error:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error in GIPHY route:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Failed to fetch GIF'
+    }, { status: 500 });
   }
 } 
