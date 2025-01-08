@@ -31,7 +31,38 @@ const nextConfig = {
   },
   reactStrictMode: true,
   images: {
-    domains: ['media1.giphy.com', 'media3.giphy.com', 'media2.giphy.com', 'media4.giphy.com', 'media0.giphy.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'media.giphy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media0.giphy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media1.giphy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media2.giphy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media3.giphy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media4.giphy.com',
+        pathname: '/**',
+      }
+    ]
   },
   distDir: '.next',
   experimental: {
