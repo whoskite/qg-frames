@@ -51,6 +51,83 @@ type AnalyticsParams = {
   [key: string]: string | number | boolean | undefined;
 };
 
+const MOOD_MAPPINGS = {
+  motivational:['success', 'achievement', 'victory', 'winning'],
+  philosophical: ['thinking', 'contemplation', 'wisdom', 'deep'],
+  'practical wisdom': ['work', 'practice', 'learning', 'doing'],
+  'thought-provoking': ['mind blown', 'realization', 'epiphany'],
+  emotional: ['feelings', 'emotion', 'heart', 'soul'],
+  'humorous wisdom': ['funny', 'laugh', 'humor', 'joke'],
+  paradoxical: ['confusion', 'surprise', 'unexpected'],
+  metaphorical: ['nature', 'symbolism', 'representation'],
+  contrarian: ['different', 'unique', 'stand out'],
+  storytelling: ['story', 'journey', 'adventure']
+} as const
+
+function extractKeywords(quote: string): string[] {
+  // Remove common words and extract key terms
+  const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
+  return quote
+    .toLowerCase()
+    .split(/\W+/)
+    .filter(word => word.length > 3 && !commonWords.includes(word))
+    .slice(0, 2); // Get top 2 meaningful words
+}
+
+const fetchGif = async (quoteText: string, style: keyof typeof MOOD_MAPPINGS) => {
+  try {
+    // Extract meaningful keywords from the quote
+    const keywords = extractKeywords(quoteText);
+    
+    // Get mood words based on the quote style
+    const styleWords = MOOD_MAPPINGS[style] || ['inspiring'];
+    const randomStyleWord = styleWords[Math.floor(Math.random() * styleWords.length)];
+    
+    // Combine keywords with style for better context
+    const searchQuery = encodeURIComponent(`${keywords.join(' ')} ${randomStyleWord}`);
+    
+    const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      signal: AbortSignal.timeout(5000)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`GIF API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Filter for high-quality GIFs
+    const filteredGifs = data.data.filter((gif: any) => {
+      const ratio = gif.images.fixed_height.width / gif.images.fixed_height.height;
+      return (
+        ratio >= 0.75 && ratio <= 1.5 && // Reasonable aspect ratio
+        parseInt(gif.images.fixed_height.size) < 2000000 // Not too large
+      );
+    });
+
+    if (filteredGifs.length > 0) {
+      // Get a random GIF from the filtered results
+      const randomIndex = Math.floor(Math.random() * Math.min(5, filteredGifs.length));
+      return filteredGifs[randomIndex]?.images?.fixed_height?.url;
+    }
+    
+    // Fallback to original results if no filtered GIFs
+    if (data.data && data.data.length > 0) {
+      const randomIndex = Math.floor(Math.random() * Math.min(5, data.data.length));
+      return data.data[randomIndex]?.images?.fixed_height?.url;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('GIF fetch error:', error);
+    return null;
+  }
+};
+
 export default function Demo(
   { title }: { title?: string } = { title: "Fun Quotes" }
 ) {
@@ -77,6 +154,8 @@ export default function Demo(
 
   const [sessionStartTime, setSessionStartTime] = useState(Date.now());
 
+  const [selectedStyle, setSelectedStyle] = useState<keyof typeof MOOD_MAPPINGS>('motivational');
+
   const logAnalyticsEvent = (eventName: string, params: AnalyticsParams) => {
     if (analytics) {
       logEvent(analytics, eventName, params);
@@ -100,7 +179,7 @@ export default function Demo(
         referrer: document.referrer || 'direct'
       });
     }
-  }, [analytics]);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -112,7 +191,7 @@ export default function Demo(
     }, 60000); // Log every minute
 
     return () => clearInterval(interval);
-  }, [analytics, sessionStartTime]);
+  }, [sessionStartTime]);
 
   useEffect(() => {
     setNotificationDetails(context?.client.notificationDetails ?? null);
@@ -298,29 +377,26 @@ export default function Demo(
     if (isLoading) return;
     setIsLoading(true);
     
-    // Track quote generation attempt
-    if (analytics) {
-      logAnalyticsEvent('generate_quote_click', {
-        prompt: userPrompt || 'empty_prompt'
-      });
-    }
-
     try {
-      // Reset the previous GIF while loading
+      // Reset states
       setGifUrl(null);
-
-      // First generate the quote with retry logic
+      
+      // Generate quote
       let generatedQuote = null;
       let attempts = 0;
       const maxAttempts = 3;
 
-      while (!generatedQuote && attempts < maxAttempts) {
+      while (attempts < maxAttempts) {
         try {
-          generatedQuote = await generateQuote(userPrompt);
+          const result = await generateQuote(userPrompt);
+          if (result.text && !result.text.includes('#')) {
+            generatedQuote = result.text;
+            setSelectedStyle(result.style); // Use the style from the quote generation
+            break;
+          }
           attempts++;
         } catch (error) {
           if (attempts === maxAttempts) throw error;
-          // Wait 1 second before retrying
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
@@ -328,60 +404,48 @@ export default function Demo(
       if (!generatedQuote) {
         throw new Error('Failed to generate quote after multiple attempts');
       }
-      
-      setQuote(generatedQuote.slice(0, MAX_CHARS));
-      setBgColor(getRandomColor());
 
-      // Track successful quote generation
+      // Set quote and color separately
+      setQuote(generatedQuote.slice(0, MAX_CHARS));
+      
+      // Generate color separately from quote
+      const newColor = getRandomColor();
+      setBgColor(newColor);
+
+      // Track successful generation
       if (analytics) {
         logAnalyticsEvent('quote_generated_success', {
           prompt: userPrompt || 'empty_prompt',
           quote_length: generatedQuote.length,
-          attempts: attempts
+          attempts: attempts,
+          background_color: newColor // Track color separately
         });
       }
 
       // GIF fetching with retry logic
       try {
-        const moodWords = ['happy', 'excited', 'fun', 'cool', 'amazing', 'awesome', 'wonderful', 'great'];
-        const randomMood = moodWords[Math.floor(Math.random() * moodWords.length)];
-        const searchQuery = encodeURIComponent(`${generatedQuote.slice(0, 30)} ${randomMood}`);
-        
-        const fetchGif = async () => {
-          const response = await fetch(`/api/giphy?search=${searchQuery}&timestamp=${Date.now()}`, {
-            // Add fetch options
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-            },
-            // Add timeout
-            signal: AbortSignal.timeout(5000) // 5 second timeout
-          });
-          
-          if (!response.ok) {
-            throw new Error(`GIF API error: ${response.status}`);
-          }
-          return response.json();
-        };
-
-        // Try to fetch GIF with retries
-        let gifData = null;
+        let gifUrl = null;
         attempts = 0;
         
-        while (!gifData && attempts < maxAttempts) {
-          try {
-            gifData = await fetchGif();
-            attempts++;
-          } catch (error) {
-            if (attempts === maxAttempts) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        // Pick a random style if none is selected
+        const currentStyle = selectedStyle || 'motivational';
+        
+        while (attempts < 3 && !gifUrl) {
+          gifUrl = await fetchGif(generatedQuote, currentStyle);
+          if (gifUrl) {
+            setGifUrl(gifUrl);
+            break;
           }
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        if (gifData?.data && gifData.data.length > 0) {
-          const randomIndex = Math.floor(Math.random() * Math.min(5, gifData.data.length));
-          const gifUrl = gifData.data[randomIndex]?.images?.fixed_height?.url;
-          setGifUrl(gifUrl || null);
+        // If all attempts fail, log it but don't throw an error
+        if (!gifUrl && analytics) {
+          logAnalyticsEvent('gif_fetch_failed', {
+            quote: generatedQuote.slice(0, 30) + '...',
+            attempts: attempts
+          });
         }
       } catch (gifError) {
         console.error('GIF fetch error:', gifError);
