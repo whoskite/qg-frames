@@ -18,7 +18,8 @@ const nextConfig = {
               "https://www.googletagmanager.com",
               "https://localhost:*",
               "http://localhost:*",
-              "https://www.google-analytics.com"
+              "https://www.google-analytics.com",
+              "https://api.neynar.com"
             ].join(' '),
           },
           {
@@ -60,6 +61,61 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'media4.giphy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.farcaster.xyz',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.seadn.io',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ipfs.decentralized-content.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ipfs.dweb.link',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.stamp.fyi',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'warpcast.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.warpcast.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.neynar.com',
         pathname: '/**',
       }
     ]

@@ -2,25 +2,28 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X } from 'lucide-react';
 import { useEffect, useCallback, useState } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
-import { signIn, signOut, getCsrfToken, useSession } from "next-auth/react";
-import { SignIn as SignInCore } from "@farcaster/frame-core";
-import type { SignInResult } from "@farcaster/frame-core/dist/actions/signIn";
 import { logEvent, setUserProperties } from "firebase/analytics";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 
 // UI Components
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "~/components/ui/Button";
+import { Button } from "../components/ui/Button";
 
 // Utils and Services
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
-import { app, analytics } from '~/lib/firebase';
+import { app, analytics } from '../lib/firebase';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -38,6 +41,14 @@ interface FarcasterUser {
   verifiedAddresses?: string[];
 }
 
+interface QuoteHistoryItem {
+  text: string;
+  style: string;
+  gifUrl: string | null;
+  timestamp: Date;
+  bgColor: string;
+}
+
 type AnalyticsParams = {
   [key: string]: string | number | boolean | undefined;
 };
@@ -48,9 +59,28 @@ const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292'
 // 3. Helper Functions
 const getRandomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)];
 
+// First, add a timestamp formatter helper function at the top
+const formatTimestamp = (date: Date) => {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  
+  // If less than 24 hours, show relative time
+  if (diff < 24 * 60 * 60 * 1000) {
+    const hours = Math.floor(diff / (60 * 60 * 1000));
+    if (hours < 1) {
+      const minutes = Math.floor(diff / (60 * 1000));
+      return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    }
+    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  }
+  
+  // Otherwise show date
+  return date.toLocaleDateString();
+};
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
-  // State declarations
+  // Move state declarations to the top of the component
   const [quote, setQuote] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,6 +90,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [context, setContext] = useState<FrameContext>();
   const [isCasting, setIsCasting] = useState(false);
   const [sessionStartTime] = useState(Date.now());
+  const [quoteHistory, setQuoteHistory] = useState<QuoteHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   // Frame-specific state
   const [added, setAdded] = useState(false);
@@ -80,6 +113,8 @@ export default function Demo({ title = "Fun Quotes" }) {
   const initializeFrameSDK = useCallback(async () => {
     try {
       const context = await sdk.context;
+      console.log('Frame SDK Context:', context);
+      
       if (!context) {
         console.log('No context available');
         return;
@@ -103,9 +138,14 @@ export default function Demo({ title = "Fun Quotes" }) {
 
       sdk.actions.ready({});
     } catch (error) {
-      console.error('Error loading Frame SDK context:', error);
+      console.error('Error in initializeFrameSDK:', error);
     }
   }, []);
+
+  // Add useEffect to call initializeFrameSDK
+  useEffect(() => {
+    initializeFrameSDK();
+  }, [initializeFrameSDK]);
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = async () => {
@@ -113,17 +153,26 @@ export default function Demo({ title = "Fun Quotes" }) {
     setIsLoading(true);
     
     try {
-      // Reset states and generate quote
       setGifUrl(null);
       const quoteResponse = await generateQuote(userPrompt);
       
       if (quoteResponse) {
-        setQuote(quoteResponse.text.slice(0, MAX_CHARS));
-        setBgColor(getRandomColor());
+        const newQuote = quoteResponse.text.slice(0, MAX_CHARS);
+        const newColor = getRandomColor();
+        setQuote(newQuote);
+        setBgColor(newColor);
         
-        // Get matching GIF
         const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
         setGifUrl(gifUrl);
+        
+        // Add to history
+        setQuoteHistory(prev => [{
+          text: newQuote,
+          style: quoteResponse.style,
+          gifUrl,
+          timestamp: new Date(),
+          bgColor: newColor
+        }, ...prev.slice(0, 9)]); // Keep last 10 quotes
         
         logAnalyticsEvent('quote_generated_success', {
           prompt: userPrompt || 'empty_prompt',
@@ -149,6 +198,22 @@ export default function Demo({ title = "Fun Quotes" }) {
       initializeFrameSDK();
     }
   }, [isSDKLoaded, initializeFrameSDK]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showHistory) {
+        setShowHistory(false);
+      }
+    };
+
+    if (showHistory) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showHistory]);
 
   // Additional Functions
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -189,6 +254,22 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
+  const handleReuseQuote = (item: QuoteHistoryItem) => {
+    setQuote(item.text);
+    setBgColor(item.bgColor);
+    setGifUrl(item.gifUrl);
+    setShowHistory(false);
+  };
+
+  // Add clear function
+  const handleClearHistory = () => {
+    setIsClearing(true);
+    setTimeout(() => {
+      setQuoteHistory([]);
+      setIsClearing(false);
+    }, 500);
+  };
+
   // 9. Render Loading State
   if (!isSDKLoaded) {
     return <div>Loading...</div>;
@@ -196,11 +277,12 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // 10. Main Render
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen">
       {/* Fixed Navigation */}
-      <nav className="fixed top-0 left-0 w-full bg-transparent z-10">
+      <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-center items-center">
+          <div className="flex justify-between items-center">
+            {/* Left side - Logo */}
             <div className="flex-shrink-0">
               <Image
                 src="/logo.png"
@@ -209,6 +291,56 @@ export default function Demo({ title = "Fun Quotes" }) {
                 height={60}
                 className="object-contain"
               />
+            </div>
+
+            {/* Right side - Profile Image with Dropdown */}
+            <div className="flex-shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="cursor-pointer transition-transform hover:scale-105">
+                    <div className="relative w-[45px] h-[45px] rounded-full border-2 border-white shadow-lg overflow-hidden">
+                      <Image
+                        src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+                        alt={context?.user?.displayName || "Profile"}
+                        width={45}
+                        height={45}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                        onError={(e) => {
+                          console.error('Failed to load profile image:', context?.user?.pfpUrl);
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/Profile_Image.jpg";
+                        }}
+                      />
+                    </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {context?.user && (
+                    <div className="px-2 py-1.5 text-sm">
+                      <div className="font-medium">{context.user.displayName}</div>
+                      <div className="text-xs text-muted-foreground">@{context.user.username}</div>
+                    </div>
+                  )}
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 opacity-50 cursor-not-allowed"
+                    disabled
+                  >
+                    <Heart className="w-4 h-4 text-gray-400" />
+                    <div className="flex flex-col">
+                      <span className="text-gray-400">Favorites</span>
+                      <span className="text-[10px] text-gray-400">Coming soon</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowHistory(true)}
+                  >
+                    <History className="w-4 h-4" />
+                    <span>History</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -362,6 +494,121 @@ export default function Demo({ title = "Fun Quotes" }) {
           </CardFooter>
         </Card>
       </main>
+
+      {/* History Modal */}
+      {showHistory && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowHistory(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Quote History
+              </h2>
+              <div className="flex items-center gap-1">
+                {quoteHistory.length > 0 && (
+                  <Button
+                    onClick={handleClearHistory}
+                    disabled={isClearing}
+                    className="text-purple-600 hover:text-red-500 transition-colors text-xs min-w-[32px] h-5 px-1 flex items-center justify-center"
+                  >
+                    {isClearing ? (
+                      <motion.span
+                        animate={{ opacity: [1, 0.5, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-xs text-purple-600"
+                      >
+                        •••
+                      </motion.span>
+                    ) : (
+                      <span className="text-purple-600">
+                        Clear
+                      </span>
+                    )}
+                  </Button>
+                )}
+                <Button
+                  className="hover:bg-purple-100 rounded-full h-5 w-5 p-0 flex items-center justify-center"
+                  onClick={() => setShowHistory(false)}
+                >
+                  <X className="h-3 w-3 text-purple-600" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
+              {quoteHistory.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center text-gray-500 py-12"
+                >
+                  <div className="mb-4">✨</div>
+                  <p className="font-medium">No quotes generated yet</p>
+                  <p className="text-sm mt-2 text-gray-400">
+                    Your generated quotes will appear here
+                  </p>
+                </motion.div>
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  {quoteHistory.map((item, index) => (
+                    <motion.div
+                      key={item.timestamp.toString()}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
+                      className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
+                      onClick={() => handleReuseQuote(item)}
+                    >
+                      <div 
+                        className="p-4 cursor-pointer"
+                        style={{ backgroundColor: item.bgColor }}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="text-white font-medium flex-1">{item.text}</p>
+                          <span className="text-xs text-white/70 ml-2">
+                            {formatTimestamp(item.timestamp)}
+                          </span>
+                        </div>
+                        
+                        {item.gifUrl && (
+                          <div className="relative h-32 mt-3 rounded-md overflow-hidden">
+                            <Image
+                              src={item.gifUrl}
+                              alt="Quote GIF"
+                              fill
+                              className="object-cover transition-transform group-hover:scale-105"
+                              unoptimized
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="mt-3 flex items-center gap-2 text-white/80">
+                          <span className="text-xs">Click to reuse</span>
+                          <motion.div
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            →
+                          </motion.div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
