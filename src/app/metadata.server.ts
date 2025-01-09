@@ -1,8 +1,6 @@
 import { Metadata } from "next";
-import App from "./app";
 
 const appUrl = process.env.NEXT_PUBLIC_URL;
-
 
 const frame = {
   version: "next",
@@ -18,8 +16,6 @@ const frame = {
     },
   },
 };
-
-export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -37,8 +33,4 @@ export async function generateMetadata(): Promise<Metadata> {
       "fc:frame": JSON.stringify(frame),
     },
   };
-}
-
-export default function Home() {
-  return (<App />);
-}
+} 

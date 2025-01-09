@@ -8,6 +8,32 @@ import sdk, {
   FrameNotificationDetails,
   type FrameContext,
 } from "@farcaster/frame-sdk";
+
+interface FarcasterUser {
+  fid: number;
+  username: string;
+  display_name?: string;
+  pfp_url?: string;
+  follower_count: number;
+  following_count: number;
+  profile?: {
+    bio?: {
+      text?: string;
+    } | string;
+  };
+  verifiedAddresses?: string[];
+}
+
+interface _UserDetails {
+  fid: number;
+  username: string;
+  display_name?: string;
+  pfp_url?: string;
+  follower_count: number;
+  following_count: number;
+  verified_addresses: string[];
+}
+
 import {
   useAccount,
   useSendTransaction,
@@ -207,14 +233,13 @@ export default function Demo(
       } catch (error) {
         console.error('Error loading Frame SDK context:', error);
       }
+      setContext(await sdk.context);
+      sdk.actions.ready();
     };
 
     if (sdk && !isSDKLoaded) {
       setIsSDKLoaded(true);
       load();
-      return () => {
-        sdk.removeAllListeners();
-      };
     }
   }, [isSDKLoaded]);
 

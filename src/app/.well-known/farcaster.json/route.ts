@@ -11,14 +11,14 @@ export async function GET() {
     },
     frame: {
       version: "1",
-      name: "Quote Generator",
-      homeUrl: "https://qg-frames.vercel.app/",
-      iconUrl: `https://qg-frames.vercel.app/icon.png`,
-      imageUrl: `https://qg-frames.vercel.app/image.png`,
-      buttonTitle: "Launch Frame",
+      name: "FunQuotes",
+      homeUrl: "https://qg-frames.vercel.app",
+      iconUrl: "https://qg-frames.vercel.app/logo.png",
+      imageUrl: "https://qg-frames.vercel.app/opengraph-image",
+      buttonTitle: "Create FunQuotes",
       splashImageUrl: "https://qg-frames.vercel.app/splash.png",
-      splashBackgroundColor: "#f7f7f7",
-      webhookUrl: "https://qg-frames.vercel.app/api/webhook",
+      splashBackgroundColor: "#F9C001",
+      postUrl: "https://qg-frames.vercel.app/api/frame"
     },
   };
 
