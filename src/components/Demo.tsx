@@ -196,110 +196,153 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // 10. Main Render
   return (
-    <div className="mx-auto">
-      <div className="min-h-screen flex flex-col">
-        <div className="min-h-screen w-full grid place-items-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-3">
-          {/* Navigation */}
-          <nav className="top-0 left-0 w-full bg-transparent">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-center items-center">
-                <div className="flex-shrink-0">
-                  <Image
-                    src="/logo.png"
-                    alt="FunQuoteLogo"
-                    width={60}
-                    height={60}
-                    className="object-contain"
-                  />
-                </div>
-              </div>
+    <div className="min-h-screen">
+      {/* Fixed Navigation */}
+      <nav className="fixed top-0 left-0 w-full bg-transparent z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-center items-center">
+            <div className="flex-shrink-0">
+              <Image
+                src="/logo.png"
+                alt="FunQuoteLogo"
+                width={60}
+                height={60}
+                className="object-contain"
+              />
             </div>
-          </nav>
+          </div>
+        </div>
+      </nav>
 
-          {/* Main Card */}
-          <Card className="w-full max-w-md mx-4 overflow-hidden shadow-2xl">
-            <CardHeader className="bg-white">
-              <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-                Fun Quote Generator
-              </CardTitle>
-            </CardHeader>
+      {/* Main Content - Centered */}
+      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4">
+        {/* Card Component */}
+        <Card className="w-full max-w-sm overflow-hidden shadow-2xl">
+          <CardHeader className="bg-white">
+            <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+              Fun Quote Generator
+            </CardTitle>
+          </CardHeader>
 
-            <CardContent className="p-6">
-              {/* GIF Display */}
-              <AnimatePresence mode="wait">
-                {gifUrl && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
-                    onClick={handleRegenerateGif}
-                  >
-                    <div className="relative w-full h-[200px]">
-                      <Image
-                        src={gifUrl}
-                        alt="Quote-related GIF"
-                        fill
-                        unoptimized
-                        sizes="(max-width: 600px) 100vw, 50vw"
-                        className={`object-cover rounded-lg transition-opacity duration-200 ${
-                          isLoading ? 'opacity-50' : 'opacity-100'
-                        }`}
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          Click to regenerate GIF
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Quote Display */}
-              <AnimatePresence mode="wait">
-                <motion.div 
-                  key={quote}
-                  initial={{ opacity: 0, y: 50 }}
+          <CardContent className="p-6">
+            {/* GIF Display */}
+            <AnimatePresence mode="wait">
+              {gifUrl && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -50 }}
-                  transition={{ duration: 0.5 }}
-                  className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center"
-                  style={{ backgroundColor: bgColor }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                  onClick={handleRegenerateGif}
                 >
-                  <p className="text-center text-white text-lg font-medium">
-                    {quote || "Click the magic button to generate an inspiring quote!"}
-                  </p>
+                  <div className="relative w-full h-[200px]">
+                    <Image
+                      src={gifUrl}
+                      alt="Quote-related GIF"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 600px) 100vw, 50vw"
+                      className={`object-cover rounded-lg transition-opacity duration-200 ${
+                        isLoading ? 'opacity-50' : 'opacity-100'
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                      <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        Click to regenerate GIF
+                      </span>
+                    </div>
+                  </div>
                 </motion.div>
-              </AnimatePresence>
+              )}
+            </AnimatePresence>
 
-              {/* Input Field */}
-              <div className="mb-6">
-                <Input
-                  type="text"
-                  placeholder="Enter a topic/word for your quote"
-                  value={userPrompt}
-                  onChange={(e) => setUserPrompt(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full text-lg"
-                />
-              </div>
-            </CardContent>
+            {/* Quote Display */}
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={quote}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center"
+                style={{ backgroundColor: bgColor }}
+              >
+                <p className="text-center text-white text-lg font-medium">
+                  {quote || "Click the magic button to generate an inspiring quote!"}
+                </p>
+              </motion.div>
+            </AnimatePresence>
 
-            {/* Action Buttons */}
-            <CardFooter className="flex flex-col gap-4">
+            {/* Input Field */}
+            <div className="mb-6">
+              <Input
+                type="text"
+                placeholder="Enter a topic/word for your quote"
+                value={userPrompt}
+                onChange={(e) => setUserPrompt(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full text-lg"
+              />
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-4">
+            <motion.div className="w-full"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                onClick={handleGenerateQuote} 
+                disabled={isLoading}
+                className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <span className="flex items-center">
+                    Generating
+                    <motion.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="ml-2"
+                    >
+                      ...
+                    </motion.span>
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    Generate Magic Quote <Sparkles className="ml-2" size={20} />
+                  </span>
+                )}
+              </Button>
+            </motion.div>
+
+            {/* Cast Button */}
+            {quote && (
               <motion.div className="w-full"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Button 
-                  onClick={handleGenerateQuote} 
-                  disabled={isLoading}
+                  onClick={() => {
+                    setIsCasting(true);
+                    try {
+                      const shareText = `"${quote}" - Created by @kite /thepod`;
+                      const shareUrl = 'https://qg-frames.vercel.app';
+                      const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                      
+                      logAnalyticsEvent('cast_created', {
+                        quote: quote
+                      });
+                      
+                      sdk.actions.openUrl(url);
+                    } finally {
+                      setIsCasting(false);
+                    }
+                  }}
                   className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
                 >
-                  {isLoading ? (
+                  {isCasting ? (
                     <span className="flex items-center">
-                      Generating
+                      Casting
                       <motion.span
                         animate={{ opacity: [0, 1, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
@@ -310,60 +353,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                     </span>
                   ) : (
                     <span className="flex items-center">
-                      Generate Magic Quote <Sparkles className="ml-2" size={20} />
+                      Cast Away <Share2 className="ml-2" size={20} />
                     </span>
                   )}
                 </Button>
               </motion.div>
-
-              {/* Cast Button */}
-              {quote && (
-                <motion.div className="w-full"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button 
-                    onClick={() => {
-                      setIsCasting(true);
-                      try {
-                        const shareText = `"${quote}" - Created by @kite /thepod`;
-                        const shareUrl = 'https://qg-frames.vercel.app';
-                        const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
-                        
-                        logAnalyticsEvent('cast_created', {
-                          quote: quote
-                        });
-                        
-                        sdk.actions.openUrl(url);
-                      } finally {
-                        setIsCasting(false);
-                      }
-                    }}
-                    className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-                  >
-                    {isCasting ? (
-                      <span className="flex items-center">
-                        Casting
-                        <motion.span
-                          animate={{ opacity: [0, 1, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                          className="ml-2"
-                        >
-                          ...
-                        </motion.span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center">
-                        Cast Away <Share2 className="ml-2" size={20} />
-                      </span>
-                    )}
-                  </Button>
-                </motion.div>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
+            )}
+          </CardFooter>
+        </Card>
+      </main>
     </div>
   );
 }
