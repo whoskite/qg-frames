@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.11",
-    "@farcaster/auth-kit": "^0.6.0",
-    "@farcaster/connect-kit": "^0.0.31",
     "@farcaster/frame-core": "^0.0.19",
     "@farcaster/frame-node": "^0.0.7",
     "@farcaster/frame-sdk": "^0.0.20",
