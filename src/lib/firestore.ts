@@ -1,5 +1,5 @@
 import { getFirestore, type Firestore } from 'firebase/firestore';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 
 // Helper function to ensure we have a valid Firestore instance
@@ -44,8 +44,8 @@ export async function getUserQuoteHistory(userId: number) {
 export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
   try {
     const db = getDb();
-    const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
-    await addDoc(userFavoritesRef, {
+    const quoteRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
+    await setDoc(quoteRef, {
       ...quote,
       timestamp: new Date(),
     });

@@ -381,9 +381,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   const toggleFavorite = async (quote: QuoteHistoryItem) => {
     if (!context?.user?.fid) return;
 
-    const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
-    
     try {
+      const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
+      
       if (isAlreadyFavorited) {
         // Remove from favorites
         const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
@@ -391,7 +391,6 @@ export default function Demo({ title = "Fun Quotes" }) {
           await removeFavoriteQuote(context.user.fid, favoriteToRemove.id);
           setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
           
-          // Log analytics event
           logAnalyticsEvent('quote_unfavorited', {
             quote_text: quote.text.slice(0, 30) + '...'
           });
@@ -400,19 +399,22 @@ export default function Demo({ title = "Fun Quotes" }) {
         // Add to favorites
         const newFavorite: FavoriteQuote = {
           ...quote,
-          id: generateRandomString(10)
+          id: generateRandomString(10),
+          timestamp: new Date()
         };
+
+        // Save to Firestore first
         await saveFavoriteQuote(context.user.fid, newFavorite);
+        
+        // Then update local state
         setFavorites(prev => [newFavorite, ...prev]);
         
-        // Log analytics event
         logAnalyticsEvent('quote_favorited', {
           quote_text: quote.text.slice(0, 30) + '...'
         });
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      // You might want to show a toast/notification here
     }
   };
 
@@ -421,7 +423,9 @@ export default function Demo({ title = "Fun Quotes" }) {
     const loadFavorites = async () => {
       if (context?.user?.fid && isFirebaseInitialized) {
         try {
+          console.log('Loading favorites for user:', context.user.fid);
           const userFavorites = await getUserFavorites(context.user.fid);
+          console.log('Loaded favorites:', userFavorites);
           setFavorites(userFavorites);
         } catch (error) {
           console.error('Error loading favorites:', error);
