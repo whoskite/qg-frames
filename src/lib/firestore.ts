@@ -8,37 +8,54 @@ import {
   doc,
   setDoc,
   orderBy,
-  Timestamp
+  Timestamp,
+  QueryDocumentSnapshot,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 
-interface FirestoreData {
-  timestamp?: Timestamp;
-  [key: string]: any;
+interface FirestoreQuote extends Omit<QuoteHistoryItem, 'timestamp'> {
+  timestamp: Timestamp;
+  fid: number;
+  createdAt: Timestamp;
 }
 
-// Helper function to convert Firestore timestamp to Date
-const convertTimestamps = (data: FirestoreData) => {
-  if (data?.timestamp) {
-    return {
-      ...data,
-      timestamp: data.timestamp.toDate()
-    };
-  }
-  return data;
+// Helper function to convert Firestore data to QuoteHistoryItem
+const convertToQuoteHistoryItem = (doc: QueryDocumentSnapshot<FirestoreQuote>): QuoteHistoryItem => {
+  const data = doc.data();
+  return {
+    text: data.text,
+    style: data.style,
+    gifUrl: data.gifUrl,
+    timestamp: data.timestamp.toDate(),
+    bgColor: data.bgColor
+  };
 };
 
-export async function saveQuoteToHistory(fid: number, quote: QuoteHistoryItem) {
+// Helper function to convert Firestore data to FavoriteQuote
+const convertToFavoriteQuote = (doc: QueryDocumentSnapshot<FirestoreQuote>): FavoriteQuote => {
+  return {
+    ...convertToQuoteHistoryItem(doc),
+    id: doc.id
+  };
+};
+
+export async function saveQuoteToHistory(fid: number, quote: QuoteHistoryItem): Promise<string | null> {
   if (!db) return null;
   
   try {
     const quotesRef = collection(db, 'quotes');
-    const docRef = await addDoc(quotesRef, {
-      ...quote,
+    const firestoreQuote = {
+      text: quote.text,
+      style: quote.style,
+      gifUrl: quote.gifUrl,
+      bgColor: quote.bgColor,
+      timestamp: Timestamp.fromDate(quote.timestamp),
       fid,
-      createdAt: new Date()
-    });
+      createdAt: serverTimestamp()
+    };
+    const docRef = await addDoc(quotesRef, firestoreQuote);
     return docRef.id;
   } catch (error) {
     console.error('Error saving quote:', error);
@@ -46,7 +63,7 @@ export async function saveQuoteToHistory(fid: number, quote: QuoteHistoryItem) {
   }
 }
 
-export async function getUserQuoteHistory(fid: number) {
+export async function getUserQuoteHistory(fid: number): Promise<QuoteHistoryItem[]> {
   if (!db) return [];
   
   try {
@@ -58,26 +75,28 @@ export async function getUserQuoteHistory(fid: number) {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...convertTimestamps(doc.data())
-    }));
+    return querySnapshot.docs.map(doc => convertToQuoteHistoryItem(doc as QueryDocumentSnapshot<FirestoreQuote>));
   } catch (error) {
     console.error('Error getting quote history:', error);
     return [];
   }
 }
 
-export async function saveFavoriteQuote(fid: number, quote: FavoriteQuote) {
+export async function saveFavoriteQuote(fid: number, quote: FavoriteQuote): Promise<string | null> {
   if (!db) return null;
   
   try {
     const favoritesRef = collection(db, 'favorites');
-    const docRef = await setDoc(doc(favoritesRef, quote.id), {
-      ...quote,
+    const firestoreQuote = {
+      text: quote.text,
+      style: quote.style,
+      gifUrl: quote.gifUrl,
+      bgColor: quote.bgColor,
+      timestamp: Timestamp.fromDate(quote.timestamp),
       fid,
-      createdAt: new Date()
-    });
+      createdAt: serverTimestamp()
+    };
+    await setDoc(doc(favoritesRef, quote.id), firestoreQuote);
     return quote.id;
   } catch (error) {
     console.error('Error saving favorite:', error);
@@ -85,7 +104,7 @@ export async function saveFavoriteQuote(fid: number, quote: FavoriteQuote) {
   }
 }
 
-export async function getUserFavorites(fid: number) {
+export async function getUserFavorites(fid: number): Promise<FavoriteQuote[]> {
   if (!db) return [];
   
   try {
@@ -97,10 +116,7 @@ export async function getUserFavorites(fid: number) {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...convertTimestamps(doc.data())
-    }));
+    return querySnapshot.docs.map(doc => convertToFavoriteQuote(doc as QueryDocumentSnapshot<FirestoreQuote>));
   } catch (error) {
     console.error('Error getting favorites:', error);
     return [];
