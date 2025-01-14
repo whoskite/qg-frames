@@ -42,7 +42,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function Home() {
   return (
     <main>
-      <SessionTest />
       <App />
     </main>
   );
