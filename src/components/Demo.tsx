@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
 import { logEvent, setUserProperties } from "firebase/analytics";
-import { useSession, signIn } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,10 +84,21 @@ const formatTimestamp = (date: Date) => {
   return date.toLocaleDateString();
 };
 
+// Add these helper functions at the top with other helper functions
+const getStorageKey = (fid: number) => `funquotes_history_${fid}`;
+const getFavoritesKey = (fid: number) => `funquotes_favorites_${fid}`;
+
+// Add these interfaces at the top with other interfaces
+interface StoredQuoteHistoryItem extends Omit<QuoteHistoryItem, 'timestamp'> {
+  timestamp: string;
+}
+
+interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
+  timestamp: string;
+}
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
-  const { data: session, status } = useSession();
-  const [user, setUser] = useState<FarcasterUser | null>(null);
   const [quote, setQuote] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -122,50 +132,52 @@ export default function Demo({ title = "Fun Quotes" }) {
   }, []);
 
   // 6. Frame SDK Functions
-  const initializeFrameSDK = useCallback(async () => {
-    try {
-      const context = await sdk.context;
-      console.log('Frame SDK Context:', context);
-      
-      if (!context) {
-        console.log('No context available');
-        return;
-      }
-      
-      setContext(context);
-      if (context.client) {
-        setAdded(context.client.added);
-      }
-
-      // Setup Frame event listeners
-      sdk.on("frameAdded", ({ notificationDetails }) => {
-        setLastEvent(`frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`);
-        setAdded(true);
-        if (notificationDetails) {
-          setNotificationDetails(notificationDetails);
-        }
-      });
-
-      sdk.on("frameAddRejected", ({ reason }) => {
-        setLastEvent(`frameAddRejected, reason ${reason}`);
-      });
-
-      sdk.on("frameRemoved", () => {
-        setLastEvent("frameRemoved");
-        setAdded(false);
-        setNotificationDetails(null);
-      });
-
-      sdk.actions.ready({});
-    } catch (error) {
-      console.error('Error in initializeFrameSDK:', error);
-    }
-  }, []);
-
-  // Add useEffect to call initializeFrameSDK
   useEffect(() => {
-    initializeFrameSDK();
-  }, [initializeFrameSDK]);
+    const initializeFrameSDK = async () => {
+      try {
+        const frameContext = await sdk.context;
+        console.log('Frame SDK Context:', frameContext);
+        
+        if (!frameContext) {
+          console.log('No context available');
+          return;
+        }
+        
+        setContext(frameContext);
+        if (frameContext.client) {
+          setAdded(frameContext.client.added);
+        }
+
+        // Setup Frame event listeners
+        sdk.on("frameAdded", ({ notificationDetails }) => {
+          setLastEvent(`frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`);
+          setAdded(true);
+          if (notificationDetails) {
+            setNotificationDetails(notificationDetails);
+          }
+        });
+
+        sdk.on("frameAddRejected", ({ reason }) => {
+          setLastEvent(`frameAddRejected, reason ${reason}`);
+        });
+
+        sdk.on("frameRemoved", () => {
+          setLastEvent("frameRemoved");
+          setAdded(false);
+          setNotificationDetails(null);
+        });
+
+        sdk.actions.ready({});
+      } catch (error) {
+        console.error('Error in initializeFrameSDK:', error);
+      }
+    };
+
+    if (!isSDKLoaded) {
+      setIsSDKLoaded(true);
+      initializeFrameSDK();
+    }
+  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent]);
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = async () => {
@@ -215,9 +227,8 @@ export default function Demo({ title = "Fun Quotes" }) {
   useEffect(() => {
     if (sdk && !isSDKLoaded) {
       setIsSDKLoaded(true);
-      initializeFrameSDK();
     }
-  }, [isSDKLoaded, initializeFrameSDK]);
+  }, [isSDKLoaded]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -286,6 +297,9 @@ export default function Demo({ title = "Fun Quotes" }) {
     setIsClearing(true);
     setTimeout(() => {
       setQuoteHistory([]);
+      if (context?.user?.fid) {
+        localStorage.removeItem(getStorageKey(context.user.fid));
+      }
       setIsClearing(false);
     }, 500);
   };
@@ -304,47 +318,61 @@ export default function Demo({ title = "Fun Quotes" }) {
     testConnection();
   }, []);
 
+  // In the Demo component, add this effect to load saved history
   useEffect(() => {
-    const initFarcaster = async () => {
-      if (status === "authenticated" && session?.user?.fid) {
-        try {
-          const response = await fetch(`https://api.neynar.com/v2/farcaster/user/${session.user.fid}`, {
-            headers: {
-              'api_key': process.env.NEXT_PUBLIC_NEYNAR_API_KEY || ''
-            }
-          });
-          const data = await response.json();
-          if (data.user) {
-            setUser(data.user);
+    const loadSavedData = () => {
+      if (context?.user?.fid) {
+        // Load history
+        const savedHistory = localStorage.getItem(getStorageKey(context.user.fid));
+        if (savedHistory) {
+          try {
+            const parsed = JSON.parse(savedHistory) as StoredQuoteHistoryItem[];
+            // Convert string timestamps back to Date objects
+            const historyWithDates = parsed.map((item) => ({
+              ...item,
+              timestamp: new Date(item.timestamp)
+            }));
+            setQuoteHistory(historyWithDates);
+          } catch (error) {
+            console.error('Error loading history:', error);
           }
-        } catch (error) {
-          console.error('Error fetching Farcaster user:', error);
+        }
+
+        // Load favorites
+        const savedFavorites = localStorage.getItem(getFavoritesKey(context.user.fid));
+        if (savedFavorites) {
+          try {
+            const parsed = JSON.parse(savedFavorites) as StoredFavoriteQuote[];
+            // Convert string timestamps back to Date objects
+            const favoritesWithDates = parsed.map((item) => ({
+              ...item,
+              timestamp: new Date(item.timestamp)
+            }));
+            setFavorites(favoritesWithDates);
+          } catch (error) {
+            console.error('Error loading favorites:', error);
+          }
         }
       }
     };
 
-    initFarcaster();
-  }, [session, status]);
+    loadSavedData();
+  }, [context?.user?.fid]);
+
+  // Add effects to save data when it changes
+  useEffect(() => {
+    if (context?.user?.fid && quoteHistory.length > 0) {
+      localStorage.setItem(getStorageKey(context.user.fid), JSON.stringify(quoteHistory));
+    }
+  }, [quoteHistory, context?.user?.fid]);
+
+  useEffect(() => {
+    if (context?.user?.fid && favorites.length > 0) {
+      localStorage.setItem(getFavoritesKey(context.user.fid), JSON.stringify(favorites));
+    }
+  }, [favorites, context?.user?.fid]);
 
   // 10. Main Render
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
-
-  if (!session) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold mb-4">{title}</h1>
-        <Button
-          onClick={() => signIn("credentials")}
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-        >
-          Sign in with Farcaster
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="relative min-h-screen">
       {/* Fixed Navigation */}
