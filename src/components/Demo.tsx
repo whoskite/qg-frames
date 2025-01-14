@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
 import { logEvent, setUserProperties } from "firebase/analytics";
+import { useSession, signIn } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,7 +87,8 @@ const formatTimestamp = (date: Date) => {
 
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
-  // Move state declarations to the top of the component
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<FarcasterUser | null>(null);
   const [quote, setQuote] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -302,7 +304,47 @@ export default function Demo({ title = "Fun Quotes" }) {
     testConnection();
   }, []);
 
+  useEffect(() => {
+    const initFarcaster = async () => {
+      if (status === "authenticated" && session?.user?.fid) {
+        try {
+          const response = await fetch(`https://api.neynar.com/v2/farcaster/user/${session.user.fid}`, {
+            headers: {
+              'api_key': process.env.NEXT_PUBLIC_NEYNAR_API_KEY || ''
+            }
+          });
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+          }
+        } catch (error) {
+          console.error('Error fetching Farcaster user:', error);
+        }
+      }
+    };
+
+    initFarcaster();
+  }, [session, status]);
+
   // 10. Main Render
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold mb-4">{title}</h1>
+        <Button
+          onClick={() => signIn("credentials")}
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          Sign in with Farcaster
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen">
       {/* Fixed Navigation */}
