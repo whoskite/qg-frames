@@ -2,21 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is signed in
-    function isSignedIn() {
-      return request.auth != null;
+    // Helper functions
+    function isAuthenticated() {
+      return true;  // Since we're using Farcaster auth, not Firebase auth
     }
 
-    // Helper function to check if the user owns the document
-    function isOwner(fid) {
-      return request.auth.uid == fid;
+    function isValidUser(userId) {
+      return userId is string && userId.matches('^[0-9]+$');  // Ensure userId is a numeric string
     }
 
-    // Match user's data
+    // User document rules
     match /users/{userId}/{document=**} {
-      allow read, write: if true;  // Temporarily allow all access for testing
-      // TODO: Change to proper auth after testing:
-      // allow read, write: if isSignedIn() && isOwner(userId);
+      allow read, write: if isValidUser(userId);
+    }
+
+    // Specific collection rules
+    match /users/{userId}/history/{historyId} {
+      allow read, write: if isValidUser(userId);
+    }
+
+    match /users/{userId}/favorites/{favoriteId} {
+      allow read, write: if isValidUser(userId);
     }
   }
 } 

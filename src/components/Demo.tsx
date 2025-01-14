@@ -523,7 +523,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       </nav>
 
       {/* Main Content - Centered */}
-      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4">
+      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4 pt-24">
         {/* Card Component */}
         <Card className="w-full max-w-sm overflow-hidden shadow-2xl">
           <CardHeader className="bg-white">
