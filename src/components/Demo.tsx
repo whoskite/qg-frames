@@ -379,15 +379,21 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Modify the favorite toggle function
   const toggleFavorite = async (quote: QuoteHistoryItem) => {
-    if (!context?.user?.fid) return;
+    if (!context?.user?.fid) {
+      console.log('No user FID found');
+      return;
+    }
 
     try {
+      console.log('Starting toggleFavorite for quote:', quote);
       const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
+      console.log('Is already favorited:', isAlreadyFavorited);
       
       if (isAlreadyFavorited) {
         // Remove from favorites
         const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
         if (favoriteToRemove) {
+          console.log('Removing favorite with ID:', favoriteToRemove.id);
           await removeFavoriteQuote(context.user.fid, favoriteToRemove.id);
           setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
           
@@ -402,9 +408,11 @@ export default function Demo({ title = "Fun Quotes" }) {
           id: generateRandomString(10),
           timestamp: new Date()
         };
-
+        
+        console.log('Adding new favorite:', newFavorite);
         // Save to Firestore first
         await saveFavoriteQuote(context.user.fid, newFavorite);
+        console.log('Successfully saved to Firestore');
         
         // Then update local state
         setFavorites(prev => [newFavorite, ...prev]);
@@ -414,7 +422,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         });
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      console.error('Error in toggleFavorite:', error);
     }
   };
 

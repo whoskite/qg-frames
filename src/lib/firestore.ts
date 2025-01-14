@@ -43,12 +43,21 @@ export async function getUserQuoteHistory(userId: number) {
 // Save favorite quote
 export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
   try {
+    console.log('Saving favorite quote:', { userId, quote });
     const db = getDb();
-    const quoteRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
-    await setDoc(quoteRef, {
+    const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
+    
+    // Convert the Date object to a Firestore timestamp
+    const quoteData = {
       ...quote,
       timestamp: new Date(),
-    });
+    };
+    
+    console.log('Saving to path:', `users/${userId}/favorites/${quote.id}`);
+    await setDoc(userFavoritesRef, quoteData);
+    console.log('Successfully saved favorite quote');
+    
+    return quote.id;
   } catch (error) {
     console.error('Error saving favorite:', error);
     throw error;
@@ -58,14 +67,19 @@ export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
 // Get user's favorites
 export async function getUserFavorites(userId: number) {
   try {
+    console.log('Getting favorites for user:', userId);
     const db = getDb();
     const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
     const querySnapshot = await getDocs(userFavoritesRef);
-    return querySnapshot.docs.map(doc => ({
+    
+    const favorites = querySnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id,
       timestamp: doc.data().timestamp.toDate(),
     })) as FavoriteQuote[];
+    
+    console.log('Retrieved favorites:', favorites);
+    return favorites;
   } catch (error) {
     console.error('Error getting favorites:', error);
     throw error;
