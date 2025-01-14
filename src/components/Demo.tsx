@@ -385,7 +385,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
 
     try {
-      console.log('Starting toggleFavorite for quote:', quote);
+      console.log('Starting toggleFavorite with FID:', context.user.fid);
       const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
       console.log('Is already favorited:', isAlreadyFavorited);
       
@@ -393,13 +393,9 @@ export default function Demo({ title = "Fun Quotes" }) {
         // Remove from favorites
         const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
         if (favoriteToRemove) {
-          console.log('Removing favorite with ID:', favoriteToRemove.id);
+          console.log('Removing favorite:', favoriteToRemove);
           await removeFavoriteQuote(context.user.fid, favoriteToRemove.id);
           setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
-          
-          logAnalyticsEvent('quote_unfavorited', {
-            quote_text: quote.text.slice(0, 30) + '...'
-          });
         }
       } else {
         // Add to favorites
@@ -411,18 +407,22 @@ export default function Demo({ title = "Fun Quotes" }) {
         
         console.log('Adding new favorite:', newFavorite);
         // Save to Firestore first
-        await saveFavoriteQuote(context.user.fid, newFavorite);
-        console.log('Successfully saved to Firestore');
+        const savedId = await saveFavoriteQuote(context.user.fid, newFavorite);
+        console.log('Saved to Firestore with ID:', savedId);
         
-        // Then update local state
+        // Update local state after successful save
         setFavorites(prev => [newFavorite, ...prev]);
-        
-        logAnalyticsEvent('quote_favorited', {
-          quote_text: quote.text.slice(0, 30) + '...'
-        });
+        console.log('Updated local favorites state');
       }
     } catch (error) {
       console.error('Error in toggleFavorite:', error);
+      if (error instanceof Error) {
+        console.error('Full error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+      }
     }
   };
 

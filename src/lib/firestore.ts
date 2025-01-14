@@ -1,4 +1,4 @@
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFirestore, type Firestore, Timestamp } from 'firebase/firestore';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 
@@ -43,27 +43,35 @@ export async function getUserQuoteHistory(userId: number) {
 // Save favorite quote
 export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
   try {
-    console.log('Saving favorite quote:', { userId, quote });
+    console.log('Starting saveFavoriteQuote with:', { userId, quote });
     const db = getDb();
-    const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
     
-    // Ensure we're saving all required fields and proper timestamp
     const quoteData = {
       id: quote.id,
       text: quote.text,
       style: quote.style,
       gifUrl: quote.gifUrl,
       bgColor: quote.bgColor,
-      timestamp: quote.timestamp,
+      timestamp: Timestamp.fromDate(quote.timestamp)
     };
     
-    console.log('Saving to path:', `users/${userId}/favorites/${quote.id}`);
+    const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
+    console.log('About to save with data:', quoteData);
+    console.log('To path:', `users/${userId}/favorites/${quote.id}`);
+    
     await setDoc(userFavoritesRef, quoteData);
-    console.log('Successfully saved favorite quote');
+    console.log('Successfully saved favorite quote to Firestore');
     
     return quote.id;
   } catch (error) {
-    console.error('Error saving favorite:', error);
+    console.error('Error in saveFavoriteQuote:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     throw error;
   }
 }
@@ -71,27 +79,39 @@ export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
 // Get user's favorites
 export async function getUserFavorites(userId: number) {
   try {
-    console.log('Getting favorites for user:', userId);
+    console.log('Starting getUserFavorites for userId:', userId);
     const db = getDb();
     const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
+    
+    console.log('Fetching documents from:', `users/${userId}/favorites`);
     const querySnapshot = await getDocs(userFavoritesRef);
+    console.log('Number of documents found:', querySnapshot.size);
     
     const favorites = querySnapshot.docs.map(doc => {
       const data = doc.data();
+      console.log('Processing document:', data);
+      
       return {
         id: doc.id,
         text: data.text,
         style: data.style,
         gifUrl: data.gifUrl,
         bgColor: data.bgColor,
-        timestamp: data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp),
+        timestamp: data.timestamp?.toDate() || new Date(),
       } as FavoriteQuote;
     });
     
-    console.log('Retrieved favorites:', favorites);
+    console.log('Processed favorites:', favorites);
     return favorites;
   } catch (error) {
-    console.error('Error getting favorites:', error);
+    console.error('Error in getUserFavorites:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     throw error;
   }
 }
