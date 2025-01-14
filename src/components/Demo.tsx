@@ -130,6 +130,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [favorites, setFavorites] = useState<FavoriteQuote[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
 
+  // Add a new state for Firebase initialization
+  const [isFirebaseInitialized, setIsFirebaseInitialized] = useState(false);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -314,7 +317,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  // Replace the existing Firebase test useEffect with this:
+  // Update the Firebase initialization useEffect
   useEffect(() => {
     const initApp = async () => {
       try {
@@ -331,6 +334,8 @@ export default function Demo({ title = "Fun Quotes" }) {
         if (fbAnalytics) {
           logEvent(fbAnalytics, 'app_initialized');
         }
+
+        setIsFirebaseInitialized(true);
       } catch (error) {
         console.error('Error initializing app:', error);
       }
@@ -339,10 +344,10 @@ export default function Demo({ title = "Fun Quotes" }) {
     initApp();
   }, []);
 
-  // In the Demo component, add this effect to load saved history
+  // Update the load saved data effect to wait for Firebase initialization
   useEffect(() => {
     const loadSavedData = async () => {
-      if (context?.user?.fid) {
+      if (context?.user?.fid && isFirebaseInitialized) {
         try {
           // Load history
           const history = await getUserQuoteHistory(context.user.fid);
@@ -358,7 +363,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
 
     loadSavedData();
-  }, [context?.user?.fid]);
+  }, [context?.user?.fid, isFirebaseInitialized]);
 
   // Replace localStorage save effects with Firestore saves
   useEffect(() => {
