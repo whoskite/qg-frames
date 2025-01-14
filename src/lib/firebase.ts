@@ -1,9 +1,8 @@
-import { initializeApp, type FirebaseApp, getApps } from "firebase/app";
+import { initializeApp, type FirebaseApp } from "firebase/app";
 import { Analytics, getAnalytics, setAnalyticsCollectionEnabled, isSupported } from "firebase/analytics";
-import { type Firestore, initializeFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
-let app: FirebaseApp;
+let app: FirebaseApp | undefined;
 let analytics: Analytics | undefined;
 let db: Firestore | undefined;
 
@@ -17,24 +16,11 @@ const firebaseConfig = {
   measurementId: "G-ZSK0QT3J1Q"
 };
 
-function initializeFirebase() {
-  if (typeof window === 'undefined') return;
-
+// Only initialize in browser environment
+if (typeof window !== 'undefined') {
   try {
-    if (!getApps().length) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApps()[0];
-    }
-
-    // Initialize auth first
-    getAuth(app);
-    
-    // Initialize Firestore with memory cache enabled
-    db = initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-      cacheSizeBytes: 1048576 // 1MB cache size
-    });
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
     
     isSupported().then(supported => {
       if (supported) {
@@ -46,8 +32,5 @@ function initializeFirebase() {
     console.error('Error initializing Firebase:', error);
   }
 }
-
-// Initialize Firebase
-initializeFirebase();
 
 export { app, analytics, db }; 
