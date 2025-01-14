@@ -46,18 +46,23 @@ export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
     console.log('Starting saveFavoriteQuote with:', { userId, quote });
     const db = getDb();
     
+    // Ensure all required fields are present
+    if (!quote.id || !quote.text || !quote.timestamp) {
+      throw new Error('Missing required fields for favorite quote');
+    }
+    
     const quoteData = {
       id: quote.id,
       text: quote.text,
-      style: quote.style,
+      style: quote.style || 'default',
       gifUrl: quote.gifUrl,
       bgColor: quote.bgColor,
       timestamp: Timestamp.fromDate(quote.timestamp)
     };
     
     const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
-    console.log('About to save with data:', quoteData);
-    console.log('To path:', `users/${userId}/favorites/${quote.id}`);
+    console.log('About to save favorite with data:', quoteData);
+    console.log('To Firestore path:', `users/${userId}/favorites/${quote.id}`);
     
     await setDoc(userFavoritesRef, quoteData);
     console.log('Successfully saved favorite quote to Firestore');

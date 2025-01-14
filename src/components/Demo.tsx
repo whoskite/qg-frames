@@ -380,12 +380,12 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Modify the favorite toggle function
   const toggleFavorite = async (quote: QuoteHistoryItem) => {
     if (!context?.user?.fid) {
-      console.log('No user FID found');
+      console.log('No user FID found, cannot save favorite');
       return;
     }
 
     try {
-      console.log('Starting toggleFavorite with FID:', context.user.fid);
+      console.log('Starting toggleFavorite with quote:', quote);
       const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
       console.log('Is already favorited:', isAlreadyFavorited);
       
@@ -406,13 +406,18 @@ export default function Demo({ title = "Fun Quotes" }) {
         };
         
         console.log('Adding new favorite:', newFavorite);
-        // Save to Firestore first
-        const savedId = await saveFavoriteQuote(context.user.fid, newFavorite);
-        console.log('Saved to Firestore with ID:', savedId);
-        
-        // Update local state after successful save
-        setFavorites(prev => [newFavorite, ...prev]);
-        console.log('Updated local favorites state');
+        try {
+          // Save to Firestore first
+          await saveFavoriteQuote(context.user.fid, newFavorite);
+          console.log('Successfully saved to Firestore');
+          
+          // Update local state after successful save
+          setFavorites(prev => [newFavorite, ...prev]);
+          console.log('Updated local favorites state');
+        } catch (error) {
+          console.error('Error saving to Firestore:', error);
+          throw error; // Re-throw to be caught by outer catch block
+        }
       }
     } catch (error) {
       console.error('Error in toggleFavorite:', error);
@@ -576,31 +581,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                     animate={{ scale: 1 }}
                     className="absolute top-4 right-4"
                     onClick={() => {
-                      const newFavorite: FavoriteQuote = {
+                      const quoteItem: QuoteHistoryItem = {
                         text: quote,
                         style: 'default',
                         gifUrl,
                         timestamp: new Date(),
-                        bgColor,
-                        id: generateRandomString(10)
+                        bgColor
                       };
-                      
-                      // Check if quote is already in favorites
-                      const isAlreadyFavorited = favorites.some(fav => fav.text === quote);
-                      
-                      if (isAlreadyFavorited) {
-                        // Remove from favorites
-                        setFavorites(prev => prev.filter(fav => fav.text !== quote));
-                        logAnalyticsEvent('quote_unfavorited', {
-                          quote_text: quote.slice(0, 30) + '...'
-                        });
-                      } else {
-                        // Add to favorites
-                        setFavorites(prev => [newFavorite, ...prev]);
-                        logAnalyticsEvent('quote_favorited', {
-                          quote_text: quote.slice(0, 30) + '...'
-                        });
-                      }
+                      toggleFavorite(quoteItem);
                     }}
                   >
                     <Heart 
