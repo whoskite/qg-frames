@@ -6,31 +6,38 @@ let app: FirebaseApp | undefined;
 let analytics: Analytics | undefined;
 let db: Firestore | undefined;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAlEvmbGZF8w5MJvHTR5LwXEN4RY44bpYE",
-  authDomain: "funquotes-864f1.firebaseapp.com",
-  projectId: "funquotes-864f1",
-  storageBucket: "funquotes-864f1.appspot.com",
-  messagingSenderId: "653295041318",
-  appId: "1:653295041318:web:4e27882cddd96b7e305fe7",
-  measurementId: "G-ZSK0QT3J1Q"
-};
+async function initializeFirebase() {
+  if (typeof window === 'undefined') return null;
 
-// Only initialize in browser environment
-if (typeof window !== 'undefined') {
   try {
+    // Only initialize once
+    if (app) return { app, analytics, db };
+
+    const response = await fetch('/api/firebase-config');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Firebase config: ${response.statusText}`);
+    }
+
+    const firebaseConfig = await response.json();
+    if (!firebaseConfig.projectId) {
+      throw new Error('Firebase config is missing projectId');
+    }
+
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
-    
-    isSupported().then(supported => {
-      if (supported) {
-        analytics = getAnalytics(app);
+
+    if (await isSupported()) {
+      analytics = getAnalytics(app);
+      if (process.env.NODE_ENV === 'development') {
         setAnalyticsCollectionEnabled(analytics, true);
       }
-    }).catch(console.error);
+    }
+
+    return { app, analytics, db };
   } catch (error) {
     console.error('Error initializing Firebase:', error);
+    return null;
   }
 }
 
-export { app, analytics, db }; 
+export { initializeFirebase, app, analytics, db }; 

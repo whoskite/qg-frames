@@ -6,8 +6,8 @@ import { Share2, Sparkles, Heart, History, X } from 'lucide-react';
 import { useEffect, useCallback, useState } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import sdk, { type FrameContext, type FrameNotificationDetails } from "@farcaster/frame-sdk";
-import { logEvent } from "firebase/analytics";
+import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
+import { logEvent, setUserProperties } from "firebase/analytics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { generateRandomString } from "~/lib/utils";
-import { analytics } from '../lib/firebase';
-import { loadQuoteHistory, saveQuoteHistory, loadFavorites, saveFavorites, clearQuoteHistory } from '~/lib/firestore';
+import { testFirebaseConnection } from '../lib/firebase-test';
+import { app, analytics, db } from '../lib/firebase';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -55,8 +55,9 @@ interface FavoriteQuote extends QuoteHistoryItem {
   id: string;
 }
 
-// Add type for analytics params
-type AnalyticsParams = Record<string, string | number | boolean>;
+type AnalyticsParams = {
+  [key: string]: string | number | boolean | undefined;
+};
 
 const MAX_CHARS = 280;
 const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292', '#AEC6CF', '#836FFF', '#77DD77', '#FFB347'];
@@ -97,75 +98,86 @@ interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
 }
 
 // 4. Main Component
-export default function Demo() {
-  // State management
-  const [quote, setQuote] = useState<string>("");
-  const [userPrompt, setUserPrompt] = useState<string>("");
-  const [bgColor, setBgColor] = useState<string>("#ffffff");
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
+export default function Demo({ title = "Fun Quotes" }) {
+  const [quote, setQuote] = useState('');
+  const [userPrompt, setUserPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
+  const [bgColor, setBgColor] = useState(getRandomColor());
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+  const [context, setContext] = useState<FrameContext>();
+  const [isCasting, setIsCasting] = useState(false);
+  const [sessionStartTime] = useState(Date.now());
   const [quoteHistory, setQuoteHistory] = useState<QuoteHistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+
+  // Frame-specific state
+  const [added, setAdded] = useState(false);
+  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
+  const [lastEvent, setLastEvent] = useState("");
+  const [addFrameResult, setAddFrameResult] = useState("");
+  const [sendNotificationResult, setSendNotificationResult] = useState("");
+
+  // Add to your state declarations
   const [favorites, setFavorites] = useState<FavoriteQuote[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
-  
-  // Frame SDK state
-  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
-  const [frameContext, setFrameContext] = useState<FrameContext | null>(null);
-  const [added, setAdded] = useState(false);
-  const [lastEvent, setLastEvent] = useState<string>("");
-  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
 
-  // Analytics helper
-  const logAnalyticsEvent = useCallback((eventName: string, params?: AnalyticsParams) => {
+  // 5. Analytics Functions
+  const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
       logEvent(analytics, eventName, params);
+      console.log('Analytics Event:', { eventName, params });
     }
   }, []);
 
-  // Frame SDK initialization
+  // 6. Frame SDK Functions
   useEffect(() => {
     const initializeFrameSDK = async () => {
       try {
-        const context = await sdk.context;
-        if (context) {
-          setFrameContext(context);
-          if (context.client) {
-            setAdded(context.client.added);
-          }
-          
-          // Setup Frame event listeners
-          sdk.on("frameAdded", ({ notificationDetails }) => {
-            setLastEvent(`frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`);
-            setAdded(true);
-            if (notificationDetails) {
-              setNotificationDetails(notificationDetails);
-            }
-          });
-
-          sdk.on("frameAddRejected", ({ reason }) => {
-            setLastEvent(`frameAddRejected, reason ${reason}`);
-          });
-
-          sdk.on("frameRemoved", () => {
-            setLastEvent("frameRemoved");
-            setAdded(false);
-            setNotificationDetails(null);
-          });
-
-          sdk.actions.ready({});
+        const frameContext = await sdk.context;
+        console.log('Frame SDK Context:', frameContext);
+        
+        if (!frameContext) {
+          console.log('No context available');
+          return;
         }
+        
+        setContext(frameContext);
+        if (frameContext.client) {
+          setAdded(frameContext.client.added);
+        }
+
+        // Setup Frame event listeners
+        sdk.on("frameAdded", ({ notificationDetails }) => {
+          setLastEvent(`frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`);
+          setAdded(true);
+          if (notificationDetails) {
+            setNotificationDetails(notificationDetails);
+          }
+        });
+
+        sdk.on("frameAddRejected", ({ reason }) => {
+          setLastEvent(`frameAddRejected, reason ${reason}`);
+        });
+
+        sdk.on("frameRemoved", () => {
+          setLastEvent("frameRemoved");
+          setAdded(false);
+          setNotificationDetails(null);
+        });
+
+        sdk.actions.ready({});
       } catch (error) {
         console.error('Error in initializeFrameSDK:', error);
       }
     };
 
-    if (!isSDKLoaded && typeof window !== 'undefined') {
+    if (!isSDKLoaded) {
       setIsSDKLoaded(true);
       initializeFrameSDK();
     }
-  }, [isSDKLoaded]);
+  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent]);
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = async () => {
@@ -283,70 +295,86 @@ export default function Demo() {
   // Add clear function
   const handleClearHistory = () => {
     setIsClearing(true);
-    if (frameContext?.user?.fid) {
-      clearQuoteHistory(frameContext.user.fid)
-        .then(() => {
-          setQuoteHistory([]);
-          setIsClearing(false);
-        })
-        .catch(error => {
-          console.error('Error clearing history:', error);
-          setIsClearing(false);
-        });
-    }
+    setTimeout(() => {
+      setQuoteHistory([]);
+      if (context?.user?.fid) {
+        localStorage.removeItem(getStorageKey(context.user.fid));
+      }
+      setIsClearing(false);
+    }, 500);
   };
+
+  // Add this new useEffect
+  useEffect(() => {
+    const testConnection = async () => {
+      const result = await testFirebaseConnection();
+      if (result) {
+        console.log('Firebase is properly configured!');
+      } else {
+        console.error('Firebase configuration issue detected');
+      }
+    };
+
+    testConnection();
+  }, []);
 
   // In the Demo component, add this effect to load saved history
   useEffect(() => {
-    const loadSavedData = async () => {
-      if (frameContext?.user?.fid) {
-        try {
-          // Load history
-          const history = await loadQuoteHistory(frameContext.user.fid);
-          setQuoteHistory(history);
+    const loadSavedData = () => {
+      if (context?.user?.fid) {
+        // Load history
+        const savedHistory = localStorage.getItem(getStorageKey(context.user.fid));
+        if (savedHistory) {
+          try {
+            const parsed = JSON.parse(savedHistory) as StoredQuoteHistoryItem[];
+            // Convert string timestamps back to Date objects
+            const historyWithDates = parsed.map((item) => ({
+              ...item,
+              timestamp: new Date(item.timestamp)
+            }));
+            setQuoteHistory(historyWithDates);
+          } catch (error) {
+            console.error('Error loading history:', error);
+          }
+        }
 
-          // Load favorites
-          const favs = await loadFavorites(frameContext.user.fid);
-          setFavorites(favs);
-        } catch (error) {
-          console.error('Error loading saved data:', error);
+        // Load favorites
+        const savedFavorites = localStorage.getItem(getFavoritesKey(context.user.fid));
+        if (savedFavorites) {
+          try {
+            const parsed = JSON.parse(savedFavorites) as StoredFavoriteQuote[];
+            // Convert string timestamps back to Date objects
+            const favoritesWithDates = parsed.map((item) => ({
+              ...item,
+              timestamp: new Date(item.timestamp)
+            }));
+            setFavorites(favoritesWithDates);
+          } catch (error) {
+            console.error('Error loading favorites:', error);
+          }
         }
       }
     };
 
     loadSavedData();
-  }, [frameContext?.user?.fid]);
+  }, [context?.user?.fid]);
 
-  // Replace localStorage saving with Firestore saving
+  // Add effects to save data when it changes
   useEffect(() => {
-    if (frameContext?.user?.fid && quoteHistory.length > 0) {
-      saveQuoteHistory(frameContext.user.fid, quoteHistory).catch(error => {
-        console.error('Error saving quote history:', error);
-      });
+    if (context?.user?.fid && quoteHistory.length > 0) {
+      localStorage.setItem(getStorageKey(context.user.fid), JSON.stringify(quoteHistory));
     }
-  }, [quoteHistory, frameContext?.user?.fid]);
+  }, [quoteHistory, context?.user?.fid]);
 
   useEffect(() => {
-    if (frameContext?.user?.fid && favorites.length > 0) {
-      saveFavorites(frameContext.user.fid, favorites).catch(error => {
-        console.error('Error saving favorites:', error);
-      });
+    if (context?.user?.fid && favorites.length > 0) {
+      localStorage.setItem(getFavoritesKey(context.user.fid), JSON.stringify(favorites));
     }
-  }, [favorites, frameContext?.user?.fid]);
-
-  const handleShare = async () => {
-    try {
-      const shareText = `"${quote}" - Created by @kite /thepod`;
-      await navigator.clipboard.writeText(shareText);
-      logAnalyticsEvent('quote_shared', { quote });
-    } catch (error) {
-      console.error('Error sharing quote:', error);
-    }
-  };
+  }, [favorites, context?.user?.fid]);
 
   // 10. Main Render
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 p-4">
+    <div className="relative min-h-screen">
       {/* Fixed Navigation */}
       <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -369,14 +397,14 @@ export default function Demo() {
                   <div className="cursor-pointer transition-transform hover:scale-105">
                     <div className="relative w-[45px] h-[45px] rounded-full border-2 border-white shadow-lg overflow-hidden">
                       <Image
-                        src={frameContext?.user?.pfpUrl || "/Profile_Image.jpg"}
-                        alt={frameContext?.user?.displayName || "Profile"}
+                        src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+                        alt={context?.user?.displayName || "Profile"}
                         width={45}
                         height={45}
                         className="w-full h-full object-cover"
                         unoptimized
                         onError={(e) => {
-                          console.error('Failed to load profile image:', frameContext?.user?.pfpUrl);
+                          console.error('Failed to load profile image:', context?.user?.pfpUrl);
                           const target = e.target as HTMLImageElement;
                           target.src = "/Profile_Image.jpg";
                         }}
@@ -385,10 +413,10 @@ export default function Demo() {
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {frameContext?.user && (
+                  {context?.user && (
                     <div className="px-2 py-1.5 text-sm">
-                      <div className="font-medium">{frameContext.user.displayName}</div>
-                      <div className="text-xs text-muted-foreground">@{frameContext.user.username}</div>
+                      <div className="font-medium">{context.user.displayName}</div>
+                      <div className="text-xs text-muted-foreground">@{context.user.username}</div>
                     </div>
                   )}
                   <DropdownMenuItem 
@@ -560,14 +588,50 @@ export default function Demo() {
               </Button>
             </motion.div>
 
-            <div className="flex space-x-2 mt-4">
-              <Button onClick={handleShare}>
-                <div className="flex items-center space-x-2">
-                  <Share2 className="w-4 h-4" />
-                  <span>Share</span>
-                </div>
-              </Button>
-            </div>
+            {/* Cast Button */}
+            {quote && (
+              <motion.div className="w-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button 
+                  onClick={() => {
+                    setIsCasting(true);
+                    try {
+                      const shareText = `"${quote}" - Created by @kite /thepod`;
+                      const shareUrl = 'https://qg-frames.vercel.app';
+                      const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                      
+                      logAnalyticsEvent('cast_created', {
+                        quote: quote
+                      });
+                      
+                      sdk.actions.openUrl(url);
+                    } finally {
+                      setIsCasting(false);
+                    }
+                  }}
+                  className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
+                >
+                  {isCasting ? (
+                    <span className="flex items-center">
+                      Casting
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="ml-2"
+                      >
+                        ...
+                      </motion.span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      Cast Away <Share2 className="ml-2" size={20} />
+                    </span>
+                  )}
+                </Button>
+              </motion.div>
+            )}
           </CardFooter>
         </Card>
       </main>
