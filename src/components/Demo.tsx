@@ -104,6 +104,59 @@ interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
   timestamp: string;
 }
 
+// First, add this helper function at the top with other helper functions
+const downloadQuoteAsImage = (quoteText: string, bgColor: string) => {
+  // Create a temporary canvas
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Set canvas size
+  canvas.width = 1200;
+  canvas.height = 630;
+
+  // Draw background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Configure text style
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 48px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Word wrap the text
+  const maxWidth = 1000;
+  const lineHeight = 60;
+  const words = quoteText.split(' ');
+  const lines = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const width = ctx.measureText(currentLine + " " + word).width;
+    if (width < maxWidth) {
+      currentLine += " " + word;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  lines.push(currentLine);
+
+  // Draw text
+  const startY = canvas.height/2 - (lines.length - 1) * lineHeight/2;
+  lines.forEach((line, i) => {
+    ctx.fillText(line, canvas.width/2, startY + i * lineHeight);
+  });
+
+  // Convert to image and download
+  const link = document.createElement('a');
+  link.download = 'quote.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+};
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
@@ -576,29 +629,53 @@ export default function Demo({ title = "Fun Quotes" }) {
                 style={{ backgroundColor: bgColor }}
               >
                 {quote && (
-                  <motion.button
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-4 right-4"
-                    onClick={() => {
-                      const quoteItem: QuoteHistoryItem = {
-                        text: quote,
-                        style: 'default',
-                        gifUrl,
-                        timestamp: new Date(),
-                        bgColor
-                      };
-                      toggleFavorite(quoteItem);
-                    }}
-                  >
-                    <Heart 
-                      className={`w-6 h-6 transition-colors ${
-                        favorites.some(fav => fav.text === quote)
-                          ? 'fill-pink-500 text-pink-500' 
-                          : 'text-white hover:text-pink-200'
-                      }`}
-                    />
-                  </motion.button>
+                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                    <motion.button
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="hover:opacity-80 transition-opacity"
+                      onClick={() => downloadQuoteAsImage(quote, bgColor)}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="24" 
+                        height="24" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="w-6 h-6 text-white hover:text-gray-200"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                    </motion.button>
+                    <motion.button
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      onClick={() => {
+                        const quoteItem: QuoteHistoryItem = {
+                          text: quote,
+                          style: 'default',
+                          gifUrl,
+                          timestamp: new Date(),
+                          bgColor
+                        };
+                        toggleFavorite(quoteItem);
+                      }}
+                    >
+                      <Heart 
+                        className={`w-6 h-6 transition-colors ${
+                          favorites.some(fav => fav.text === quote)
+                            ? 'fill-pink-500 text-pink-500' 
+                            : 'text-white hover:text-pink-200'
+                        }`}
+                      />
+                    </motion.button>
+                  </div>
                 )}
                 <p className="text-center text-white text-lg font-medium">
                   {quote || "Click the magic button to generate an inspiring quote!"}
