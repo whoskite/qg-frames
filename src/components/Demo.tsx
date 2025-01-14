@@ -17,6 +17,14 @@ import {
 import { generateRandomString } from "~/lib/utils";
 import { testFirebaseConnection } from '../lib/firebase-test';
 import { app, analytics, db } from '../lib/firebase';
+import {
+  saveQuoteToHistory,
+  getUserQuoteHistory,
+  saveFavoriteQuote,
+  getUserFavorites,
+  removeFavoriteQuote,
+  clearUserHistory
+} from '../lib/firestore';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -293,15 +301,18 @@ export default function Demo({ title = "Fun Quotes" }) {
   };
 
   // Add clear function
-  const handleClearHistory = () => {
+  const handleClearHistory = async () => {
+    if (!context?.user?.fid) return;
+    
     setIsClearing(true);
-    setTimeout(() => {
+    try {
+      await clearUserHistory(context.user.fid);
       setQuoteHistory([]);
-      if (context?.user?.fid) {
-        localStorage.removeItem(getStorageKey(context.user.fid));
-      }
+    } catch (error) {
+      console.error('Error clearing history:', error);
+    } finally {
       setIsClearing(false);
-    }, 500);
+    }
   };
 
   // Add this new useEffect
@@ -320,38 +331,18 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // In the Demo component, add this effect to load saved history
   useEffect(() => {
-    const loadSavedData = () => {
+    const loadSavedData = async () => {
       if (context?.user?.fid) {
-        // Load history
-        const savedHistory = localStorage.getItem(getStorageKey(context.user.fid));
-        if (savedHistory) {
-          try {
-            const parsed = JSON.parse(savedHistory) as StoredQuoteHistoryItem[];
-            // Convert string timestamps back to Date objects
-            const historyWithDates = parsed.map((item) => ({
-              ...item,
-              timestamp: new Date(item.timestamp)
-            }));
-            setQuoteHistory(historyWithDates);
-          } catch (error) {
-            console.error('Error loading history:', error);
-          }
-        }
+        try {
+          // Load history
+          const history = await getUserQuoteHistory(context.user.fid);
+          setQuoteHistory(history);
 
-        // Load favorites
-        const savedFavorites = localStorage.getItem(getFavoritesKey(context.user.fid));
-        if (savedFavorites) {
-          try {
-            const parsed = JSON.parse(savedFavorites) as StoredFavoriteQuote[];
-            // Convert string timestamps back to Date objects
-            const favoritesWithDates = parsed.map((item) => ({
-              ...item,
-              timestamp: new Date(item.timestamp)
-            }));
-            setFavorites(favoritesWithDates);
-          } catch (error) {
-            console.error('Error loading favorites:', error);
-          }
+          // Load favorites
+          const favorites = await getUserFavorites(context.user.fid);
+          setFavorites(favorites);
+        } catch (error) {
+          console.error('Error loading saved data:', error);
         }
       }
     };
@@ -359,18 +350,41 @@ export default function Demo({ title = "Fun Quotes" }) {
     loadSavedData();
   }, [context?.user?.fid]);
 
-  // Add effects to save data when it changes
+  // Replace localStorage save effects with Firestore saves
   useEffect(() => {
-    if (context?.user?.fid && quoteHistory.length > 0) {
-      localStorage.setItem(getStorageKey(context.user.fid), JSON.stringify(quoteHistory));
-    }
+    const saveQuote = async () => {
+      if (context?.user?.fid && quoteHistory.length > 0) {
+        const latestQuote = quoteHistory[0];
+        await saveQuoteToHistory(context.user.fid, latestQuote);
+      }
+    };
+
+    saveQuote();
   }, [quoteHistory, context?.user?.fid]);
 
-  useEffect(() => {
-    if (context?.user?.fid && favorites.length > 0) {
-      localStorage.setItem(getFavoritesKey(context.user.fid), JSON.stringify(favorites));
+  // Modify the favorite toggle function
+  const toggleFavorite = async (quote: QuoteHistoryItem) => {
+    if (!context?.user?.fid) return;
+
+    const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
+    
+    if (isAlreadyFavorited) {
+      // Remove from favorites
+      const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
+      if (favoriteToRemove) {
+        await removeFavoriteQuote(favoriteToRemove.id);
+        setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
+      }
+    } else {
+      // Add to favorites
+      const newFavorite: FavoriteQuote = {
+        ...quote,
+        id: generateRandomString(10)
+      };
+      await saveFavoriteQuote(context.user.fid, newFavorite);
+      setFavorites(prev => [newFavorite, ...prev]);
     }
-  }, [favorites, context?.user?.fid]);
+  };
 
   // 10. Main Render
   return (
