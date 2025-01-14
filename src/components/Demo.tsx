@@ -828,12 +828,14 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Favorite Quotes
               </h2>
-              <Button
-                className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
-                onClick={() => setShowFavorites(false)}
-              >
-                <X className="h-4 w-4 text-black" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
+                  onClick={() => setShowFavorites(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
             </div>
             
             <div className="overflow-y-auto flex-1 space-y-4 pr-2">
@@ -883,6 +885,27 @@ export default function Demo({ title = "Fun Quotes" }) {
                             />
                           </div>
                         )}
+                        
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-white/80">
+                            <span className="text-xs">Click to reuse</span>
+                            <motion.div
+                              animate={{ x: [0, 5, 0] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                            >
+                              →
+                            </motion.div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(item);
+                            }}
+                            className="text-white/80 hover:text-pink-500 transition-colors"
+                          >
+                            <Heart className="w-5 h-5 fill-current" />
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
