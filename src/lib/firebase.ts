@@ -6,38 +6,32 @@ let app: FirebaseApp | undefined;
 let analytics: Analytics | undefined;
 let db: Firestore | undefined;
 
-async function initializeFirebase() {
-  if (typeof window === 'undefined') return null;
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+};
 
+// Initialize immediately if we're in the browser
+if (typeof window !== 'undefined' && !app) {
   try {
-    // Only initialize once
-    if (app) return { app, analytics, db };
-
-    const response = await fetch('/api/firebase-config');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Firebase config: ${response.statusText}`);
-    }
-
-    const firebaseConfig = await response.json();
-    if (!firebaseConfig.projectId) {
-      throw new Error('Firebase config is missing projectId');
-    }
-
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
-
-    if (await isSupported()) {
-      analytics = getAnalytics(app);
-      if (process.env.NODE_ENV === 'development') {
+    
+    // Initialize analytics if supported
+    isSupported().then(supported => {
+      if (supported) {
+        analytics = getAnalytics(app);
         setAnalyticsCollectionEnabled(analytics, true);
       }
-    }
-
-    return { app, analytics, db };
+    }).catch(console.error);
   } catch (error) {
     console.error('Error initializing Firebase:', error);
-    return null;
   }
 }
 
-export { initializeFirebase, app, analytics, db }; 
+export { app, analytics, db }; 
