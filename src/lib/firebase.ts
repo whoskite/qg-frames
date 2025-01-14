@@ -7,17 +7,19 @@ let analytics: Analytics | undefined;
 let db: Firestore | undefined;
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyAlEvmbGZF8w5MJvHTR5LwXEN4RY44bpYE",
+  authDomain: "funquotes-864f1.firebaseapp.com",
+  projectId: "funquotes-864f1",
+  storageBucket: "funquotes-864f1.firebasestorage.app",
+  messagingSenderId: "653295041318",
+  appId: "1:653295041318:web:4e27882cddd96b7e305fe7",
+  measurementId: "G-ZSK0QT3J1Q"
 };
 
-// Initialize immediately if we're in the browser
-if (typeof window !== 'undefined' && !app) {
+// Validate config before initialization
+if (!firebaseConfig.projectId) {
+  console.error('Firebase config is missing projectId');
+} else if (typeof window !== 'undefined' && !app) {
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
