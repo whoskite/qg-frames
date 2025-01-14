@@ -1,6 +1,7 @@
 import { initializeApp, type FirebaseApp, getApps } from "firebase/app";
 import { Analytics, getAnalytics, setAnalyticsCollectionEnabled, isSupported } from "firebase/analytics";
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { type Firestore, initializeFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 let app: FirebaseApp;
 let analytics: Analytics | undefined;
@@ -26,7 +27,14 @@ function initializeFirebase() {
       app = getApps()[0];
     }
 
-    db = getFirestore(app);
+    // Initialize auth first
+    getAuth(app);
+    
+    // Initialize Firestore with memory cache enabled
+    db = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      cacheSizeBytes: 1048576 // 1MB cache size
+    });
     
     isSupported().then(supported => {
       if (supported) {
