@@ -14,6 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import { generateRandomString } from "~/lib/utils";
+import { testFirebaseConnection } from '../lib/firebase-test';
+import { app, analytics, db } from '../lib/firebase';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -23,7 +26,6 @@ import { Button } from "../components/ui/Button";
 // Utils and Services
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
-import { app, analytics } from '../lib/firebase';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -47,6 +49,10 @@ interface QuoteHistoryItem {
   gifUrl: string | null;
   timestamp: Date;
   bgColor: string;
+}
+
+interface FavoriteQuote extends QuoteHistoryItem {
+  id: string;
 }
 
 type AnalyticsParams = {
@@ -101,6 +107,10 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [addFrameResult, setAddFrameResult] = useState("");
   const [sendNotificationResult, setSendNotificationResult] = useState("");
 
+  // Add to your state declarations
+  const [favorites, setFavorites] = useState<FavoriteQuote[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -134,7 +144,15 @@ export default function Demo({ title = "Fun Quotes" }) {
         }
       });
 
-      // ... rest of your event listeners
+      sdk.on("frameAddRejected", ({ reason }) => {
+        setLastEvent(`frameAddRejected, reason ${reason}`);
+      });
+
+      sdk.on("frameRemoved", () => {
+        setLastEvent("frameRemoved");
+        setAdded(false);
+        setNotificationDetails(null);
+      });
 
       sdk.actions.ready({});
     } catch (error) {
@@ -270,10 +288,19 @@ export default function Demo({ title = "Fun Quotes" }) {
     }, 500);
   };
 
-  // 9. Render Loading State
-  if (!isSDKLoaded) {
-    return <div>Loading...</div>;
-  }
+  // Add this new useEffect
+  useEffect(() => {
+    const testConnection = async () => {
+      const result = await testFirebaseConnection();
+      if (result) {
+        console.log('Firebase is properly configured!');
+      } else {
+        console.error('Firebase configuration issue detected');
+      }
+    };
+
+    testConnection();
+  }, []);
 
   // 10. Main Render
   return (
@@ -323,13 +350,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                     </div>
                   )}
                   <DropdownMenuItem 
-                    className="flex items-center gap-2 opacity-50 cursor-not-allowed"
-                    disabled
+                    className="flex items-center gap-2"
+                    onClick={() => setShowFavorites(true)}
                   >
-                    <Heart className="w-4 h-4 text-gray-400" />
+                    <Heart className="w-4 h-4 text-pink-500" />
                     <div className="flex flex-col">
-                      <span className="text-gray-400">Favorites</span>
-                      <span className="text-[10px] text-gray-400">Coming soon</span>
+                      <span>Favorites</span>
+                      <span className="text-[10px] text-gray-400">
+                        {favorites.length} saved
+                      </span>
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
@@ -396,9 +425,51 @@ export default function Demo({ title = "Fun Quotes" }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center"
+                className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center relative"
                 style={{ backgroundColor: bgColor }}
               >
+                {quote && (
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-4 right-4"
+                    onClick={() => {
+                      const newFavorite: FavoriteQuote = {
+                        text: quote,
+                        style: 'default',
+                        gifUrl,
+                        timestamp: new Date(),
+                        bgColor,
+                        id: generateRandomString(10)
+                      };
+                      
+                      // Check if quote is already in favorites
+                      const isAlreadyFavorited = favorites.some(fav => fav.text === quote);
+                      
+                      if (isAlreadyFavorited) {
+                        // Remove from favorites
+                        setFavorites(prev => prev.filter(fav => fav.text !== quote));
+                        logAnalyticsEvent('quote_unfavorited', {
+                          quote_text: quote.slice(0, 30) + '...'
+                        });
+                      } else {
+                        // Add to favorites
+                        setFavorites(prev => [newFavorite, ...prev]);
+                        logAnalyticsEvent('quote_favorited', {
+                          quote_text: quote.slice(0, 30) + '...'
+                        });
+                      }
+                    }}
+                  >
+                    <Heart 
+                      className={`w-6 h-6 transition-colors ${
+                        favorites.some(fav => fav.text === quote)
+                          ? 'fill-pink-500 text-pink-500' 
+                          : 'text-white hover:text-pink-200'
+                      }`}
+                    />
+                  </motion.button>
+                )}
                 <p className="text-center text-white text-lg font-medium">
                   {quote || "Click the magic button to generate an inspiring quote!"}
                 </p>
@@ -600,6 +671,88 @@ export default function Demo({ title = "Fun Quotes" }) {
                             →
                           </motion.div>
                         </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Favorites Modal */}
+      {showFavorites && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowFavorites(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Favorite Quotes
+              </h2>
+              <Button
+                className="hover:bg-purple-100 rounded-full h-5 w-5 p-0 flex items-center justify-center"
+                onClick={() => setShowFavorites(false)}
+              >
+                <X className="h-3 w-3 text-purple-600" />
+              </Button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
+              {favorites.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center text-gray-500 py-12"
+                >
+                  <div className="mb-4">💖</div>
+                  <p className="font-medium">No favorites yet</p>
+                  <p className="text-sm mt-2 text-gray-400">
+                    Your favorite quotes will appear here
+                  </p>
+                </motion.div>
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  {favorites.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
+                      className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
+                      onClick={() => handleReuseQuote(item)}
+                    >
+                      <div 
+                        className="p-4 cursor-pointer"
+                        style={{ backgroundColor: item.bgColor }}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="text-white font-medium flex-1">{item.text}</p>
+                          <span className="text-xs text-white/70 ml-2">
+                            {formatTimestamp(item.timestamp)}
+                          </span>
+                        </div>
+                        
+                        {item.gifUrl && (
+                          <div className="relative h-32 mt-3 rounded-md overflow-hidden">
+                            <Image
+                              src={item.gifUrl}
+                              alt="Quote GIF"
+                              fill
+                              className="object-cover transition-transform group-hover:scale-105"
+                              unoptimized
+                            />
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   ))}
