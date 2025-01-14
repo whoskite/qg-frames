@@ -532,7 +532,7 @@ export default function Demo({ title = "Fun Quotes" }) {
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             {/* GIF Display */}
             <AnimatePresence mode="wait">
               {gifUrl && (
@@ -828,33 +828,12 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Favorite Quotes
               </h2>
-              <div className="flex items-center gap-1">
-                {favorites.length > 0 && (
-                  <Button
-                    onClick={async () => {
-                      if (!context?.user?.fid) return;
-                      try {
-                        // Clear all favorites from Firestore
-                        for (const favorite of favorites) {
-                          await removeFavoriteQuote(context.user.fid, favorite.id);
-                        }
-                        setFavorites([]);
-                      } catch (error) {
-                        console.error('Error clearing favorites:', error);
-                      }
-                    }}
-                    className="text-purple-600 hover:text-red-500 transition-colors text-xs min-w-[32px] h-5 px-1 flex items-center justify-center"
-                  >
-                    Clear
-                  </Button>
-                )}
-                <Button
-                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
-                  onClick={() => setShowFavorites(false)}
-                >
-                  <X className="h-4 w-4 text-black" />
-                </Button>
-              </div>
+              <Button
+                className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
+                onClick={() => setShowFavorites(false)}
+              >
+                <X className="h-4 w-4 text-black" />
+              </Button>
             </div>
             
             <div className="overflow-y-auto flex-1 space-y-4 pr-2">
@@ -904,16 +883,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                             />
                           </div>
                         )}
-                        
-                        <div className="mt-3 flex items-center gap-2 text-white/80">
-                          <span className="text-xs">Click to reuse</span>
-                          <motion.div
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            →
-                          </motion.div>
-                        </div>
                       </div>
                     </motion.div>
                   ))}
