@@ -383,23 +383,54 @@ export default function Demo({ title = "Fun Quotes" }) {
 
     const isAlreadyFavorited = favorites.some(fav => fav.text === quote.text);
     
-    if (isAlreadyFavorited) {
-      // Remove from favorites
-      const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
-      if (favoriteToRemove) {
-        await removeFavoriteQuote(context.user.fid, favoriteToRemove.id);
-        setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
+    try {
+      if (isAlreadyFavorited) {
+        // Remove from favorites
+        const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
+        if (favoriteToRemove) {
+          await removeFavoriteQuote(context.user.fid, favoriteToRemove.id);
+          setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
+          
+          // Log analytics event
+          logAnalyticsEvent('quote_unfavorited', {
+            quote_text: quote.text.slice(0, 30) + '...'
+          });
+        }
+      } else {
+        // Add to favorites
+        const newFavorite: FavoriteQuote = {
+          ...quote,
+          id: generateRandomString(10)
+        };
+        await saveFavoriteQuote(context.user.fid, newFavorite);
+        setFavorites(prev => [newFavorite, ...prev]);
+        
+        // Log analytics event
+        logAnalyticsEvent('quote_favorited', {
+          quote_text: quote.text.slice(0, 30) + '...'
+        });
       }
-    } else {
-      // Add to favorites
-      const newFavorite: FavoriteQuote = {
-        ...quote,
-        id: generateRandomString(10)
-      };
-      await saveFavoriteQuote(context.user.fid, newFavorite);
-      setFavorites(prev => [newFavorite, ...prev]);
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      // You might want to show a toast/notification here
     }
   };
+
+  // Add this effect to load favorites when component mounts
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const userFavorites = await getUserFavorites(context.user.fid);
+          setFavorites(userFavorites);
+        } catch (error) {
+          console.error('Error loading favorites:', error);
+        }
+      }
+    };
+
+    loadFavorites();
+  }, [context?.user?.fid, isFirebaseInitialized]);
 
   // 10. Main Render
   return (

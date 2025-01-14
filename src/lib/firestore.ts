@@ -63,6 +63,7 @@ export async function getUserFavorites(userId: number) {
     const querySnapshot = await getDocs(userFavoritesRef);
     return querySnapshot.docs.map(doc => ({
       ...doc.data(),
+      id: doc.id,
       timestamp: doc.data().timestamp.toDate(),
     })) as FavoriteQuote[];
   } catch (error) {
