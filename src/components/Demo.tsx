@@ -17,6 +17,7 @@ import {
 import { generateRandomString } from "~/lib/utils";
 import { testFirebaseConnection } from '../lib/firebase-test';
 import { app, analytics, db } from '../lib/firebase';
+import { loadQuoteHistory, saveQuoteHistory, loadFavorites, saveFavorites, clearQuoteHistory } from '~/lib/firestore';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -295,13 +296,17 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add clear function
   const handleClearHistory = () => {
     setIsClearing(true);
-    setTimeout(() => {
-      setQuoteHistory([]);
-      if (context?.user?.fid) {
-        localStorage.removeItem(getStorageKey(context.user.fid));
-      }
-      setIsClearing(false);
-    }, 500);
+    if (context?.user?.fid) {
+      clearQuoteHistory(context.user.fid)
+        .then(() => {
+          setQuoteHistory([]);
+          setIsClearing(false);
+        })
+        .catch(error => {
+          console.error('Error clearing history:', error);
+          setIsClearing(false);
+        });
+    }
   };
 
   // Add this new useEffect
@@ -320,38 +325,18 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // In the Demo component, add this effect to load saved history
   useEffect(() => {
-    const loadSavedData = () => {
+    const loadSavedData = async () => {
       if (context?.user?.fid) {
-        // Load history
-        const savedHistory = localStorage.getItem(getStorageKey(context.user.fid));
-        if (savedHistory) {
-          try {
-            const parsed = JSON.parse(savedHistory) as StoredQuoteHistoryItem[];
-            // Convert string timestamps back to Date objects
-            const historyWithDates = parsed.map((item) => ({
-              ...item,
-              timestamp: new Date(item.timestamp)
-            }));
-            setQuoteHistory(historyWithDates);
-          } catch (error) {
-            console.error('Error loading history:', error);
-          }
-        }
+        try {
+          // Load history
+          const history = await loadQuoteHistory(context.user.fid);
+          setQuoteHistory(history);
 
-        // Load favorites
-        const savedFavorites = localStorage.getItem(getFavoritesKey(context.user.fid));
-        if (savedFavorites) {
-          try {
-            const parsed = JSON.parse(savedFavorites) as StoredFavoriteQuote[];
-            // Convert string timestamps back to Date objects
-            const favoritesWithDates = parsed.map((item) => ({
-              ...item,
-              timestamp: new Date(item.timestamp)
-            }));
-            setFavorites(favoritesWithDates);
-          } catch (error) {
-            console.error('Error loading favorites:', error);
-          }
+          // Load favorites
+          const favs = await loadFavorites(context.user.fid);
+          setFavorites(favs);
+        } catch (error) {
+          console.error('Error loading saved data:', error);
         }
       }
     };
@@ -359,16 +344,20 @@ export default function Demo({ title = "Fun Quotes" }) {
     loadSavedData();
   }, [context?.user?.fid]);
 
-  // Add effects to save data when it changes
+  // Replace localStorage saving with Firestore saving
   useEffect(() => {
     if (context?.user?.fid && quoteHistory.length > 0) {
-      localStorage.setItem(getStorageKey(context.user.fid), JSON.stringify(quoteHistory));
+      saveQuoteHistory(context.user.fid, quoteHistory).catch(error => {
+        console.error('Error saving quote history:', error);
+      });
     }
   }, [quoteHistory, context?.user?.fid]);
 
   useEffect(() => {
     if (context?.user?.fid && favorites.length > 0) {
-      localStorage.setItem(getFavoritesKey(context.user.fid), JSON.stringify(favorites));
+      saveFavorites(context.user.fid, favorites).catch(error => {
+        console.error('Error saving favorites:', error);
+      });
     }
   }, [favorites, context?.user?.fid]);
 
