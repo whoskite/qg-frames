@@ -47,10 +47,14 @@ export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
     const db = getDb();
     const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
     
-    // Convert the Date object to a Firestore timestamp
+    // Ensure we're saving all required fields and proper timestamp
     const quoteData = {
-      ...quote,
-      timestamp: new Date(),
+      id: quote.id,
+      text: quote.text,
+      style: quote.style,
+      gifUrl: quote.gifUrl,
+      bgColor: quote.bgColor,
+      timestamp: quote.timestamp,
     };
     
     console.log('Saving to path:', `users/${userId}/favorites/${quote.id}`);
@@ -72,11 +76,17 @@ export async function getUserFavorites(userId: number) {
     const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
     const querySnapshot = await getDocs(userFavoritesRef);
     
-    const favorites = querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id,
-      timestamp: doc.data().timestamp.toDate(),
-    })) as FavoriteQuote[];
+    const favorites = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        text: data.text,
+        style: data.style,
+        gifUrl: data.gifUrl,
+        bgColor: data.bgColor,
+        timestamp: data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp),
+      } as FavoriteQuote;
+    });
     
     console.log('Retrieved favorites:', favorites);
     return favorites;
