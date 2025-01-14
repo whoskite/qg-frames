@@ -382,7 +382,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       // Remove from favorites
       const favoriteToRemove = favorites.find(fav => fav.text === quote.text);
       if (favoriteToRemove) {
-        await removeFavoriteQuote(favoriteToRemove.id);
+        await removeFavoriteQuote(context.user.fid, favoriteToRemove.id);
         setFavorites(prev => prev.filter(fav => fav.id !== favoriteToRemove.id));
       }
     } else {
