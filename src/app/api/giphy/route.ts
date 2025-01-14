@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server';
 
+interface GiphyImage {
+  fixed_height: {
+    height: number;
+    width: number;
+    url: string;
+  };
+}
+
+interface GiphyGif {
+  images: GiphyImage;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('search');
@@ -18,7 +30,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=10&rating=g`;
+    const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=25&rating=g&bundle=messaging_non_clips&random_id=${Date.now()}&offset=${Math.floor(Math.random() * 100)}&lang=en`;
     
     const response = await fetch(giphyUrl);
 
@@ -33,7 +45,16 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    const filteredData = data.data
+      .filter((gif: GiphyGif) => 
+        gif.images?.fixed_height?.height <= 300 &&
+        gif.images?.fixed_height?.width <= 500
+      )
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 10);
+
+    return NextResponse.json({ ...data, data: filteredData });
   } catch (error) {
     console.error('Error in GIPHY route:', error);
     return NextResponse.json({ 
