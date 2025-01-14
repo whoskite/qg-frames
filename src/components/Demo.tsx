@@ -15,8 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { generateRandomString } from "~/lib/utils";
-import { testFirebaseConnection } from '../lib/firebase-test';
-import { app, analytics, db } from '../lib/firebase';
+import { analytics, initializeFirebase } from '../lib/firebase';
 import {
   saveQuoteToHistory,
   getUserQuoteHistory,
@@ -315,18 +314,29 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  // Add this new useEffect
+  // Replace the existing Firebase test useEffect with this:
   useEffect(() => {
-    const testConnection = async () => {
-      const result = await testFirebaseConnection();
-      if (result) {
-        console.log('Firebase is properly configured!');
-      } else {
-        console.error('Firebase configuration issue detected');
+    const initApp = async () => {
+      try {
+        const result = await initializeFirebase();
+        if (!result) {
+          throw new Error('Firebase initialization failed');
+        }
+
+        const { analytics: fbAnalytics, db } = result;
+        if (!db) {
+          throw new Error('Firestore not initialized');
+        }
+        
+        if (fbAnalytics) {
+          logEvent(fbAnalytics, 'app_initialized');
+        }
+      } catch (error) {
+        console.error('Error initializing app:', error);
       }
     };
 
-    testConnection();
+    initApp();
   }, []);
 
   // In the Demo component, add this effect to load saved history

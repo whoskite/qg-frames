@@ -1,16 +1,17 @@
-import { db } from './firebase';
-import { collection, addDoc, getDocs, Firestore } from 'firebase/firestore';
+import { initializeFirebase } from './firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 export const testFirebaseConnection = async () => {
-  if (!db) {
-    console.error('Firebase DB not initialized');
-    return false;
-  }
-
   try {
+    // Ensure Firebase is initialized
+    const firebase = await initializeFirebase();
+    if (!firebase?.db) {
+      throw new Error('Firebase initialization failed');
+    }
+
     // Try to add a test document
-    const testCollection = collection(db as Firestore, 'test');
-    await addDoc(testCollection, {
+    const testCollection = collection(firebase.db, 'test');
+    const docRef = await addDoc(testCollection, {
       test: true,
       timestamp: new Date()
     });
@@ -20,6 +21,7 @@ export const testFirebaseConnection = async () => {
     
     console.log('Firebase connection successful!');
     console.log('Documents in test collection:', querySnapshot.size);
+    console.log('Test document ID:', docRef.id);
     
     return true;
   } catch (error) {
