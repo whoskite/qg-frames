@@ -525,7 +525,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       {/* Main Content - Centered */}
       <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4 pt-24">
         {/* Card Component */}
-        <Card className="w-full max-w-xs overflow-hidden shadow-2xl">
+        <Card className="w-full max-w-sm overflow-hidden shadow-2xl">
           <CardHeader className="bg-white">
             <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
               Fun Quote Generator
@@ -736,10 +736,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </Button>
                 )}
                 <Button
-                  className="hover:bg-purple-100 rounded-full h-5 w-5 p-0 flex items-center justify-center"
+                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
                   onClick={() => setShowHistory(false)}
                 >
-                  <X className="h-3 w-3 text-purple-600" />
+                  <X className="h-4 w-4 text-black" />
                 </Button>
               </div>
             </div>
@@ -828,12 +828,33 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Favorite Quotes
               </h2>
-              <Button
-                className="hover:bg-purple-100 rounded-full h-5 w-5 p-0 flex items-center justify-center"
-                onClick={() => setShowFavorites(false)}
-              >
-                <X className="h-3 w-3 text-purple-600" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {favorites.length > 0 && (
+                  <Button
+                    onClick={async () => {
+                      if (!context?.user?.fid) return;
+                      try {
+                        // Clear all favorites from Firestore
+                        for (const favorite of favorites) {
+                          await removeFavoriteQuote(context.user.fid, favorite.id);
+                        }
+                        setFavorites([]);
+                      } catch (error) {
+                        console.error('Error clearing favorites:', error);
+                      }
+                    }}
+                    className="text-purple-600 hover:text-red-500 transition-colors text-xs min-w-[32px] h-5 px-1 flex items-center justify-center"
+                  >
+                    Clear
+                  </Button>
+                )}
+                <Button
+                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
+                  onClick={() => setShowFavorites(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
             </div>
             
             <div className="overflow-y-auto flex-1 space-y-4 pr-2">
@@ -883,6 +904,16 @@ export default function Demo({ title = "Fun Quotes" }) {
                             />
                           </div>
                         )}
+                        
+                        <div className="mt-3 flex items-center gap-2 text-white/80">
+                          <span className="text-xs">Click to reuse</span>
+                          <motion.div
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            →
+                          </motion.div>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
