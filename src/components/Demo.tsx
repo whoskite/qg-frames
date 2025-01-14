@@ -119,9 +119,9 @@ const downloadQuoteAsImage = (quoteText: string, bgColor: string) => {
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Configure text style
+  // Configure text style with web-safe font
   ctx.fillStyle = 'white';
-  ctx.font = 'bold 48px Inter, system-ui, sans-serif';
+  ctx.font = 'bold 48px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 

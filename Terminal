@@ -1,1 +1,11 @@
- 
+# First, let's create and switch to a new branch
+git checkout -b feat/download-image
+
+# Add the changes
+git add .
+
+# Commit with a descriptive message
+git commit -m "feat: add quote image download functionality"
+
+# Push the new branch to remote
+git push origin feat/download-image 
