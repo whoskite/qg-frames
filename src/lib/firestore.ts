@@ -1,155 +1,85 @@
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  getDocs, 
-  deleteDoc,
-  doc,
-  setDoc,
-  orderBy,
-  Timestamp,
-  QueryDocumentSnapshot,
-  serverTimestamp
-} from 'firebase/firestore';
 import { db } from './firebase';
-import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import type { QuoteHistoryItem, FavoriteQuote } from '../types';
 
-interface FirestoreQuote extends Omit<QuoteHistoryItem, 'timestamp'> {
-  timestamp: Timestamp;
-  fid: number;
-  createdAt: Timestamp;
-}
-
-// Helper function to convert Firestore data to QuoteHistoryItem
-const convertToQuoteHistoryItem = (doc: QueryDocumentSnapshot<FirestoreQuote>): QuoteHistoryItem => {
-  const data = doc.data();
-  return {
-    text: data.text,
-    style: data.style,
-    gifUrl: data.gifUrl,
-    timestamp: data.timestamp.toDate(),
-    bgColor: data.bgColor
-  };
-};
-
-// Helper function to convert Firestore data to FavoriteQuote
-const convertToFavoriteQuote = (doc: QueryDocumentSnapshot<FirestoreQuote>): FavoriteQuote => {
-  return {
-    ...convertToQuoteHistoryItem(doc),
-    id: doc.id
-  };
-};
-
-export async function saveQuoteToHistory(fid: number, quote: QuoteHistoryItem): Promise<string | null> {
-  if (!db) return null;
-  
+// Save quote to user's history
+export async function saveQuoteToHistory(userId: string, quote: QuoteHistoryItem) {
   try {
-    const quotesRef = collection(db, 'quotes');
-    const firestoreQuote = {
-      text: quote.text,
-      style: quote.style,
-      gifUrl: quote.gifUrl,
-      bgColor: quote.bgColor,
-      timestamp: Timestamp.fromDate(quote.timestamp),
-      fid,
-      createdAt: serverTimestamp()
-    };
-    const docRef = await addDoc(quotesRef, firestoreQuote);
-    return docRef.id;
+    const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
+    await addDoc(userHistoryRef, {
+      ...quote,
+      timestamp: new Date(),
+    });
   } catch (error) {
     console.error('Error saving quote:', error);
-    return null;
+    throw error;
   }
 }
 
-export async function getUserQuoteHistory(fid: number): Promise<QuoteHistoryItem[]> {
-  if (!db) return [];
-  
+// Get user's quote history
+export async function getUserQuoteHistory(userId: string) {
   try {
-    const quotesRef = collection(db, 'quotes');
-    const q = query(
-      quotesRef, 
-      where('fid', '==', fid),
-      orderBy('createdAt', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => convertToQuoteHistoryItem(doc as QueryDocumentSnapshot<FirestoreQuote>));
+    const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
+    const querySnapshot = await getDocs(userHistoryRef);
+    return querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      timestamp: doc.data().timestamp.toDate(),
+    })) as QuoteHistoryItem[];
   } catch (error) {
-    console.error('Error getting quote history:', error);
-    return [];
+    console.error('Error getting history:', error);
+    throw error;
   }
 }
 
-export async function saveFavoriteQuote(fid: number, quote: FavoriteQuote): Promise<string | null> {
-  if (!db) return null;
-  
+// Save favorite quote
+export async function saveFavoriteQuote(userId: string, quote: FavoriteQuote) {
   try {
-    const favoritesRef = collection(db, 'favorites');
-    const firestoreQuote = {
-      text: quote.text,
-      style: quote.style,
-      gifUrl: quote.gifUrl,
-      bgColor: quote.bgColor,
-      timestamp: Timestamp.fromDate(quote.timestamp),
-      fid,
-      createdAt: serverTimestamp()
-    };
-    await setDoc(doc(favoritesRef, quote.id), firestoreQuote);
-    return quote.id;
+    const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
+    await addDoc(userFavoritesRef, {
+      ...quote,
+      timestamp: new Date(),
+    });
   } catch (error) {
     console.error('Error saving favorite:', error);
-    return null;
+    throw error;
   }
 }
 
-export async function getUserFavorites(fid: number): Promise<FavoriteQuote[]> {
-  if (!db) return [];
-  
+// Get user's favorites
+export async function getUserFavorites(userId: string) {
   try {
-    const favoritesRef = collection(db, 'favorites');
-    const q = query(
-      favoritesRef, 
-      where('fid', '==', fid),
-      orderBy('createdAt', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => convertToFavoriteQuote(doc as QueryDocumentSnapshot<FirestoreQuote>));
+    const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
+    const querySnapshot = await getDocs(userFavoritesRef);
+    return querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      timestamp: doc.data().timestamp.toDate(),
+    })) as FavoriteQuote[];
   } catch (error) {
     console.error('Error getting favorites:', error);
-    return [];
+    throw error;
   }
 }
 
-export async function removeFavoriteQuote(quoteId: string) {
-  if (!db) return false;
-  
+// Remove favorite quote
+export async function removeFavoriteQuote(userId: string, quoteId: string) {
   try {
-    const favoriteRef = doc(db, 'favorites', quoteId);
-    await deleteDoc(favoriteRef);
-    return true;
+    const quoteRef = doc(db, 'users', userId.toString(), 'favorites', quoteId);
+    await deleteDoc(quoteRef);
   } catch (error) {
     console.error('Error removing favorite:', error);
-    return false;
+    throw error;
   }
 }
 
-export async function clearUserHistory(fid: number) {
-  if (!db) return false;
-  
+// Clear user history
+export async function clearUserHistory(userId: string) {
   try {
-    const quotesRef = collection(db, 'quotes');
-    const q = query(quotesRef, where('fid', '==', fid));
-    const querySnapshot = await getDocs(q);
-    
+    const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
+    const querySnapshot = await getDocs(userHistoryRef);
     const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
-    
-    return true;
   } catch (error) {
     console.error('Error clearing history:', error);
-    return false;
+    throw error;
   }
 } 

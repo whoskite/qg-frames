@@ -2,49 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to validate quote data structure
-    function isValidQuote() {
-      let data = request.resource.data;
-      return data.keys().hasAll(['text', 'style', 'gifUrl', 'timestamp', 'bgColor', 'fid', 'createdAt']) &&
-        data.text is string &&
-        data.text.size() <= 280 &&
-        data.style is string &&
-        (data.gifUrl is string || data.gifUrl == null) &&
-        data.bgColor is string &&
-        data.fid is number &&
-        data.createdAt is timestamp;
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
     }
 
-    // Helper function to check if user is accessing their own data
+    // Helper function to check if the user owns the document
     function isOwner(fid) {
-      return request.auth != null && request.auth.uid == string(fid);
+      return request.auth.uid == fid;
     }
 
-    // Quotes collection rules
-    match /quotes/{quoteId} {
-      allow read: if request.auth != null && 
-        resource.data.fid == request.auth.uid;
+    // Match any document in the users collection
+    match /users/{userId} {
+      // Allow read/write if the user is authenticated and owns the document
+      allow read, write: if isAuthenticated() && isOwner(userId);
       
-      allow create: if request.auth != null && 
-        isValidQuote() &&
-        request.resource.data.fid == request.auth.uid;
+      // Match subcollections
+      match /history/{historyId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
       
-      allow delete: if request.auth != null && 
-        resource.data.fid == request.auth.uid;
+      match /favorites/{favoriteId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
     }
 
-    // Favorites collection rules
-    match /favorites/{favoriteId} {
-      allow read: if request.auth != null && 
-        resource.data.fid == request.auth.uid;
-      
-      allow create: if request.auth != null && 
-        isValidQuote() &&
-        request.resource.data.id is string &&
-        request.resource.data.fid == request.auth.uid;
-      
-      allow delete: if request.auth != null && 
-        resource.data.fid == request.auth.uid;
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 } 
