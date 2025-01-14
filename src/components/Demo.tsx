@@ -525,7 +525,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       {/* Main Content - Centered */}
       <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4 pt-24">
         {/* Card Component */}
-        <Card className="w-full max-w-sm overflow-hidden shadow-2xl">
+        <Card className="w-full max-w-xs overflow-hidden shadow-2xl">
           <CardHeader className="bg-white">
             <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
               Fun Quote Generator
