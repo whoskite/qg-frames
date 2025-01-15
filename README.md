@@ -127,20 +127,27 @@ Project Link: [https://github.com/whoskite/qg-frames](https://github.com/whoskit
 
 ## 🔮 Future Plans
 
-Feature Enhancements:
-- [ ] Different quote styles/themes
-- [ ] Quote categories
-- [ ] Social sharing options beyond Farcaster
-- [ ] Public gallery of popular quotes
-- [ ] Enhanced sharing features
+Core Features:
+- [ ] Quote categories and themes
+- [ ] Public quote gallery with curation
 - [ ] User collections and playlists
-Performance Optimizations:
-- [ ] Implement caching for frequently used quotes
-- [ ] Optimize image loading
-- [ ] Add pagination for history/favorites
-- [ ] Implement lazy loading
-Analytics and Insights:
-- [ ] Add usage analytics
-- [ ] Track popular quote types
-- [ ] Monitor performance metrics
-- [ ] Implement user feedback system
+
+User Experience:
+- [ ] New user onboarding flow
+- [ ] In-app curated feed with engagement features
+- [ ] Lazy loading and pagination
+- [ ] Image loading optimizations
+
+Integration & Data:
+- [ ] Hubble integration
+- [ ] Talent Protocol integration
+- [ ] Unified private/public data system with Firebase & Hubble
+
+Social & Sharing:
+- [ ] Expanded social platform integrations
+- [ ] Enhanced sharing capabilities
+
+Analytics:
+- [ ] Usage tracking and insights
+- [ ] Performance monitoring
+- [ ] User feedback system
