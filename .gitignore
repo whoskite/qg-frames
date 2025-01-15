@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore investor documents
+docs/investor_*
+docs/business_*
+docs/market_*
+docs/metrics_*
+docs/tokenomics_*
