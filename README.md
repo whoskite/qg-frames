@@ -130,3 +130,18 @@ Project Link: [https://github.com/whoskite/qg-frames](https://github.com/whoskit
 - [ ] Additional quote styles and themes
 - [ ] Enhanced sharing features
 - [ ] User collections and playlists
+Feature Enhancements:
+- [ ] Different quote styles/themes
+- [ ] Quote categories
+- [ ] Social sharing options beyond Farcaster
+- [ ] Public gallery of popular quotes
+Performance Optimizations:
+- [ ] Implement caching for frequently used quotes
+- [ ] Optimize image loading
+- [ ] Add pagination for history/favorites
+- [ ] Implement lazy loading
+Analytics and Insights:
+- [ ] Add usage analytics
+- [ ] Track popular quote types
+- [ ] Monitor performance metrics
+- [ ] Implement user feedback system
