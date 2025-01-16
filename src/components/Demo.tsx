@@ -1431,27 +1431,29 @@ export default function Demo({ title = "Fun Quotes" }) {
                       let mediaUrl = '';
 
                       if (gifEnabled && gifUrl) {
-                        // If GIF is enabled and available, use it
+                        // If GIF is enabled and available, use it directly
                         mediaUrl = gifUrl;
                       } else if (quote) {
                         // Generate and upload the canvas image
                         try {
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          mediaUrl = await uploadImage(dataUrl);
+                          // Get the URL from the upload response
+                          const uploadedUrl = await uploadImage(dataUrl);
+                          // Ensure the URL is properly encoded
+                          mediaUrl = encodeURIComponent(uploadedUrl);
                         } catch (error) {
                           console.error('Error generating/uploading image:', error);
                         }
                       }
 
-                      // Construct the URL with proper encoding and format
-                      const embedParams = [shareUrl];
-                      if (mediaUrl) {
-                        embedParams.push(mediaUrl);
-                      }
-                      
+                      // Construct Warpcast URL with properly encoded parameters
                       const params = new URLSearchParams();
                       params.append('text', shareText);
-                      embedParams.forEach(embed => params.append('embeds[]', embed));
+                      params.append('embeds[]', shareUrl);
+                      if (mediaUrl) {
+                        // Add the media URL without additional encoding since it's already encoded
+                        params.append('embeds[]', mediaUrl);
+                      }
                       
                       const url = `https://warpcast.com/~/compose?${params.toString()}`;
                       
