@@ -5,18 +5,32 @@ export async function POST(request: Request) {
     const { image } = await request.json();
     
     if (!image) {
+      console.error('No image provided in request');
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
+    }
+
+    if (!process.env.NEYNAR_API_KEY) {
+      console.error('NEYNAR_API_KEY not found in environment variables');
+      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
     // Remove the data:image/png;base64, prefix if present
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    
+    try {
+      // Validate base64 data
+      Buffer.from(base64Data, 'base64');
+    } catch (error) {
+      console.error('Invalid base64 data:', error);
+      return NextResponse.json({ error: 'Invalid image data' }, { status: 400 });
+    }
     
     // Upload to Neynar
     const response = await fetch('https://api.neynar.com/v1/upload', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
-        'api_key': process.env.NEYNAR_API_KEY || '',
+        'api_key': process.env.NEYNAR_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -26,12 +40,20 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Neynar API error:', errorData);
-      throw new Error(`Neynar API error: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      console.error('Neynar API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      return NextResponse.json(
+        { error: `Neynar API error: ${response.status}` },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();
+    console.log('Neynar API response:', data);
     
     if (data && data.url) {
       return NextResponse.json({ url: data.url });
@@ -40,11 +62,14 @@ export async function POST(request: Request) {
     }
     
     console.error('Unexpected Neynar response:', data);
-    throw new Error('Failed to get URL from Neynar response');
-  } catch (error) {
-    console.error('Error uploading to Neynar:', error);
     return NextResponse.json(
-      { error: 'Failed to upload image' },
+      { error: 'Invalid response from Neynar' },
+      { status: 500 }
+    );
+  } catch (error) {
+    console.error('Error in upload route:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
