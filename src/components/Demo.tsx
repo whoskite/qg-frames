@@ -2,8 +2,8 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check } from 'lucide-react';
-import { useEffect, useCallback, useState } from "react";
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, Download } from 'lucide-react';
+import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
@@ -104,6 +104,90 @@ interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
   timestamp: string;
 }
 
+// Add this function before the Demo component
+const generateQuoteImage = async (quote: string, bgImage: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+
+      // Set canvas size
+      canvas.width = 800;
+      canvas.height = 400;
+
+      // Create and load background image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      img.onload = () => {
+        if (bgImage === 'none') {
+          // Create gradient background
+          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+          gradient.addColorStop(0, '#9b5de5');
+          gradient.addColorStop(0.5, '#f15bb5');
+          gradient.addColorStop(1, '#ff6b6b');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          // Draw background image
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Add semi-transparent overlay
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Add quote text
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 32px Inter, sans-serif';
+        
+        // Word wrap the text
+        const words = quote.split(' ');
+        const lines = [];
+        let currentLine = '';
+        const maxWidth = canvas.width - 100;
+
+        words.forEach(word => {
+          const testLine = currentLine + word + ' ';
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = word + ' ';
+          } else {
+            currentLine = testLine;
+          }
+        });
+        lines.push(currentLine);
+
+        // Draw the wrapped text
+        const lineHeight = 40;
+        const totalHeight = lines.length * lineHeight;
+        const startY = (canvas.height - totalHeight) / 2;
+
+        lines.forEach((line, index) => {
+          ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
+        });
+
+        resolve(canvas.toDataURL('image/png'));
+      };
+
+      img.onerror = (error) => {
+        reject(error);
+      };
+
+      if (bgImage === 'none') {
+        img.onload(); // Trigger onload directly for gradient
+      } else {
+        img.src = bgImage;
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
@@ -134,6 +218,13 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Add a new state for Firebase initialization
   const [isFirebaseInitialized, setIsFirebaseInitialized] = useState(false);
+
+  // Add to state declarations
+  const [showSettings, setShowSettings] = useState(false);
+  const [gifEnabled, setGifEnabled] = useState(true);
+
+  // Add a new state to track if it's the initial state
+  const [isInitialState, setIsInitialState] = useState(true);
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
@@ -193,6 +284,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = async () => {
+    setIsInitialState(false);
     if (isLoading) return;
     setIsLoading(true);
     
@@ -202,20 +294,20 @@ export default function Demo({ title = "Fun Quotes" }) {
       
       if (quoteResponse) {
         const newQuote = quoteResponse.text.slice(0, MAX_CHARS);
-        const newColor = getRandomColor();
         setQuote(newQuote);
-        setBgColor(newColor);
         
-        const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
-        setGifUrl(gifUrl);
+        if (gifEnabled) {
+          const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
+          setGifUrl(gifUrl);
+        }
         
         // Add to history
         setQuoteHistory(prev => [{
           text: newQuote,
           style: quoteResponse.style,
-          gifUrl,
+          gifUrl: gifEnabled ? gifUrl : null,
           timestamp: new Date(),
-          bgColor: newColor
+          bgColor
         }, ...prev.slice(0, 9)]); // Keep last 10 quotes
         
         logAnalyticsEvent('quote_generated_success', {
@@ -524,6 +616,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <Palette className="w-4 h-4" />
                     <span>Theme</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowSettings(true)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -533,7 +632,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
       {/* Main Content - Centered */}
       <main 
-        className={`min-h-screen w-full flex items-center justify-center p-4 pt-24 relative ${
+        className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-24 relative ${
           bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
         }`}
         style={bgImage !== 'none' ? {
@@ -543,8 +642,13 @@ export default function Demo({ title = "Fun Quotes" }) {
           backgroundRepeat: 'no-repeat'
         } : {}}
       >
+        {isInitialState && (
+          <div className="mb-8 text-2xl text-white font-medium text-center">
+            Welcome User
+          </div>
+        )}
         {/* Card Component */}
-        <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent backdrop-blur-md relative z-10">
+        <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
           <CardContent className="p-4">
             {/* GIF Display */}
             <AnimatePresence mode="wait">
@@ -585,10 +689,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center relative"
-                style={{ backgroundColor: bgColor }}
+                className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center"
               >
-                <p className="text-center text-white text-lg font-medium">
+                <p className="text-center text-white text-2xl font-medium">
                   {quote || "Click the magic button to generate an inspiring quote!"}
                 </p>
               </motion.div>
@@ -618,35 +721,71 @@ export default function Demo({ title = "Fun Quotes" }) {
                       : 'text-white hover:text-pink-200'
                   }`}
                 />
-                {isCasting ? (
-                  <motion.span
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="text-white"
-                  >
-                    •••
-                  </motion.span>
-                ) : (
-                  <Share2 
-                    onClick={() => {
-                      setIsCasting(true);
+                <div className="flex gap-4">
+                  <Download
+                    onClick={async () => {
                       try {
-                        const shareText = `"${quote}" - Created by @kite /thepod`;
-                        const shareUrl = 'https://qg-frames.vercel.app';
-                        const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
-                        
-                        logAnalyticsEvent('cast_created', {
-                          quote: quote
-                        });
-                        
-                        sdk.actions.openUrl(url);
-                      } finally {
-                        setIsCasting(false);
+                        if (gifUrl) {
+                          // Download GIF
+                          const response = await fetch(gifUrl);
+                          const blob = await response.blob();
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'quote-gif.gif';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(url);
+                        } else if (quote) {
+                          // Download quote image
+                          console.log('Generating quote image...');
+                          const dataUrl = await generateQuoteImage(quote, bgImage);
+                          console.log('Image generated, creating download...');
+                          
+                          const a = document.createElement('a');
+                          a.href = dataUrl;
+                          a.download = 'quote-image.png';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }
+                      } catch (error) {
+                        console.error('Error downloading:', error);
                       }
                     }}
                     className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
                   />
-                )}
+                  {isCasting ? (
+                    <motion.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="text-white"
+                    >
+                      •••
+                    </motion.span>
+                  ) : (
+                    <Share2 
+                      onClick={() => {
+                        setIsCasting(true);
+                        try {
+                          const shareText = `"${quote}" - Created by @kite /thepod`;
+                          const shareUrl = 'https://qg-frames.vercel.app';
+                          const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                          
+                          logAnalyticsEvent('cast_created', {
+                            quote: quote
+                          });
+                          
+                          sdk.actions.openUrl(url);
+                        } finally {
+                          setIsCasting(false);
+                        }
+                      }}
+                      className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
+                    />
+                  )}
+                </div>
               </motion.div>
             )}
 
@@ -986,6 +1125,100 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </div>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowSettings(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Settings
+              </h2>
+              <Button
+                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                onClick={() => setShowSettings(false)}
+              >
+                <X className="h-4 w-4 text-black" />
+              </Button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* GIF Toggle Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1 mr-8">
+                  <h3 className="font-medium text-gray-900">GIF Generation</h3>
+                  <p className="text-sm text-gray-500">Toggle automatic GIF generation for quotes</p>
+                </div>
+                <Button
+                  onClick={() => setGifEnabled(!gifEnabled)}
+                  className={`${
+                    gifEnabled 
+                      ? 'bg-purple-600 hover:bg-purple-700' 
+                      : 'bg-gray-400 hover:bg-gray-500'
+                  } text-white w-24 flex items-center justify-center`}
+                >
+                  {gifEnabled ? 'Enabled' : 'Disabled'}
+                </Button>
+              </div>
+
+              <div className="h-px bg-gray-200" />
+
+              {/* Clear History Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1 mr-8">
+                  <h3 className="font-medium text-gray-900">Clear History</h3>
+                  <p className="text-sm text-gray-500">Remove all generated quotes from history</p>
+                </div>
+                <Button
+                  onClick={handleClearHistory}
+                  disabled={isClearing}
+                  className="bg-red-500 hover:bg-red-600 text-white w-24"
+                >
+                  {isClearing ? "Clearing..." : "Clear"}
+                </Button>
+              </div>
+
+              {/* Clear Favorites Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1 mr-8">
+                  <h3 className="font-medium text-gray-900">Clear Favorites</h3>
+                  <p className="text-sm text-gray-500">Remove all favorite quotes</p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (context?.user?.fid) {
+                      setFavorites([]);
+                      // You'll need to implement clearFavorites in your firestore.ts
+                      // clearFavorites(context.user.fid);
+                    }
+                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white w-24"
+                >
+                  Clear
+                </Button>
+              </div>
+
+              {/* Version Info */}
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1 mr-8">
+                  <h3 className="font-medium text-gray-900">Version</h3>
+                  <p className="text-sm text-gray-500">Current version of the app</p>
+                </div>
+                <span className="text-sm text-gray-500 w-24 text-right">1.0.0</span>
+              </div>
             </div>
           </motion.div>
         </div>
