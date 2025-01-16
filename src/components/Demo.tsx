@@ -893,10 +893,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                             // If GIF is enabled and available, use it
                             mediaUrl = gifUrl;
                           } else if (quote) {
-                            // If no GIF, generate canvas image
+                            // Generate the image on-demand for sharing
                             try {
                               const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                              mediaUrl = dataUrl;
+                              // Convert data URL to Blob
+                              const response = await fetch(dataUrl);
+                              const blob = await response.blob();
+                              
+                              // Create a temporary URL for the blob
+                              mediaUrl = URL.createObjectURL(blob);
+
+                              // Schedule cleanup of the temporary URL
+                              setTimeout(() => {
+                                URL.revokeObjectURL(mediaUrl);
+                              }, 1000); // Cleanup after 1 second
                             } catch (error) {
                               console.error('Error generating quote image:', error);
                             }
