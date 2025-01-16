@@ -1552,28 +1552,24 @@ export default function Demo({ title = "Fun Quotes" }) {
                   onClick={async () => {
                     try {
                       if (downloadPreviewImage) {
-                        // Create a new window/tab to display the image
-                        const newWindow = window.open('', '_blank');
-                        if (newWindow) {
-                          newWindow.document.write(`
-                            <html>
-                              <head>
-                                <title>Download Quote Image</title>
-                              </head>
-                              <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5;">
-                                <div style="text-align: center;">
-                                  <img src="${downloadPreviewImage}" style="max-width: 100%; height: auto;" alt="Quote" />
-                                  <p style="margin-top: 20px; font-family: sans-serif;">Right-click the image and select "Save image as..." to download</p>
-                                </div>
-                              </body>
-                            </html>
-                          `);
-                        }
+                        // Upload the image to Firebase Storage
+                        const uploadedUrl = await uploadImage(downloadPreviewImage);
+                        
+                        // Create a download link
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = uploadedUrl;
+                        downloadLink.download = `funquote-${Date.now()}.png`;
+                        
+                        // Trigger download
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
                         setShowDownloadPreview(false);
                         setDownloadPreviewImage(null);
                       }
                     } catch (error) {
-                      console.error('Error opening image:', error);
+                      console.error('Error downloading image:', error);
                     }
                   }}
                   disabled={!downloadPreviewImage}
