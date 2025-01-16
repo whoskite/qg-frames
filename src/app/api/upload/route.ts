@@ -14,6 +14,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
+    if (!process.env.NEYNAR_CLIENT_ID) {
+      console.error('NEYNAR_CLIENT_ID not found in environment variables');
+      return NextResponse.json({ error: 'Client ID not configured' }, { status: 500 });
+    }
+
     // Remove the data:image/png;base64, prefix if present
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     
@@ -24,7 +29,8 @@ export async function POST(request: Request) {
         headers: {
           'Accept': 'application/json',
           'api_key': process.env.NEYNAR_API_KEY,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Client-Id': process.env.NEYNAR_CLIENT_ID
         },
         body: JSON.stringify({
           file: base64Data,
