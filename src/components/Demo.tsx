@@ -267,15 +267,14 @@ const generateQuoteImage = async (quote: string, bgImage: string, userContext?: 
   });
 };
 
-// Add this function before the share button click handler
-const uploadToNeynar = async (imageData: string): Promise<string> => {
+const uploadImage = async (imageData: string): Promise<string> => {
   try {
     const response = await fetch('/api/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ image: imageData })
+      body: JSON.stringify({ image: imageData }),
     });
 
     if (!response.ok) {
@@ -283,9 +282,13 @@ const uploadToNeynar = async (imageData: string): Promise<string> => {
     }
 
     const data = await response.json();
+    if (!data.url) {
+      throw new Error('No URL in response');
+    }
+
     return data.url;
   } catch (error) {
-    console.error('Error uploading to Neynar:', error);
+    console.error('Error uploading image:', error);
     throw error;
   }
 };
@@ -1434,7 +1437,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         // Generate and upload the canvas image
                         try {
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          mediaUrl = await uploadToNeynar(dataUrl);
+                          mediaUrl = await uploadImage(dataUrl);
                         } catch (error) {
                           console.error('Error generating/uploading image:', error);
                         }
