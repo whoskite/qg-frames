@@ -721,7 +721,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       >
         {isInitialState && (
           <div className="mb-8 text-2xl text-white font-medium text-center">
-            Welcome User
+            Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
           </div>
         )}
         {/* Card Component */}
