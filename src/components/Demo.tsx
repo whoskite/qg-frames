@@ -2,7 +2,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check } from 'lucide-react';
 import { useEffect, useCallback, useState } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -110,6 +110,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [userPrompt, setUserPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [bgColor, setBgColor] = useState(getRandomColor());
+  const [bgImage, setBgImage] = useState<string>('/Background_Nature_1_pexels-asumaani-16545605.jpg');
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<FrameContext>();
@@ -117,6 +118,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [sessionStartTime] = useState(Date.now());
   const [quoteHistory, setQuoteHistory] = useState<QuoteHistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 
   // Frame-specific state
@@ -515,6 +517,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <History className="w-4 h-4" />
                     <span>History</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowThemeMenu(true)}
+                  >
+                    <Palette className="w-4 h-4" />
+                    <span>Theme</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -523,15 +532,21 @@ export default function Demo({ title = "Fun Quotes" }) {
       </nav>
 
       {/* Main Content - Centered */}
-      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4 pt-24">
+      <main 
+        className={`min-h-screen w-full flex items-center justify-center p-4 pt-24 relative ${
+          bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
+        }`}
+        style={bgImage !== 'none' ? {
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        } : {}}
+      >
+        <div className="absolute inset-0 bg-black/30" />
+        
         {/* Card Component */}
-        <Card className="w-full max-w-sm overflow-hidden shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-              Fun Quote Generator
-            </CardTitle>
-          </CardHeader>
-
+        <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent backdrop-blur-md relative z-10">
           <CardContent className="p-4">
             {/* GIF Display */}
             <AnimatePresence mode="wait">
@@ -575,123 +590,96 @@ export default function Demo({ title = "Fun Quotes" }) {
                 className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center relative"
                 style={{ backgroundColor: bgColor }}
               >
-                {quote && (
-                  <motion.button
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-4 right-4"
-                    onClick={() => {
-                      const quoteItem: QuoteHistoryItem = {
-                        text: quote,
-                        style: 'default',
-                        gifUrl,
-                        timestamp: new Date(),
-                        bgColor
-                      };
-                      toggleFavorite(quoteItem);
-                    }}
-                  >
-                    <Heart 
-                      className={`w-6 h-6 transition-colors ${
-                        favorites.some(fav => fav.text === quote)
-                          ? 'fill-pink-500 text-pink-500' 
-                          : 'text-white hover:text-pink-200'
-                      }`}
-                    />
-                  </motion.button>
-                )}
                 <p className="text-center text-white text-lg font-medium">
                   {quote || "Click the magic button to generate an inspiring quote!"}
                 </p>
               </motion.div>
             </AnimatePresence>
 
+            {/* Action Buttons */}
+            {quote && (
+              <motion.div 
+                className="mb-4 flex justify-between items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Heart 
+                  onClick={() => {
+                    const quoteItem: QuoteHistoryItem = {
+                      text: quote,
+                      style: 'default',
+                      gifUrl,
+                      timestamp: new Date(),
+                      bgColor
+                    };
+                    toggleFavorite(quoteItem);
+                  }}
+                  className={`w-5 h-5 transition-transform hover:scale-125 cursor-pointer ${
+                    favorites.some(fav => fav.text === quote)
+                      ? 'fill-pink-500 text-pink-500' 
+                      : 'text-white hover:text-pink-200'
+                  }`}
+                />
+                {isCasting ? (
+                  <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="text-white"
+                  >
+                    •••
+                  </motion.span>
+                ) : (
+                  <Share2 
+                    onClick={() => {
+                      setIsCasting(true);
+                      try {
+                        const shareText = `"${quote}" - Created by @kite /thepod`;
+                        const shareUrl = 'https://qg-frames.vercel.app';
+                        const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                        
+                        logAnalyticsEvent('cast_created', {
+                          quote: quote
+                        });
+                        
+                        sdk.actions.openUrl(url);
+                      } finally {
+                        setIsCasting(false);
+                      }
+                    }}
+                    className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
+                  />
+                )}
+              </motion.div>
+            )}
+
             {/* Input Field */}
-            <div className="mb-6">
+            <div className="mb-6 relative">
               <Input
                 type="text"
                 placeholder="Enter a topic/word for your quote"
                 value={userPrompt}
                 onChange={(e) => setUserPrompt(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full text-lg"
+                className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
               />
+              <div 
+                onClick={handleGenerateQuote}
+                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+              >
+                <Image
+                  src="/Submit_Icon.png"
+                  alt="Submit"
+                  width={20}
+                  height={20}
+                  className="invert brightness-0"
+                  unoptimized
+                />
+              </div>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            <motion.div className="w-full"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button 
-                onClick={handleGenerateQuote} 
-                disabled={isLoading}
-                className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-              >
-                {isLoading ? (
-                  <span className="flex items-center">
-                    Generating
-                    <motion.span
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      className="ml-2"
-                    >
-                      ...
-                    </motion.span>
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    Generate Magic Quote <Sparkles className="ml-2" size={20} />
-                  </span>
-                )}
-              </Button>
-            </motion.div>
-
-            {/* Cast Button */}
-            {quote && (
-              <motion.div className="w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  onClick={() => {
-                    setIsCasting(true);
-                    try {
-                      const shareText = `"${quote}" - Created by @kite /thepod`;
-                      const shareUrl = 'https://qg-frames.vercel.app';
-                      const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
-                      
-                      logAnalyticsEvent('cast_created', {
-                        quote: quote
-                      });
-                      
-                      sdk.actions.openUrl(url);
-                    } finally {
-                      setIsCasting(false);
-                    }
-                  }}
-                  className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-                >
-                  {isCasting ? (
-                    <span className="flex items-center">
-                      Casting
-                      <motion.span
-                        animate={{ opacity: [0, 1, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                        className="ml-2"
-                      >
-                        ...
-                      </motion.span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      Cast Away <Share2 className="ml-2" size={20} />
-                    </span>
-                  )}
-                </Button>
-              </motion.div>
-            )}
+            {/* Remove the Cast Away button section entirely */}
           </CardFooter>
         </Card>
       </main>
@@ -911,6 +899,95 @@ export default function Demo({ title = "Fun Quotes" }) {
                   ))}
                 </AnimatePresence>
               )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Theme Menu Modal */}
+      {showThemeMenu && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowThemeMenu(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Choose Background
+              </h2>
+              <Button
+                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                onClick={() => setShowThemeMenu(false)}
+              >
+                <X className="h-4 w-4 text-black" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                {
+                  id: 'nature1',
+                  name: 'Nature 1',
+                  path: '/Background_Nature_1_pexels-asumaani-16545605.jpg'
+                },
+                {
+                  id: 'urban',
+                  name: 'Urban',
+                  path: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg'
+                },
+                {
+                  id: 'nature2',
+                  name: 'Nature 2',
+                  path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
+                },
+                {
+                  id: 'gradient',
+                  name: 'Gradient',
+                  path: 'gradient',
+                  isGradient: true
+                }
+              ].map((bg) => (
+                <div
+                  key={bg.id}
+                  onClick={() => {
+                    if (bg.isGradient) {
+                      setBgImage('none');
+                    } else {
+                      setBgImage(bg.path);
+                    }
+                  }}
+                  className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
+                    (bg.isGradient ? bgImage === 'none' : bgImage === bg.path) ? 'ring-4 ring-purple-600 ring-offset-2' : ''
+                  }`}
+                >
+                  {bg.isGradient ? (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500" />
+                  ) : (
+                    <Image
+                      src={bg.path}
+                      alt={bg.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      unoptimized
+                    />
+                  )}
+                  {(bg.isGradient ? bgImage === 'none' : bgImage === bg.path) && (
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <Check className="w-8 h-8 text-white" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center text-sm">
+                    {bg.name}
+                  </div>
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>
