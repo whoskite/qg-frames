@@ -267,6 +267,29 @@ const generateQuoteImage = async (quote: string, bgImage: string, userContext?: 
   });
 };
 
+// Add this function before the share button click handler
+const uploadToNeynar = async (imageData: string): Promise<string> => {
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ image: imageData })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    const data = await response.json();
+    return data.url;
+  } catch (error) {
+    console.error('Error uploading to Neynar:', error);
+    throw error;
+  }
+};
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
@@ -874,23 +897,56 @@ export default function Demo({ title = "Fun Quotes" }) {
                       •••
                     </motion.span>
                   ) : (
-                    <Share2 
+                    <Button
                       onClick={async () => {
-                        setShowPreview(true);
-                        if (!gifEnabled) {
-                          setIsGeneratingPreview(true);
-                          try {
-                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                            setPreviewImage(dataUrl);
-                          } catch (error) {
-                            console.error('Error generating preview:', error);
-                          } finally {
-                            setIsGeneratingPreview(false);
+                        setIsCasting(true);
+                        try {
+                          const shareText = `"${quote}" - Created by @kite /thepod`;
+                          const shareUrl = 'https://qg-frames.vercel.app';
+                          let mediaUrl = '';
+
+                          if (gifEnabled && gifUrl) {
+                            // If GIF is enabled and available, use it
+                            mediaUrl = gifUrl;
+                          } else if (quote) {
+                            // Generate and upload the canvas image
+                            try {
+                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              mediaUrl = await uploadToNeynar(dataUrl);
+                            } catch (error) {
+                              console.error('Error generating/uploading image:', error);
+                            }
                           }
+
+                          const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
+                          
+                          logAnalyticsEvent('cast_created', {
+                            quote: quote,
+                            hasMedia: !!mediaUrl,
+                            mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
+                          });
+                          
+                          sdk.actions.openUrl(url);
+                          setShowPreview(false);
+                          setPreviewImage(null);
+                        } catch (error) {
+                          console.error('Error sharing:', error);
+                        } finally {
+                          setIsCasting(false);
                         }
                       }}
-                      className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
-                    />
+                      disabled={false}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                    >
+                      {isCasting ? (
+                        <motion.span
+                          animate={{ opacity: [0, 1, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          •••
+                        </motion.span>
+                      ) : 'Share'}
+                    </Button>
                   )}
                 </div>
               </motion.div>
@@ -1402,7 +1458,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                     try {
                       const shareText = `"${quote}" - Created by @kite /thepod`;
                       const shareUrl = 'https://qg-frames.vercel.app';
-                      const mediaUrl = gifEnabled && gifUrl ? gifUrl : previewImage;
+                      let mediaUrl = '';
+
+                      if (gifEnabled && gifUrl) {
+                        // If GIF is enabled and available, use it
+                        mediaUrl = gifUrl;
+                      } else if (quote) {
+                        // Generate and upload the canvas image
+                        try {
+                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                          mediaUrl = await uploadToNeynar(dataUrl);
+                        } catch (error) {
+                          console.error('Error generating/uploading image:', error);
+                        }
+                      }
 
                       const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
                       
@@ -1421,7 +1490,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       setIsCasting(false);
                     }
                   }}
-                  disabled={gifEnabled ? !gifUrl : !previewImage}
+                  disabled={false}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8"
                 >
                   {isCasting ? (

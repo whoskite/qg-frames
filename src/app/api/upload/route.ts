@@ -1,13 +1,21 @@
-export const uploadImageToNeynar = async (base64Image: string): Promise<string> => {
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
   try {
-    // Remove the data:image/png;base64, prefix if present
-    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+    const { image } = await request.json();
     
-    // Make direct API call to Neynar
+    if (!image) {
+      return NextResponse.json({ error: 'No image provided' }, { status: 400 });
+    }
+
+    // Remove the data:image/png;base64, prefix if present
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    
+    // Upload to Neynar
     const response = await fetch('https://api.neynar.com/v2/farcaster/uploads', {
       method: 'POST',
       headers: {
-        'api_key': process.env.NEXT_PUBLIC_NEYNAR_API_KEY || '',
+        'api_key': process.env.NEYNAR_API_KEY || '',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -19,12 +27,15 @@ export const uploadImageToNeynar = async (base64Image: string): Promise<string> 
     const data = await response.json();
     
     if (data && data.url) {
-      return data.url;
+      return NextResponse.json({ url: data.url });
     }
     
     throw new Error('Failed to get URL from Neynar response');
   } catch (error) {
     console.error('Error uploading to Neynar:', error);
-    throw error;
+    return NextResponse.json(
+      { error: 'Failed to upload image' },
+      { status: 500 }
+    );
   }
-}; 
+} 
