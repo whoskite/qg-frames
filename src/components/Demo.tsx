@@ -543,8 +543,6 @@ export default function Demo({ title = "Fun Quotes" }) {
           backgroundRepeat: 'no-repeat'
         } : {}}
       >
-        <div className="absolute inset-0 bg-black/30" />
-        
         {/* Card Component */}
         <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent backdrop-blur-md relative z-10">
           <CardContent className="p-4">
