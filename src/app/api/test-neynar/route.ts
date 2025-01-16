@@ -10,8 +10,8 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Test Neynar API with a simple request to the upload endpoint
-    const response = await fetch('https://api.neynar.com/v1/upload', {
+    // Test Neynar API with a simple request to the v2 upload endpoint
+    const response = await fetch('https://api.neynar.com/v2/farcaster/uploads', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -20,7 +20,7 @@ export async function GET() {
       },
       body: JSON.stringify({
         file: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', // 1x1 transparent PNG
-        uploadType: 'image'
+        type: 'image'
       })
     });
 

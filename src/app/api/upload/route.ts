@@ -17,25 +17,17 @@ export async function POST(request: Request) {
     // Remove the data:image/png;base64, prefix if present
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     
-    try {
-      // Validate base64 data
-      Buffer.from(base64Data, 'base64');
-    } catch (error) {
-      console.error('Invalid base64 data:', error);
-      return NextResponse.json({ error: 'Invalid image data' }, { status: 400 });
-    }
-    
-    // Upload to Neynar
-    const response = await fetch('https://api.neynar.com/v1/upload', {
+    // Upload to Neynar v2 API
+    const response = await fetch('https://api.neynar.com/v2/farcaster/uploads', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'api_key': process.env.NEYNAR_API_KEY,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         file: base64Data,
-        uploadType: 'image'
+        type: 'image'
       })
     });
 
