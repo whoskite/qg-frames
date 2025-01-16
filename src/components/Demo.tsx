@@ -1534,32 +1534,36 @@ export default function Demo({ title = "Fun Quotes" }) {
               {/* Download Button */}
               <div className="flex justify-end">
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     try {
                       if (downloadPreviewImage) {
-                        // Convert data URL to blob directly
-                        const byteString = atob(downloadPreviewImage.split(',')[1]);
-                        const mimeString = downloadPreviewImage.split(',')[0].split(':')[1].split(';')[0];
-                        const ab = new ArrayBuffer(byteString.length);
-                        const ia = new Uint8Array(ab);
+                        // Convert base64 to blob with explicit MIME type
+                        const base64Response = await fetch(downloadPreviewImage);
+                        const blob = await base64Response.blob();
                         
-                        for (let i = 0; i < byteString.length; i++) {
-                          ia[i] = byteString.charCodeAt(i);
+                        // Create a Blob URL
+                        const blobUrl = URL.createObjectURL(
+                          new Blob([blob], { type: 'image/png' })
+                        );
+                        
+                        // For mobile devices, open in new tab
+                        if (/Mobi|Android/i.test(navigator.userAgent)) {
+                          window.open(blobUrl, '_blank');
+                        } else {
+                          // For desktop, trigger download
+                          const a = document.createElement('a');
+                          a.href = blobUrl;
+                          a.download = 'quote-image.png';
+                          a.style.display = 'none';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
                         }
                         
-                        const blob = new Blob([ab], { type: mimeString });
-                        const url = URL.createObjectURL(blob);
-                        
-                        // Create and trigger download
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'quote-image.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        
                         // Cleanup
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
+                        setTimeout(() => {
+                          URL.revokeObjectURL(blobUrl);
+                        }, 100);
                         
                         // Close modal after download
                         setShowDownloadPreview(false);
