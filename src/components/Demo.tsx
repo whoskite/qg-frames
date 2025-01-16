@@ -838,22 +838,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                   }`}
                 />
                 <div className="flex gap-4">
-                  <Download
-                    onClick={async () => {
-                      try {
-                        if (gifUrl) {
-                          // Download GIF
-                          const response = await fetch(gifUrl);
-                          const blob = await response.blob();
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'quote-gif.gif';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          URL.revokeObjectURL(url);
-                        } else if (quote) {
+                  {!gifEnabled && quote && (
+                    <Download
+                      onClick={async () => {
+                        try {
                           // Generate and download quote image
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
                           
@@ -870,13 +858,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                           a.click();
                           document.body.removeChild(a);
                           URL.revokeObjectURL(url);
+                        } catch (error) {
+                          console.error('Error downloading:', error);
                         }
-                      } catch (error) {
-                        console.error('Error downloading:', error);
-                      }
-                    }}
-                    className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
-                  />
+                      }}
+                      className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
+                    />
+                  )}
                   {isCasting ? (
                     <motion.span
                       animate={{ opacity: [0, 1, 0] }}
