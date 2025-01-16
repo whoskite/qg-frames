@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadString, getDownloadURL, StorageError } from 'firebase/storage';
 import { initializeFirebase } from '../../../lib/firebase';
 
 export async function POST(request: Request) {
@@ -47,7 +47,6 @@ export async function POST(request: Request) {
       const storage = getStorage(firebaseApp.app);
       console.log('Storage instance:', {
         hasStorage: !!storage,
-        bucket: storage?.bucket,
         app: storage?.app?.name
       });
       
@@ -69,7 +68,6 @@ export async function POST(request: Request) {
         const storageRef = ref(storage, filename);
         console.log('Created storage reference:', {
           fullPath: storageRef.fullPath,
-          bucket: storageRef.bucket,
           name: storageRef.name
         });
         
@@ -92,12 +90,13 @@ export async function POST(request: Request) {
       } catch (storageError: unknown) {
         console.error('Storage operation error:', storageError);
         if (storageError instanceof Error) {
+          const error = storageError as StorageError;
           console.error('Storage error details:', {
-            message: storageError.message,
-            name: storageError.name,
-            stack: storageError.stack,
-            code: (storageError as any).code,
-            serverResponse: (storageError as any).serverResponse
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+            code: error.code,
+            customData: error.customData
           });
         }
         return NextResponse.json({ 
