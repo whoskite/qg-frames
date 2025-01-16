@@ -305,6 +305,16 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add a new state to track if it's the initial state
   const [isInitialState, setIsInitialState] = useState(true);
 
+  // Add new state for preview modal
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+
+  // Add new state for download preview
+  const [showDownloadPreview, setShowDownloadPreview] = useState(false);
+  const [downloadPreviewImage, setDownloadPreviewImage] = useState<string | null>(null);
+  const [isGeneratingDownloadPreview, setIsGeneratingDownloadPreview] = useState(false);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -841,25 +851,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                   {!gifEnabled && quote && (
                     <Download
                       onClick={async () => {
+                        setShowDownloadPreview(true);
+                        setIsGeneratingDownloadPreview(true);
                         try {
-                          // Generate and download quote image
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          
-                          // Convert base64 to blob
-                          const base64Response = await fetch(dataUrl);
-                          const blob = await base64Response.blob();
-                          
-                          // Create download link
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'quote-image.png';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          URL.revokeObjectURL(url);
+                          setDownloadPreviewImage(dataUrl);
                         } catch (error) {
-                          console.error('Error downloading:', error);
+                          console.error('Error generating preview:', error);
+                        } finally {
+                          setIsGeneratingDownloadPreview(false);
                         }
                       }}
                       className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
@@ -876,48 +876,17 @@ export default function Demo({ title = "Fun Quotes" }) {
                   ) : (
                     <Share2 
                       onClick={async () => {
-                        setIsCasting(true);
-                        try {
-                          const shareText = `"${quote}" - Created by @kite /thepod`;
-                          const shareUrl = 'https://qg-frames.vercel.app';
-                          let mediaUrl = '';
-
-                          if (gifEnabled && gifUrl) {
-                            // If GIF is enabled and available, use it
-                            mediaUrl = gifUrl;
-                          } else if (quote) {
-                            // Generate the image on-demand for sharing
-                            try {
-                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                              // Convert data URL to Blob
-                              const response = await fetch(dataUrl);
-                              const blob = await response.blob();
-                              
-                              // Create a temporary URL for the blob
-                              mediaUrl = URL.createObjectURL(blob);
-
-                              // Schedule cleanup of the temporary URL
-                              setTimeout(() => {
-                                URL.revokeObjectURL(mediaUrl);
-                              }, 1000); // Cleanup after 1 second
-                            } catch (error) {
-                              console.error('Error generating quote image:', error);
-                            }
+                        setShowPreview(true);
+                        if (!gifEnabled) {
+                          setIsGeneratingPreview(true);
+                          try {
+                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                            setPreviewImage(dataUrl);
+                          } catch (error) {
+                            console.error('Error generating preview:', error);
+                          } finally {
+                            setIsGeneratingPreview(false);
                           }
-
-                          const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
-                          
-                          logAnalyticsEvent('cast_created', {
-                            quote: quote,
-                            hasMedia: !!mediaUrl,
-                            mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
-                          });
-                          
-                          sdk.actions.openUrl(url);
-                        } catch (error) {
-                          console.error('Error sharing:', error);
-                        } finally {
-                          setIsCasting(false);
                         }
                       }}
                       className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
@@ -1354,6 +1323,211 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <p className="text-sm text-gray-500">Current app version</p>
                 </div>
                 <span className="text-sm text-gray-500 w-20 text-right">1.0.0</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Share Preview Modal */}
+      {showPreview && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => {
+            setShowPreview(false);
+            setPreviewImage(null);
+          }}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Preview Share
+              </h2>
+              <Button
+                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                onClick={() => {
+                  setShowPreview(false);
+                  setPreviewImage(null);
+                }}
+              >
+                <X className="h-4 w-4 text-black" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Preview Area */}
+              <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
+                {isGeneratingPreview ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="text-purple-600 text-sm"
+                    >
+                      Generating preview...
+                    </motion.div>
+                  </div>
+                ) : previewImage ? (
+                  <Image
+                    src={previewImage}
+                    alt="Share Preview"
+                    width={800}
+                    height={400}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                ) : gifEnabled && gifUrl ? (
+                  <Image
+                    src={gifUrl || ''}
+                    alt="GIF Preview"
+                    width={800}
+                    height={400}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                ) : null}
+              </div>
+
+              {/* Share Button */}
+              <div className="flex justify-end">
+                <Button
+                  onClick={async () => {
+                    setIsCasting(true);
+                    try {
+                      const shareText = `"${quote}" - Created by @kite /thepod`;
+                      const shareUrl = 'https://qg-frames.vercel.app';
+                      const mediaUrl = gifEnabled && gifUrl ? gifUrl : previewImage;
+
+                      const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
+                      
+                      logAnalyticsEvent('cast_created', {
+                        quote: quote,
+                        hasMedia: !!mediaUrl,
+                        mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
+                      });
+                      
+                      sdk.actions.openUrl(url);
+                      setShowPreview(false);
+                      setPreviewImage(null);
+                    } catch (error) {
+                      console.error('Error sharing:', error);
+                    } finally {
+                      setIsCasting(false);
+                    }
+                  }}
+                  disabled={gifEnabled ? !gifUrl : !previewImage}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                >
+                  {isCasting ? (
+                    <motion.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      •••
+                    </motion.span>
+                  ) : 'Share'}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Add Download Preview Modal */}
+      {showDownloadPreview && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => {
+            setShowDownloadPreview(false);
+            setDownloadPreviewImage(null);
+          }}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Download Preview
+              </h2>
+              <Button
+                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                onClick={() => {
+                  setShowDownloadPreview(false);
+                  setDownloadPreviewImage(null);
+                }}
+              >
+                <X className="h-4 w-4 text-black" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Preview Area */}
+              <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
+                {isGeneratingDownloadPreview ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="text-purple-600 text-sm"
+                    >
+                      Generating preview...
+                    </motion.div>
+                  </div>
+                ) : downloadPreviewImage ? (
+                  <Image
+                    src={downloadPreviewImage}
+                    alt="Download Preview"
+                    width={800}
+                    height={400}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                ) : null}
+              </div>
+
+              {/* Download Button */}
+              <div className="flex justify-end">
+                <Button
+                  onClick={async () => {
+                    try {
+                      if (downloadPreviewImage) {
+                        // Convert base64 to blob
+                        const base64Response = await fetch(downloadPreviewImage);
+                        const blob = await base64Response.blob();
+                        
+                        // Create download link
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'quote-image.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        // Close modal after download
+                        setShowDownloadPreview(false);
+                        setDownloadPreviewImage(null);
+                      }
+                    } catch (error) {
+                      console.error('Error downloading:', error);
+                    }
+                  }}
+                  disabled={!downloadPreviewImage}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                >
+                  Download
+                </Button>
               </div>
             </div>
           </motion.div>
