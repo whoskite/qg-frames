@@ -26,7 +26,7 @@ export async function GET() {
         clientIdLength: process.env.NEYNAR_CLIENT_ID?.length,
       });
 
-      const response = await fetch('https://api.neynar.com/v2/uploads', {
+      const response = await fetch('https://api.neynar.com/v1/upload', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -53,7 +53,7 @@ export async function GET() {
         statusCode: response.status,
         statusText: response.statusText,
         responseHeaders: headers,
-        endpoint: 'v2/uploads'
+        endpoint: 'v1/upload'
       });
     } catch (neynarError: unknown) {
       console.error('Neynar API error:', neynarError);
@@ -62,7 +62,7 @@ export async function GET() {
         details: neynarError instanceof Error ? neynarError.message : 'Unknown error',
         type: typeof neynarError === 'object' && neynarError !== null ? neynarError.constructor.name : 'Unknown',
         status: 'error',
-        endpoint: 'v2/uploads'
+        endpoint: 'v1/upload'
       }, { status: 500 });
     }
   } catch (error: unknown) {

@@ -29,8 +29,8 @@ export async function POST(request: Request) {
         base64Length: base64Data.length
       });
 
-      // Make direct API call to Neynar v2 uploads endpoint
-      const response = await fetch('https://api.neynar.com/v2/uploads', {
+      // Make direct API call to Neynar v1 upload endpoint
+      const response = await fetch('https://api.neynar.com/v1/upload', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
