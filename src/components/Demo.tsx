@@ -845,26 +845,31 @@ export default function Demo({ title = "Fun Quotes" }) {
                           // Download GIF
                           const response = await fetch(gifUrl);
                           const blob = await response.blob();
-                          const url = window.URL.createObjectURL(blob);
+                          const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
                           a.href = url;
                           a.download = 'quote-gif.gif';
                           document.body.appendChild(a);
                           a.click();
                           document.body.removeChild(a);
-                          window.URL.revokeObjectURL(url);
+                          URL.revokeObjectURL(url);
                         } else if (quote) {
-                          // Download quote image
-                          console.log('Generating quote image...');
+                          // Generate and download quote image
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          console.log('Image generated, creating download...');
                           
+                          // Convert base64 to blob
+                          const base64Response = await fetch(dataUrl);
+                          const blob = await base64Response.blob();
+                          
+                          // Create download link
+                          const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
-                          a.href = dataUrl;
+                          a.href = url;
                           a.download = 'quote-image.png';
                           document.body.appendChild(a);
                           a.click();
                           document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
                         }
                       } catch (error) {
                         console.error('Error downloading:', error);
