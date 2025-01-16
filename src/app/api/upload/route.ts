@@ -16,43 +16,77 @@ export async function POST(request: Request) {
       console.log('Initializing Firebase...');
       // Initialize Firebase
       const firebaseApp = await initializeFirebase();
-      console.log('Firebase initialization result:', { 
-        hasApp: !!firebaseApp,
-        hasFirebaseApp: !!(firebaseApp?.app),
-        hasStorage: !!(firebaseApp?.app && getStorage(firebaseApp.app))
-      });
-
-      if (!firebaseApp || !firebaseApp.app) {
-        console.error('Firebase initialization failed:', { firebaseApp });
-        throw new Error('Failed to initialize Firebase');
-      }
       
+      // Validate Firebase initialization
+      if (!firebaseApp) {
+        console.error('Firebase initialization returned null');
+        return NextResponse.json({ 
+          error: 'Firebase initialization failed',
+          details: 'Firebase app is null'
+        }, { status: 500 });
+      }
+
+      if (!firebaseApp.app) {
+        console.error('Firebase app is undefined');
+        return NextResponse.json({ 
+          error: 'Firebase initialization failed',
+          details: 'Firebase app is undefined'
+        }, { status: 500 });
+      }
+
+      // Get and validate storage
       console.log('Getting Firebase Storage instance...');
       const storage = getStorage(firebaseApp.app);
+      if (!storage) {
+        console.error('Failed to get Firebase Storage instance');
+        return NextResponse.json({ 
+          error: 'Storage initialization failed',
+          details: 'Could not get Firebase Storage instance'
+        }, { status: 500 });
+      }
       
       // Generate a unique filename
       const timestamp = Date.now();
       const filename = `quotes/${timestamp}.png`;
       console.log('Generated filename:', filename);
       
-      // Create a reference to the file location
-      const storageRef = ref(storage, filename);
-      console.log('Created storage reference');
-      
-      // Upload the base64 string
-      console.log('Starting file upload...', {
-        imageLength: image.length,
-        storageRefPath: storageRef.fullPath
-      });
-      await uploadString(storageRef, image, 'data_url');
-      console.log('File uploaded successfully');
-      
-      // Get the download URL
-      console.log('Getting download URL...');
-      const url = await getDownloadURL(storageRef);
-      console.log('Got download URL:', url);
-      
-      return NextResponse.json({ url });
+      try {
+        // Create a reference to the file location
+        const storageRef = ref(storage, filename);
+        console.log('Created storage reference:', {
+          fullPath: storageRef.fullPath,
+          name: storageRef.name
+        });
+        
+        // Upload the base64 string
+        console.log('Starting file upload...', {
+          imageLength: image.length,
+          storageRefPath: storageRef.fullPath
+        });
+
+        await uploadString(storageRef, image, 'data_url');
+        console.log('File uploaded successfully');
+        
+        // Get the download URL
+        console.log('Getting download URL...');
+        const url = await getDownloadURL(storageRef);
+        console.log('Got download URL:', url);
+        
+        return NextResponse.json({ url });
+      } catch (storageError: unknown) {
+        console.error('Storage operation error:', storageError);
+        if (storageError instanceof Error) {
+          console.error('Storage error details:', {
+            message: storageError.message,
+            name: storageError.name,
+            stack: storageError.stack
+          });
+        }
+        return NextResponse.json({ 
+          error: 'Storage operation failed',
+          details: storageError instanceof Error ? storageError.message : 'Unknown storage error'
+        }, { status: 500 });
+      }
     } catch (uploadError: unknown) {
       console.error('Firebase upload error:', uploadError);
       if (uploadError instanceof Error) {

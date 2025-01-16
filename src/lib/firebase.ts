@@ -1,10 +1,12 @@
 import { initializeApp, type FirebaseApp, getApps } from "firebase/app";
 import { Analytics, getAnalytics, isSupported } from "firebase/analytics";
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 let app: FirebaseApp | undefined;
 let analytics: Analytics | undefined;
 let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
 
 async function initializeFirebase() {
   if (typeof window === 'undefined') return null;
@@ -23,8 +25,8 @@ async function initializeFirebase() {
       const firebaseConfig = await response.json();
       
       // Validate config
-      if (!firebaseConfig.projectId) {
-        throw new Error('Invalid Firebase configuration');
+      if (!firebaseConfig.projectId || !firebaseConfig.storageBucket) {
+        throw new Error('Invalid Firebase configuration: missing required fields');
       }
 
       app = initializeApp(firebaseConfig);
@@ -33,16 +35,19 @@ async function initializeFirebase() {
     // Initialize Firestore
     db = getFirestore(app);
 
+    // Initialize Storage
+    storage = getStorage(app);
+
     // Initialize Analytics if supported
     if (await isSupported()) {
       analytics = getAnalytics(app);
     }
 
-    return { app, analytics, db };
+    return { app, analytics, db, storage };
   } catch (error) {
     console.error('Error initializing Firebase:', error);
     throw error;
   }
 }
 
-export { initializeFirebase, app, analytics, db }; 
+export { initializeFirebase, app, analytics, db, storage }; 
