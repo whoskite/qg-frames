@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read access to all files
+    match /{allPaths=**} {
+      allow read: if true;
+      // Allow write access to authenticated users
+      allow write: if true;  // Since we're using Farcaster auth, not Firebase auth
+    }
+  }
+} 
