@@ -719,11 +719,19 @@ export default function Demo({ title = "Fun Quotes" }) {
           backgroundRepeat: 'no-repeat'
         } : {}}
       >
-        {isInitialState && (
-          <div className="mb-8 text-2xl text-white font-medium text-center">
-            Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {isInitialState && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="mb-8 text-2xl text-white font-medium text-center"
+            >
+              Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Card Component */}
         <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
           <CardContent className="p-4">
@@ -1235,9 +1243,9 @@ export default function Demo({ title = "Fun Quotes" }) {
             <div className="space-y-6">
               {/* GIF Toggle Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-8">
+                <div className="flex-1 mr-4">
                   <h3 className="font-medium text-gray-900">GIF Generation</h3>
-                  <p className="text-sm text-gray-500">Toggle automatic GIF generation for quotes</p>
+                  <p className="text-sm text-gray-500">Toggle automatic GIF generation</p>
                 </div>
                 <Button
                   onClick={() => setGifEnabled(!gifEnabled)}
@@ -1245,9 +1253,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                     gifEnabled 
                       ? 'bg-purple-600 hover:bg-purple-700' 
                       : 'bg-gray-400 hover:bg-gray-500'
-                  } text-white w-24 flex items-center justify-center`}
+                  } text-white w-20 text-sm flex items-center justify-center`}
                 >
-                  {gifEnabled ? 'Enabled' : 'Disabled'}
+                  {gifEnabled ? 'On' : 'Off'}
                 </Button>
               </div>
 
@@ -1255,22 +1263,22 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Clear History Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-8">
+                <div className="flex-1 mr-4">
                   <h3 className="font-medium text-gray-900">Clear History</h3>
-                  <p className="text-sm text-gray-500">Remove all generated quotes from history</p>
+                  <p className="text-sm text-gray-500">Remove all generated quotes</p>
                 </div>
                 <Button
                   onClick={handleClearHistory}
                   disabled={isClearing}
-                  className="bg-red-500 hover:bg-red-600 text-white w-24"
+                  className="bg-red-500 hover:bg-red-600 text-white w-20 text-sm"
                 >
-                  {isClearing ? "Clearing..." : "Clear"}
+                  Clear
                 </Button>
               </div>
 
               {/* Clear Favorites Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-8">
+                <div className="flex-1 mr-4">
                   <h3 className="font-medium text-gray-900">Clear Favorites</h3>
                   <p className="text-sm text-gray-500">Remove all favorite quotes</p>
                 </div>
@@ -1278,11 +1286,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                   onClick={() => {
                     if (context?.user?.fid) {
                       setFavorites([]);
-                      // You'll need to implement clearFavorites in your firestore.ts
-                      // clearFavorites(context.user.fid);
                     }
                   }}
-                  className="bg-red-500 hover:bg-red-600 text-white w-24"
+                  className="bg-red-500 hover:bg-red-600 text-white w-20 text-sm"
                 >
                   Clear
                 </Button>
@@ -1290,11 +1296,11 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Version Info */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-8">
+                <div className="flex-1 mr-4">
                   <h3 className="font-medium text-gray-900">Version</h3>
-                  <p className="text-sm text-gray-500">Current version of the app</p>
+                  <p className="text-sm text-gray-500">Current app version</p>
                 </div>
-                <span className="text-sm text-gray-500 w-24 text-right">1.0.0</span>
+                <span className="text-sm text-gray-500 w-20 text-right">1.0.0</span>
               </div>
             </div>
           </motion.div>
