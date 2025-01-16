@@ -18,7 +18,8 @@ export async function POST(request: Request) {
       const firebaseApp = await initializeFirebase();
       console.log('Firebase initialization result:', { 
         hasApp: !!firebaseApp,
-        hasFirebaseApp: !!(firebaseApp?.app)
+        hasFirebaseApp: !!(firebaseApp?.app),
+        hasStorage: !!(firebaseApp?.app && getStorage(firebaseApp.app))
       });
 
       if (!firebaseApp || !firebaseApp.app) {
@@ -39,7 +40,10 @@ export async function POST(request: Request) {
       console.log('Created storage reference');
       
       // Upload the base64 string
-      console.log('Starting file upload...');
+      console.log('Starting file upload...', {
+        imageLength: image.length,
+        storageRefPath: storageRef.fullPath
+      });
       await uploadString(storageRef, image, 'data_url');
       console.log('File uploaded successfully');
       
@@ -55,7 +59,8 @@ export async function POST(request: Request) {
         console.error('Error details:', {
           message: uploadError.message,
           stack: uploadError.stack,
-          name: uploadError.name
+          name: uploadError.name,
+          cause: uploadError.cause
         });
       }
       return NextResponse.json(
@@ -73,7 +78,8 @@ export async function POST(request: Request) {
       console.error('Error details:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
+        cause: error.cause
       });
     }
     return NextResponse.json(

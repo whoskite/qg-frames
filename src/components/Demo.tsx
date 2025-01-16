@@ -1540,40 +1540,28 @@ export default function Demo({ title = "Fun Quotes" }) {
                   onClick={async () => {
                     try {
                       if (downloadPreviewImage) {
-                        // Convert base64 to blob with explicit MIME type
-                        const base64Response = await fetch(downloadPreviewImage);
-                        const blob = await base64Response.blob();
-                        
-                        // Create a Blob URL
-                        const blobUrl = URL.createObjectURL(
-                          new Blob([blob], { type: 'image/png' })
-                        );
-                        
-                        // For mobile devices, open in new tab
-                        if (/Mobi|Android/i.test(navigator.userAgent)) {
-                          window.open(blobUrl, '_blank');
-                        } else {
-                          // For desktop, trigger download
-                          const a = document.createElement('a');
-                          a.href = blobUrl;
-                          a.download = 'quote-image.png';
-                          a.style.display = 'none';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
+                        // Create a new window/tab to display the image
+                        const newWindow = window.open('', '_blank');
+                        if (newWindow) {
+                          newWindow.document.write(`
+                            <html>
+                              <head>
+                                <title>Download Quote Image</title>
+                              </head>
+                              <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5;">
+                                <div style="text-align: center;">
+                                  <img src="${downloadPreviewImage}" style="max-width: 100%; height: auto;" alt="Quote" />
+                                  <p style="margin-top: 20px; font-family: sans-serif;">Right-click the image and select "Save image as..." to download</p>
+                                </div>
+                              </body>
+                            </html>
+                          `);
                         }
-                        
-                        // Cleanup
-                        setTimeout(() => {
-                          URL.revokeObjectURL(blobUrl);
-                        }, 100);
-                        
-                        // Close modal after download
                         setShowDownloadPreview(false);
                         setDownloadPreviewImage(null);
                       }
                     } catch (error) {
-                      console.error('Error downloading:', error);
+                      console.error('Error opening image:', error);
                     }
                   }}
                   disabled={!downloadPreviewImage}
