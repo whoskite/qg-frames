@@ -12,24 +12,34 @@ export async function POST(request: Request) {
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     
     // Upload to Neynar
-    const response = await fetch('https://api.neynar.com/v2/farcaster/uploads', {
+    const response = await fetch('https://api.neynar.com/v1/upload', {
       method: 'POST',
       headers: {
+        'Accept': 'application/json',
         'api_key': process.env.NEYNAR_API_KEY || '',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         file: base64Data,
-        type: 'image'
+        uploadType: 'image'
       })
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Neynar API error:', errorData);
+      throw new Error(`Neynar API error: ${response.status}`);
+    }
 
     const data = await response.json();
     
     if (data && data.url) {
       return NextResponse.json({ url: data.url });
+    } else if (data && data.imageUrl) {
+      return NextResponse.json({ url: data.imageUrl });
     }
     
+    console.error('Unexpected Neynar response:', data);
     throw new Error('Failed to get URL from Neynar response');
   } catch (error) {
     console.error('Error uploading to Neynar:', error);
