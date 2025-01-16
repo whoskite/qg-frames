@@ -17,47 +17,45 @@ export async function POST(request: Request) {
     // Remove the data:image/png;base64, prefix if present
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     
-    // Upload to Neynar v2 API
-    const response = await fetch('https://api.neynar.com/v2/farcaster/uploads', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'api_key': process.env.NEYNAR_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        file: base64Data,
-        type: 'image'
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.error('Neynar API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
+    try {
+      // Make direct API call to Neynar v2 uploads endpoint
+      const response = await fetch('https://api.neynar.com/v2/uploads', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'api_key': process.env.NEYNAR_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          file: base64Data,
+          type: 'image'
+        })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Neynar API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data && data.url) {
+        return NextResponse.json({ url: data.url });
+      }
+      
+      throw new Error('No URL in upload response');
+    } catch (uploadError) {
+      console.error('Neynar upload error:', uploadError);
       return NextResponse.json(
-        { error: `Neynar API error: ${response.status}` },
-        { status: response.status }
+        { error: uploadError instanceof Error ? uploadError.message : 'Failed to upload image' },
+        { status: 500 }
       );
     }
-
-    const data = await response.json();
-    console.log('Neynar API response:', data);
-    
-    if (data && data.url) {
-      return NextResponse.json({ url: data.url });
-    } else if (data && data.imageUrl) {
-      return NextResponse.json({ url: data.imageUrl });
-    }
-    
-    console.error('Unexpected Neynar response:', data);
-    return NextResponse.json(
-      { error: 'Invalid response from Neynar' },
-      { status: 500 }
-    );
   } catch (error) {
     console.error('Error in upload route:', error);
     return NextResponse.json(

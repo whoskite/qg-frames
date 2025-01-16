@@ -10,30 +10,34 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Test Neynar API with a simple request to the v2 upload endpoint
-    const response = await fetch('https://api.neynar.com/v2/farcaster/uploads', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'api_key': process.env.NEYNAR_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        file: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', // 1x1 transparent PNG
-        type: 'image'
-      })
-    });
+    try {
+      // Test with a simple API call
+      const response = await fetch('https://api.neynar.com/v2/farcaster/user/search?viewer_fid=1&q=dwr', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'api_key': process.env.NEYNAR_API_KEY
+        }
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    return NextResponse.json({
-      status: response.ok ? 'success' : 'error',
-      neynarResponse: data,
-      apiKeyExists: true,
-      apiKeyFirstChars: process.env.NEYNAR_API_KEY.substring(0, 4) + '...',
-      statusCode: response.status,
-      statusText: response.statusText
-    });
+      return NextResponse.json({
+        status: response.ok ? 'success' : 'error',
+        neynarResponse: data,
+        apiKeyExists: true,
+        apiKeyFirstChars: process.env.NEYNAR_API_KEY.substring(0, 4) + '...',
+        statusCode: response.status,
+        statusText: response.statusText
+      });
+    } catch (neynarError) {
+      console.error('Neynar API error:', neynarError);
+      return NextResponse.json({
+        error: 'Failed to make test API call',
+        details: neynarError instanceof Error ? neynarError.message : 'Unknown error',
+        status: 'error'
+      }, { status: 500 });
+    }
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : 'Unknown error',
