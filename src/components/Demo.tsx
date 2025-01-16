@@ -853,8 +853,6 @@ export default function Demo({ title = "Fun Quotes" }) {
             {quote && (
               <motion.div 
                 className="mb-4 flex justify-between items-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <Heart 
                   onClick={() => {
@@ -867,7 +865,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     };
                     toggleFavorite(quoteItem);
                   }}
-                  className={`w-5 h-5 transition-transform hover:scale-125 cursor-pointer ${
+                  className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
                     favorites.some(fav => fav.text === quote)
                       ? 'fill-pink-500 text-pink-500' 
                       : 'text-white hover:text-pink-200'
@@ -888,7 +886,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           setIsGeneratingDownloadPreview(false);
                         }
                       }}
-                      className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
+                      className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
                     />
                   )}
                   {isCasting ? (
@@ -915,7 +913,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }
                         }
                       }}
-                      className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
+                      className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
                     />
                   )}
                 </div>
