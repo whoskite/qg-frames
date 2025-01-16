@@ -1443,7 +1443,17 @@ export default function Demo({ title = "Fun Quotes" }) {
                         }
                       }
 
-                      const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
+                      // Construct the URL with proper encoding and format
+                      const embedParams = [shareUrl];
+                      if (mediaUrl) {
+                        embedParams.push(mediaUrl);
+                      }
+                      
+                      const params = new URLSearchParams();
+                      params.append('text', shareText);
+                      embedParams.forEach(embed => params.append('embeds[]', embed));
+                      
+                      const url = `https://warpcast.com/~/compose?${params.toString()}`;
                       
                       logAnalyticsEvent('cast_created', {
                         quote: quote,
