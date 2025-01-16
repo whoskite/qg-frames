@@ -871,7 +871,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   }`}
                 />
                 <div className="flex gap-4">
-                  {!gifEnabled && quote && (
+                  {quote && (
                     <Download
                       onClick={async () => {
                         setShowDownloadPreview(true);
@@ -897,56 +897,23 @@ export default function Demo({ title = "Fun Quotes" }) {
                       •••
                     </motion.span>
                   ) : (
-                    <Button
+                    <Share2 
                       onClick={async () => {
-                        setIsCasting(true);
-                        try {
-                          const shareText = `"${quote}" - Created by @kite /thepod`;
-                          const shareUrl = 'https://qg-frames.vercel.app';
-                          let mediaUrl = '';
-
-                          if (gifEnabled && gifUrl) {
-                            // If GIF is enabled and available, use it
-                            mediaUrl = gifUrl;
-                          } else if (quote) {
-                            // Generate and upload the canvas image
-                            try {
-                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                              mediaUrl = await uploadToNeynar(dataUrl);
-                            } catch (error) {
-                              console.error('Error generating/uploading image:', error);
-                            }
+                        setShowPreview(true);
+                        if (!gifEnabled) {
+                          setIsGeneratingPreview(true);
+                          try {
+                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                            setPreviewImage(dataUrl);
+                          } catch (error) {
+                            console.error('Error generating preview:', error);
+                          } finally {
+                            setIsGeneratingPreview(false);
                           }
-
-                          const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
-                          
-                          logAnalyticsEvent('cast_created', {
-                            quote: quote,
-                            hasMedia: !!mediaUrl,
-                            mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
-                          });
-                          
-                          sdk.actions.openUrl(url);
-                          setShowPreview(false);
-                          setPreviewImage(null);
-                        } catch (error) {
-                          console.error('Error sharing:', error);
-                        } finally {
-                          setIsCasting(false);
                         }
                       }}
-                      disabled={false}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                    >
-                      {isCasting ? (
-                        <motion.span
-                          animate={{ opacity: [0, 1, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          •••
-                        </motion.span>
-                      ) : 'Share'}
-                    </Button>
+                      className="h-5 w-5 text-white transition-transform hover:scale-125 cursor-pointer"
+                    />
                   )}
                 </div>
               </motion.div>
