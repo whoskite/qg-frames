@@ -118,10 +118,10 @@ const generateQuoteImage = async (quote: string, bgImage: string): Promise<strin
       canvas.height = 400;
 
       // Create and load background image
-      const img = new Image();
+      const img = new window.Image();
       img.crossOrigin = 'anonymous';
 
-      img.onload = () => {
+      const handleLoad = () => {
         if (bgImage === 'none') {
           // Create gradient background
           const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -173,12 +173,13 @@ const generateQuoteImage = async (quote: string, bgImage: string): Promise<strin
         resolve(canvas.toDataURL('image/png'));
       };
 
-      img.onerror = (error) => {
-        reject(error);
+      img.onload = handleLoad;
+      img.onerror = (_event: string | Event) => {
+        reject(new Error('Failed to load image'));
       };
 
       if (bgImage === 'none') {
-        img.onload(); // Trigger onload directly for gradient
+        handleLoad();
       } else {
         img.src = bgImage;
       }
