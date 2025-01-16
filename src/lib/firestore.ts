@@ -1,10 +1,19 @@
-import { getFirestore, type Firestore, Timestamp } from 'firebase/firestore';
-import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  setDoc, 
+  deleteDoc,
+  addDoc,
+  type Firestore,
+  Timestamp
+} from 'firebase/firestore';
+import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 
 // Helper function to ensure we have a valid Firestore instance
 function getDb(): Firestore {
-  const db = getFirestore();
   if (!db) throw new Error('Firestore not initialized');
   return db;
 }
@@ -145,4 +154,33 @@ export async function clearUserHistory(userId: number) {
     console.error('Error clearing history:', error);
     throw error;
   }
-} 
+}
+
+// Add these new functions for GIF preferences
+export const saveGifPreference = async (fid: number, enabled: boolean) => {
+  try {
+    const database = getDb();
+    const userRef = doc(database, 'users', fid.toString());
+    await setDoc(userRef, { gifEnabled: enabled }, { merge: true });
+  } catch (error) {
+    console.error('Error saving GIF preference:', error);
+    throw error;
+  }
+};
+
+export const getGifPreference = async (fid: number): Promise<boolean> => {
+  try {
+    const database = getDb();
+    const userRef = doc(database, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    
+    if (userDoc.exists()) {
+      return userDoc.data()?.gifEnabled ?? true; // Default to true if not set
+    }
+    
+    return true; // Default to true for new users
+  } catch (error) {
+    console.error('Error getting GIF preference:', error);
+    return true; // Default to true on error
+  }
+}; 

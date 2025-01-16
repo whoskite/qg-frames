@@ -22,7 +22,9 @@ import {
   saveFavoriteQuote,
   getUserFavorites,
   removeFavoriteQuote,
-  clearUserHistory
+  clearUserHistory,
+  saveGifPreference,
+  getGifPreference
 } from '../lib/firestore';
 
 // UI Components
@@ -618,6 +620,35 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
 
     loadFavorites();
+  }, [context?.user?.fid, isFirebaseInitialized]);
+
+  // Update the GIF toggle handler
+  const handleGifToggle = async () => {
+    const newState = !gifEnabled;
+    setGifEnabled(newState);
+    if (context?.user?.fid) {
+      try {
+        await saveGifPreference(context.user.fid, newState);
+      } catch (error) {
+        console.error('Error saving GIF preference:', error);
+      }
+    }
+  };
+
+  // Add effect to load GIF preference
+  useEffect(() => {
+    const loadGifPreference = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const preference = await getGifPreference(context.user.fid);
+          setGifEnabled(preference);
+        } catch (error) {
+          console.error('Error loading GIF preference:', error);
+        }
+      }
+    };
+
+    loadGifPreference();
   }, [context?.user?.fid, isFirebaseInitialized]);
 
   // 10. Main Render
@@ -1248,7 +1279,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <p className="text-sm text-gray-500">Toggle automatic GIF generation</p>
                 </div>
                 <Button
-                  onClick={() => setGifEnabled(!gifEnabled)}
+                  onClick={handleGifToggle}
                   className={`${
                     gifEnabled 
                       ? 'bg-purple-600 hover:bg-purple-700' 
