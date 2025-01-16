@@ -70,24 +70,24 @@ export async function POST(request: Request) {
         error: 'Invalid response format', 
         details: data 
       }, { status: 500 });
-    } catch (uploadError) {
+    } catch (uploadError: unknown) {
       console.error('Neynar upload error:', uploadError);
       return NextResponse.json(
         { 
           error: 'Upload failed',
           message: uploadError instanceof Error ? uploadError.message : 'Unknown error',
-          type: uploadError.constructor.name
+          type: typeof uploadError === 'object' && uploadError !== null ? uploadError.constructor.name : 'Unknown'
         },
         { status: 500 }
       );
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in upload route:', error);
     return NextResponse.json(
       { 
         error: 'Request processing failed',
         message: error instanceof Error ? error.message : 'Unknown error',
-        type: error.constructor.name
+        type: typeof error === 'object' && error !== null ? error.constructor.name : 'Unknown'
       },
       { status: 500 }
     );

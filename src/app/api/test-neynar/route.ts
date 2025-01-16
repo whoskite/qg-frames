@@ -55,20 +55,20 @@ export async function GET() {
         responseHeaders: headers,
         endpoint: 'v2/uploads'
       });
-    } catch (neynarError) {
+    } catch (neynarError: unknown) {
       console.error('Neynar API error:', neynarError);
       return NextResponse.json({
         error: 'Failed to make test API call',
         details: neynarError instanceof Error ? neynarError.message : 'Unknown error',
-        type: neynarError.constructor.name,
+        type: typeof neynarError === 'object' && neynarError !== null ? neynarError.constructor.name : 'Unknown',
         status: 'error',
         endpoint: 'v2/uploads'
       }, { status: 500 });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : 'Unknown error',
-      type: error.constructor.name,
+      type: typeof error === 'object' && error !== null ? error.constructor.name : 'Unknown',
       status: 'error'
     }, { status: 500 });
   }
