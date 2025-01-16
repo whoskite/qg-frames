@@ -1534,20 +1534,30 @@ export default function Demo({ title = "Fun Quotes" }) {
               {/* Download Button */}
               <div className="flex justify-end">
                 <Button
-                  onClick={async () => {
+                  onClick={() => {
                     try {
                       if (downloadPreviewImage) {
-                        // Convert base64 to blob
-                        const base64Response = await fetch(downloadPreviewImage);
-                        const blob = await base64Response.blob();
+                        // Convert data URL to blob directly
+                        const byteString = atob(downloadPreviewImage.split(',')[1]);
+                        const mimeString = downloadPreviewImage.split(',')[0].split(':')[1].split(';')[0];
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
                         
-                        // Create download link
+                        for (let i = 0; i < byteString.length; i++) {
+                          ia[i] = byteString.charCodeAt(i);
+                        }
+                        
+                        const blob = new Blob([ab], { type: mimeString });
                         const url = URL.createObjectURL(blob);
+                        
+                        // Create and trigger download
                         const a = document.createElement('a');
                         a.href = url;
                         a.download = 'quote-image.png';
                         document.body.appendChild(a);
                         a.click();
+                        
+                        // Cleanup
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                         
