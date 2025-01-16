@@ -105,7 +105,7 @@ interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
 }
 
 // Add this function before the Demo component
-const generateQuoteImage = async (quote: string, bgImage: string): Promise<string> => {
+const generateQuoteImage = async (quote: string, bgImage: string, userContext?: FrameContext): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
       // Create canvas
@@ -118,8 +118,13 @@ const generateQuoteImage = async (quote: string, bgImage: string): Promise<strin
       canvas.height = 400;
 
       // Create and load background image
-      const img = new window.Image();
+      const img = document.createElement('img');
       img.crossOrigin = 'anonymous';
+
+      // Create profile image element
+      const profileImg = document.createElement('img');
+      profileImg.crossOrigin = 'anonymous';
+      profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
 
       const handleLoad = () => {
         if (bgImage === 'none') {
@@ -131,8 +136,33 @@ const generateQuoteImage = async (quote: string, bgImage: string): Promise<strin
           ctx.fillStyle = gradient;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         } else {
-          // Draw background image
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Calculate dimensions to cover the entire canvas while maintaining aspect ratio
+          const imgAspectRatio = img.width / img.height;
+          const canvasAspectRatio = canvas.width / canvas.height;
+          let drawWidth = canvas.width;
+          let drawHeight = canvas.height;
+          let offsetX = 0;
+          let offsetY = 0;
+
+          if (imgAspectRatio > canvasAspectRatio) {
+            // Image is wider - scale based on height and center horizontally
+            drawHeight = canvas.height;
+            drawWidth = drawHeight * imgAspectRatio;
+            offsetX = (canvas.width - drawWidth) / 2;
+          } else {
+            // Image is taller - scale based on width and center vertically
+            drawWidth = canvas.width;
+            drawHeight = drawWidth / imgAspectRatio;
+            offsetY = (canvas.height - drawHeight) / 2;
+          }
+
+          // Fill background with black
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Draw background image centered
+          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+          
           // Add semi-transparent overlay
           ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -164,25 +194,71 @@ const generateQuoteImage = async (quote: string, bgImage: string): Promise<strin
         // Draw the wrapped text
         const lineHeight = 40;
         const totalHeight = lines.length * lineHeight;
-        const startY = (canvas.height - totalHeight) / 2;
+        const startY = (canvas.height - totalHeight) / 2 - 20; // Move quote up to make room for profile
 
         lines.forEach((line, index) => {
           ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
         });
 
+        // Draw profile image and username
+        const profileSize = 40;
+        const profileY = canvas.height - 70; // Position from bottom
+        const username = `@${userContext?.user?.username || 'user'}`;
+        
+        // Measure text width to calculate total width of profile + username
+        ctx.font = '20px Inter, sans-serif';
+        const textMetrics = ctx.measureText(username);
+        const totalWidth = profileSize + 15 + textMetrics.width; // profile width + gap + text width
+        
+        // Calculate starting X position to center everything
+        const startX = (canvas.width - totalWidth) / 2;
+        const profileX = startX;
+        const usernameX = startX + profileSize + 15;
+
+        // Draw circular profile image
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+
+        // Draw the profile image
+        ctx.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
+        ctx.restore();
+
+        // Draw white border around profile image
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
+        ctx.stroke();
+
+        // Add username next to profile image
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'left';
+        ctx.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
+
         resolve(canvas.toDataURL('image/png'));
       };
 
-      img.onload = handleLoad;
+      // Load profile image first, then proceed with the rest
+      profileImg.onload = () => {
+        if (bgImage === 'none') {
+          handleLoad();
+        } else {
+          img.onload = handleLoad;
+          img.src = bgImage;
+        }
+      };
+
+      profileImg.onerror = () => {
+        // If profile image fails, use default image
+        profileImg.src = "/Profile_Image.jpg";
+      };
+
       img.onerror = (_event: string | Event) => {
         reject(new Error('Failed to load image'));
       };
-
-      if (bgImage === 'none') {
-        handleLoad();
-      } else {
-        img.src = bgImage;
-      }
     } catch (error) {
       reject(error);
     }
@@ -741,7 +817,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         } else if (quote) {
                           // Download quote image
                           console.log('Generating quote image...');
-                          const dataUrl = await generateQuoteImage(quote, bgImage);
+                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
                           console.log('Image generated, creating download...');
                           
                           const a = document.createElement('a');
