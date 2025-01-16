@@ -9,8 +9,6 @@ let db: Firestore | undefined;
 let storage: FirebaseStorage | undefined;
 
 async function initializeFirebase() {
-  if (typeof window === 'undefined') return null;
-
   try {
     // Check if Firebase is already initialized
     if (getApps().length > 0) {
@@ -38,8 +36,8 @@ async function initializeFirebase() {
     // Initialize Storage
     storage = getStorage(app);
 
-    // Initialize Analytics if supported
-    if (await isSupported()) {
+    // Initialize Analytics if in browser context
+    if (typeof window !== 'undefined' && await isSupported()) {
       analytics = getAnalytics(app);
     }
 

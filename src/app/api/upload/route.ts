@@ -17,6 +17,14 @@ export async function POST(request: Request) {
       // Initialize Firebase
       const firebaseApp = await initializeFirebase();
       
+      // Log Firebase config
+      console.log('Firebase initialization result:', {
+        hasApp: !!firebaseApp,
+        hasAppProperty: firebaseApp && !!firebaseApp.app,
+        appName: firebaseApp?.app?.name,
+        options: firebaseApp?.app?.options
+      });
+      
       // Validate Firebase initialization
       if (!firebaseApp) {
         console.error('Firebase initialization returned null');
@@ -37,6 +45,12 @@ export async function POST(request: Request) {
       // Get and validate storage
       console.log('Getting Firebase Storage instance...');
       const storage = getStorage(firebaseApp.app);
+      console.log('Storage instance:', {
+        hasStorage: !!storage,
+        bucket: storage?.bucket,
+        app: storage?.app?.name
+      });
+      
       if (!storage) {
         console.error('Failed to get Firebase Storage instance');
         return NextResponse.json({ 
@@ -55,13 +69,15 @@ export async function POST(request: Request) {
         const storageRef = ref(storage, filename);
         console.log('Created storage reference:', {
           fullPath: storageRef.fullPath,
+          bucket: storageRef.bucket,
           name: storageRef.name
         });
         
         // Upload the base64 string
         console.log('Starting file upload...', {
           imageLength: image.length,
-          storageRefPath: storageRef.fullPath
+          storageRefPath: storageRef.fullPath,
+          dataUrlPrefix: image.substring(0, 50) + '...'
         });
 
         await uploadString(storageRef, image, 'data_url');
@@ -79,7 +95,9 @@ export async function POST(request: Request) {
           console.error('Storage error details:', {
             message: storageError.message,
             name: storageError.name,
-            stack: storageError.stack
+            stack: storageError.stack,
+            code: (storageError as any).code,
+            serverResponse: (storageError as any).serverResponse
           });
         }
         return NextResponse.json({ 
