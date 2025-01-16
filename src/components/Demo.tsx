@@ -882,18 +882,37 @@ export default function Demo({ title = "Fun Quotes" }) {
                     </motion.span>
                   ) : (
                     <Share2 
-                      onClick={() => {
+                      onClick={async () => {
                         setIsCasting(true);
                         try {
                           const shareText = `"${quote}" - Created by @kite /thepod`;
                           const shareUrl = 'https://qg-frames.vercel.app';
-                          const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
+                          let mediaUrl = '';
+
+                          if (gifEnabled && gifUrl) {
+                            // If GIF is enabled and available, use it
+                            mediaUrl = gifUrl;
+                          } else if (quote) {
+                            // If no GIF, generate canvas image
+                            try {
+                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              mediaUrl = dataUrl;
+                            } catch (error) {
+                              console.error('Error generating quote image:', error);
+                            }
+                          }
+
+                          const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${mediaUrl ? `&embeds[]=${encodeURIComponent(mediaUrl)}` : ''}`;
                           
                           logAnalyticsEvent('cast_created', {
-                            quote: quote
+                            quote: quote,
+                            hasMedia: !!mediaUrl,
+                            mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
                           });
                           
                           sdk.actions.openUrl(url);
+                        } catch (error) {
+                          console.error('Error sharing:', error);
                         } finally {
                           setIsCasting(false);
                         }
