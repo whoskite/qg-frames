@@ -4,6 +4,7 @@ import { initializeFirebase } from '../../../lib/firebase';
 
 export async function POST(request: Request) {
   try {
+    console.log('Starting upload process...');
     const { image } = await request.json();
     
     if (!image) {
@@ -12,30 +13,51 @@ export async function POST(request: Request) {
     }
 
     try {
+      console.log('Initializing Firebase...');
       // Initialize Firebase
       const firebaseApp = await initializeFirebase();
+      console.log('Firebase initialization result:', { 
+        hasApp: !!firebaseApp,
+        hasFirebaseApp: !!(firebaseApp?.app)
+      });
+
       if (!firebaseApp || !firebaseApp.app) {
+        console.error('Firebase initialization failed:', { firebaseApp });
         throw new Error('Failed to initialize Firebase');
       }
       
+      console.log('Getting Firebase Storage instance...');
       const storage = getStorage(firebaseApp.app);
       
       // Generate a unique filename
       const timestamp = Date.now();
       const filename = `quotes/${timestamp}.png`;
+      console.log('Generated filename:', filename);
       
       // Create a reference to the file location
       const storageRef = ref(storage, filename);
+      console.log('Created storage reference');
       
       // Upload the base64 string
+      console.log('Starting file upload...');
       await uploadString(storageRef, image, 'data_url');
+      console.log('File uploaded successfully');
       
       // Get the download URL
+      console.log('Getting download URL...');
       const url = await getDownloadURL(storageRef);
+      console.log('Got download URL:', url);
       
       return NextResponse.json({ url });
     } catch (uploadError: unknown) {
       console.error('Firebase upload error:', uploadError);
+      if (uploadError instanceof Error) {
+        console.error('Error details:', {
+          message: uploadError.message,
+          stack: uploadError.stack,
+          name: uploadError.name
+        });
+      }
       return NextResponse.json(
         { 
           error: 'Upload failed',
@@ -47,6 +69,13 @@ export async function POST(request: Request) {
     }
   } catch (error: unknown) {
     console.error('Error in upload route:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     return NextResponse.json(
       { 
         error: 'Request processing failed',
