@@ -14,16 +14,43 @@ async function initializeFirebase() {
     if (getApps().length > 0) {
       app = getApps()[0];
     } else {
-      // Fetch config from secure API endpoint
-      const response = await fetch('/api/firebase-config');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Firebase configuration');
-      }
+      let firebaseConfig;
       
-      const firebaseConfig = await response.json();
+      // Handle server-side and client-side differently
+      if (typeof window === 'undefined') {
+        // Server-side: use environment variables directly
+        firebaseConfig = {
+          apiKey: process.env.FIREBASE_API_KEY,
+          authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+          messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+          appId: process.env.FIREBASE_APP_ID,
+          measurementId: process.env.FIREBASE_MEASUREMENT_ID
+        };
+        console.log('Server-side Firebase config:', {
+          hasApiKey: !!firebaseConfig.apiKey,
+          authDomain: firebaseConfig.authDomain,
+          projectId: firebaseConfig.projectId,
+          storageBucket: firebaseConfig.storageBucket,
+          hasMessagingSenderId: !!firebaseConfig.messagingSenderId,
+          hasAppId: !!firebaseConfig.appId
+        });
+      } else {
+        // Client-side: fetch from API
+        const response = await fetch('/api/firebase-config');
+        if (!response.ok) {
+          throw new Error('Failed to fetch Firebase configuration');
+        }
+        firebaseConfig = await response.json();
+      }
       
       // Validate config
       if (!firebaseConfig.projectId || !firebaseConfig.storageBucket) {
+        console.error('Invalid Firebase config:', {
+          hasProjectId: !!firebaseConfig.projectId,
+          hasStorageBucket: !!firebaseConfig.storageBucket
+        });
         throw new Error('Invalid Firebase configuration: missing required fields');
       }
 
