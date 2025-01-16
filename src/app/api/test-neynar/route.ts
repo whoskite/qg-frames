@@ -18,7 +18,14 @@ export async function GET() {
     }
 
     try {
-      // Test the uploads endpoint with a minimal request
+      // Test with a minimal valid base64 image
+      const minimalBase64Image = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+      console.log('Making test request to Neynar with:', {
+        apiKeyLength: process.env.NEYNAR_API_KEY?.length,
+        clientIdLength: process.env.NEYNAR_CLIENT_ID?.length,
+      });
+
       const response = await fetch('https://api.neynar.com/v2/uploads', {
         method: 'POST',
         headers: {
@@ -28,12 +35,13 @@ export async function GET() {
           'X-Client-Id': process.env.NEYNAR_CLIENT_ID
         },
         body: JSON.stringify({
-          file: 'test',
+          file: minimalBase64Image,
           type: 'image'
         })
       });
 
       const data = await response.json();
+      const headers = Object.fromEntries(response.headers.entries());
 
       return NextResponse.json({
         status: response.ok ? 'success' : 'error',
@@ -44,6 +52,7 @@ export async function GET() {
         clientIdFirstChars: process.env.NEYNAR_CLIENT_ID.substring(0, 4) + '...',
         statusCode: response.status,
         statusText: response.statusText,
+        responseHeaders: headers,
         endpoint: 'v2/uploads'
       });
     } catch (neynarError) {
@@ -51,6 +60,7 @@ export async function GET() {
       return NextResponse.json({
         error: 'Failed to make test API call',
         details: neynarError instanceof Error ? neynarError.message : 'Unknown error',
+        type: neynarError.constructor.name,
         status: 'error',
         endpoint: 'v2/uploads'
       }, { status: 500 });
@@ -58,6 +68,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : 'Unknown error',
+      type: error.constructor.name,
       status: 'error'
     }, { status: 500 });
   }

@@ -23,6 +23,12 @@ export async function POST(request: Request) {
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     
     try {
+      console.log('Making request to Neynar with:', {
+        apiKeyLength: process.env.NEYNAR_API_KEY?.length,
+        clientIdLength: process.env.NEYNAR_CLIENT_ID?.length,
+        base64Length: base64Data.length
+      });
+
       // Make direct API call to Neynar v2 uploads endpoint
       const response = await fetch('https://api.neynar.com/v2/uploads', {
         method: 'POST',
@@ -40,12 +46,17 @@ export async function POST(request: Request) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        console.error('Neynar API error:', {
+        const errorDetails = {
           status: response.status,
           statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(`Upload failed: ${response.status}`);
+          error: errorData,
+          headers: Object.fromEntries(response.headers.entries())
+        };
+        console.error('Neynar API error details:', errorDetails);
+        return NextResponse.json({ 
+          error: 'Upload failed', 
+          details: errorDetails 
+        }, { status: response.status });
       }
 
       const data = await response.json();
@@ -54,18 +65,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ url: data.url });
       }
       
-      throw new Error('No URL in upload response');
+      console.error('Unexpected response format:', data);
+      return NextResponse.json({ 
+        error: 'Invalid response format', 
+        details: data 
+      }, { status: 500 });
     } catch (uploadError) {
       console.error('Neynar upload error:', uploadError);
       return NextResponse.json(
-        { error: uploadError instanceof Error ? uploadError.message : 'Failed to upload image' },
+        { 
+          error: 'Upload failed',
+          message: uploadError instanceof Error ? uploadError.message : 'Unknown error',
+          type: uploadError.constructor.name
+        },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error('Error in upload route:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Request processing failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        type: error.constructor.name
+      },
       { status: 500 }
     );
   }
