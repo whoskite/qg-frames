@@ -8,7 +8,8 @@ import {
   addDoc,
   type Firestore,
   Timestamp,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
@@ -218,5 +219,80 @@ export const getThemePreference = async (fid: number): Promise<string | null> =>
   } catch (error) {
     console.error('Error getting theme preference:', error);
     return null;
+  }
+};
+
+// Add these functions to handle streaks
+export const updateUserStreak = async (fid: number) => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return 0;
+  }
+
+  const userRef = doc(db as Firestore, 'users', fid.toString());
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  try {
+    const userDoc = await getDoc(userRef);
+    const userData = userDoc.data();
+    
+    if (!userData) {
+      // First visit ever
+      await setDoc(userRef, {
+        lastVisit: today.getTime(),
+        currentStreak: 1,
+        streakStartDate: today.getTime()
+      }, { merge: true });
+      return 1;
+    }
+
+    const lastVisit = new Date(userData.lastVisit);
+    lastVisit.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((today.getTime() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let newStreak = userData.currentStreak || 0;
+    
+    if (diffDays === 0) {
+      // Already visited today, maintain streak
+      return newStreak;
+    } else if (diffDays === 1) {
+      // Consecutive day, increment streak
+      newStreak += 1;
+    } else {
+      // Streak broken, start new streak
+      newStreak = 1;
+    }
+    
+    await updateDoc(userRef, {
+      lastVisit: today.getTime(),
+      currentStreak: newStreak,
+      streakStartDate: newStreak === 1 ? today.getTime() : userData.streakStartDate
+    });
+    
+    return newStreak;
+  } catch (error) {
+    console.error('Error updating streak:', error);
+    return 0;
+  }
+};
+
+export const getUserStreak = async (fid: number): Promise<number> => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return 0;
+  }
+
+  try {
+    const userRef = doc(db as Firestore, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    const userData = userDoc.data();
+    
+    if (!userData) return 0;
+    return userData.currentStreak || 0;
+  } catch (error) {
+    console.error('Error getting streak:', error);
+    return 0;
   }
 }; 

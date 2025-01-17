@@ -27,7 +27,9 @@ import {
   saveGifPreference,
   getGifPreference,
   saveThemePreference,
-  getThemePreference
+  getThemePreference,
+  updateUserStreak,
+  getUserStreak
 } from '../lib/firestore';
 
 // UI Components
@@ -205,6 +207,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add to state declarations
   const [showProfile, setShowProfile] = useState(false);
 
+  // Add to state declarations
+  const [userStreak, setUserStreak] = useState(0);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -228,6 +233,16 @@ export default function Demo({ title = "Fun Quotes" }) {
         setContext(frameContext);
         if (frameContext.client) {
           setAdded(frameContext.client.added);
+        }
+
+        // Update streak when user logs in with Farcaster
+        if (frameContext.user?.fid && isFirebaseInitialized) {
+          try {
+            const streak = await updateUserStreak(frameContext.user.fid);
+            setUserStreak(streak);
+          } catch (error) {
+            console.error('Error updating streak on login:', error);
+          }
         }
 
         // Setup Frame event listeners
@@ -259,7 +274,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       setIsSDKLoaded(true);
       initializeFrameSDK();
     }
-  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent]);
+  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent, isFirebaseInitialized]);
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = async () => {
@@ -1674,6 +1689,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           favorites={favorites}
           quoteHistory={quoteHistory}
           sessionStartTime={sessionStartTime}
+          userStreak={userStreak}
         />
       )}
     </div>
@@ -1696,6 +1712,7 @@ interface ProfileModalProps {
   favorites: FavoriteQuote[];
   quoteHistory: QuoteHistoryItem[];
   sessionStartTime: number;
+  userStreak: number;
 }
 
 // Update the ProfileModal component
@@ -1704,7 +1721,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
   context, 
   favorites, 
   quoteHistory, 
-  sessionStartTime 
+  sessionStartTime,
+  userStreak
 }) => (
   <div 
     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -1756,8 +1774,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             <p className="text-2xl font-semibold text-gray-900">{favorites.length}</p>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Generated</p>
-            <p className="text-2xl font-semibold text-gray-900">{quoteHistory.length}</p>
+            <p className="text-sm text-gray-600">Daily Streak</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl font-semibold text-gray-900">{userStreak}</p>
+              <span className="text-sm text-gray-600">days</span>
+            </div>
           </div>
         </div>
 
