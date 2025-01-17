@@ -222,6 +222,10 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add to state declarations
   const [userStreak, setUserStreak] = useState(0);
 
+  // Add new state for music
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -527,6 +531,34 @@ export default function Demo({ title = "Fun Quotes" }) {
       }
     }
   };
+
+  // Add this effect to handle background music
+  useEffect(() => {
+    const audio = new Audio('/ES_Calm_Cadence.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+    setAudioPlayer(audio);
+
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.src = '';
+      }
+    };
+  }, []);
+
+  // Add effect to control music playback
+  useEffect(() => {
+    if (audioPlayer) {
+      if (isMusicEnabled) {
+        audioPlayer.play().catch(error => {
+          console.error('Error playing audio:', error);
+        });
+      } else {
+        audioPlayer.pause();
+      }
+    }
+  }, [isMusicEnabled, audioPlayer]);
 
   // Add this effect to load favorites when component mounts
   useEffect(() => {
@@ -1601,6 +1633,29 @@ export default function Demo({ title = "Fun Quotes" }) {
                 >
                   Clear
                 </Button>
+              </div>
+
+              {/* Music Toggle Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Background Music</h3>
+                <motion.div
+                  animate={{ x: isMusicEnabled ? 0 : -5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Button
+                    onClick={() => {
+                      setIsMusicEnabled(!isMusicEnabled);
+                      toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
+                    }}
+                    className={`${
+                      isMusicEnabled 
+                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                    } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                  >
+                    {isMusicEnabled ? 'On' : 'Off'}
+                  </Button>
+                </motion.div>
               </div>
 
               {/* Version Info */}
