@@ -509,6 +509,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
     setShowHistory(false);
     setShowFavorites(false);
+    setIsInitialState(false);
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Show success notification
@@ -829,9 +830,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="mb-8 text-2xl text-white font-medium text-center"
+                className="space-y-2 mb-8 text-center"
               >
-                Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                <div className="text-2xl text-white font-medium">
+                  Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                </div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-white/80 text-sm flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Try typing a topic or mood to generate your quote</span>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -880,7 +892,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center"
                 >
                   <p className="text-center text-white text-2xl font-medium">
-                    {quote || "Click the magic button to generate an inspiring quote!"}
+                    {quote || ""}
                   </p>
                 </motion.div>
               </AnimatePresence>
