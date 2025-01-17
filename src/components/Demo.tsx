@@ -790,11 +790,6 @@ export default function Demo({ title = "Fun Quotes" }) {
           const streak = await updateUserStreak(context.user.fid);
           setUserStreak(streak);
           setIsInitialState(true);
-          
-          // Hide streak message after 4 seconds
-          setTimeout(() => {
-            setIsInitialState(false);
-          }, 4000);
         } catch (error) {
           console.error('Error updating streak:', error);
         }
