@@ -155,6 +155,18 @@ const customScrollbarStyles = `
   }
 `;
 
+// Add this after the imports
+const playStreakSound = () => {
+  const audio = new Audio('/streak-sound.wav');
+  audio.volume = 0.5;
+  return audio.play().catch(error => {
+    console.error('Error playing sound:', error);
+  });
+};
+
+// Add this helper function
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
@@ -782,13 +794,23 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  // Add this effect after other useEffects
+  // Update the streak effect
   useEffect(() => {
     const updateUserStreakCount = async () => {
       if (context?.user?.fid && isFirebaseInitialized) {
         try {
-          const streak = await updateUserStreak(context.user.fid);
-          setUserStreak(streak);
+          const newStreak = await updateUserStreak(context.user.fid);
+          const currentStreak = userStreak;
+          
+          // Play sound first
+          await playStreakSound();
+          
+          // Animate the streak count
+          for (let i = currentStreak; i <= newStreak; i++) {
+            setUserStreak(i);
+            await sleep(100); // 100ms delay between each number
+          }
+          
           setIsInitialState(true);
         } catch (error) {
           console.error('Error updating streak:', error);
