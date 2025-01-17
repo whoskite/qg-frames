@@ -1528,7 +1528,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               {/* Version Info */}
               <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
                 <h3 className="font-semibold text-gray-800">Version</h3>
-                <span className="text-sm font-medium text-gray-700 w-20 text-right">1.0.0</span>
+                <span className="text-sm font-medium text-gray-700 w-20 text-right">2.0.0</span>
               </div>
             </div>
           </motion.div>
