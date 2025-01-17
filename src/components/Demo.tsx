@@ -783,159 +783,163 @@ export default function Demo({ title = "Fun Quotes" }) {
           bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
         }`}
         style={bgImage !== 'none' ? {
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.5' : '0.3'}), rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.5' : '0.3'})), url(${bgImage})`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundRepeat: 'no-repeat',
+          filter: bgImage.includes('TheMrSazon') ? 'blur(1.5px)' : 'none'
         } : {}}
       >
-        <AnimatePresence mode="wait">
-          {isInitialState && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="mb-8 text-2xl text-white font-medium text-center"
-            >
-              Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {/* Card Component */}
-        <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
-          <CardContent className="p-4">
-            {/* GIF Display */}
-            <AnimatePresence mode="wait">
-              {gifUrl && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
-                  onClick={handleRegenerateGif}
-                >
-                  <div className="relative w-full h-[200px]">
-                    <Image
-                      src={gifUrl}
-                      alt="Quote-related GIF"
-                      fill
-                      unoptimized
-                      sizes="(max-width: 600px) 100vw, 50vw"
-                      className={`object-cover rounded-lg transition-opacity duration-200 ${
-                        isLoading ? 'opacity-50' : 'opacity-100'
-                      }`}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                      <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        Click to regenerate GIF
-                      </span>
+        <div className={`absolute inset-0 ${bgImage.includes('TheMrSazon') ? 'backdrop-blur-sm' : ''}`} style={{ zIndex: 1 }} />
+        <div className="relative" style={{ zIndex: 2 }}>
+          <AnimatePresence mode="wait">
+            {isInitialState && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="mb-8 text-2xl text-white font-medium text-center"
+              >
+                Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* Card Component */}
+          <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+            <CardContent className="p-4">
+              {/* GIF Display */}
+              <AnimatePresence mode="wait">
+                {gifUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                    onClick={handleRegenerateGif}
+                  >
+                    <div className="relative w-full h-[200px]">
+                      <Image
+                        src={gifUrl}
+                        alt="Quote-related GIF"
+                        fill
+                        unoptimized
+                        sizes="(max-width: 600px) 100vw, 50vw"
+                        className={`object-cover rounded-lg transition-opacity duration-200 ${
+                          isLoading ? 'opacity-50' : 'opacity-100'
+                        }`}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          Click to regenerate GIF
+                        </span>
+                      </div>
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Quote Display */}
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={quote}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -50 }}
+                  transition={{ duration: 0.5 }}
+                  className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center"
+                >
+                  <p className="text-center text-white text-2xl font-medium">
+                    {quote || "Click the magic button to generate an inspiring quote!"}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Action Buttons */}
+              {quote && (
+                <motion.div 
+                  className="mb-4 flex justify-between items-center"
+                >
+                  <Heart 
+                    onClick={() => {
+                      const quoteItem: QuoteHistoryItem = {
+                        text: quote,
+                        style: 'default',
+                        gifUrl,
+                        timestamp: new Date(),
+                        bgColor
+                      };
+                      toggleFavorite(quoteItem);
+                    }}
+                    className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                      favorites.some(fav => fav.text === quote)
+                        ? 'fill-pink-500 text-pink-500' 
+                        : 'text-white hover:text-pink-200'
+                    }`}
+                  />
+                  <div className="flex gap-4">
+                    {isCasting ? (
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="text-white"
+                      >
+                        •••
+                      </motion.span>
+                    ) : (
+                      <Share2 
+                        onClick={async () => {
+                          setShowPreview(true);
+                          if (!gifEnabled) {
+                            setIsGeneratingPreview(true);
+                            try {
+                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              setPreviewImage(dataUrl);
+                            } catch (error) {
+                              console.error('Error generating preview:', error);
+                            } finally {
+                              setIsGeneratingPreview(false);
+                            }
+                          }
+                        }}
+                        className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
+                      />
+                    )}
                   </div>
                 </motion.div>
               )}
-            </AnimatePresence>
 
-            {/* Quote Display */}
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={quote}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                transition={{ duration: 0.5 }}
-                className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center"
-              >
-                <p className="text-center text-white text-2xl font-medium">
-                  {quote || "Click the magic button to generate an inspiring quote!"}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Action Buttons */}
-            {quote && (
-              <motion.div 
-                className="mb-4 flex justify-between items-center"
-              >
-                <Heart 
-                  onClick={() => {
-                    const quoteItem: QuoteHistoryItem = {
-                      text: quote,
-                      style: 'default',
-                      gifUrl,
-                      timestamp: new Date(),
-                      bgColor
-                    };
-                    toggleFavorite(quoteItem);
-                  }}
-                  className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                    favorites.some(fav => fav.text === quote)
-                      ? 'fill-pink-500 text-pink-500' 
-                      : 'text-white hover:text-pink-200'
-                  }`}
+              {/* Input Field */}
+              <div className="mb-6 relative">
+                <Input
+                  type="text"
+                  placeholder="Enter a topic/word for your quote"
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
                 />
-                <div className="flex gap-4">
-                  {isCasting ? (
-                    <motion.span
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      className="text-white"
-                    >
-                      •••
-                    </motion.span>
-                  ) : (
-                    <Share2 
-                      onClick={async () => {
-                        setShowPreview(true);
-                        if (!gifEnabled) {
-                          setIsGeneratingPreview(true);
-                          try {
-                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                            setPreviewImage(dataUrl);
-                          } catch (error) {
-                            console.error('Error generating preview:', error);
-                          } finally {
-                            setIsGeneratingPreview(false);
-                          }
-                        }
-                      }}
-                      className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
-                    />
-                  )}
+                <div 
+                  onClick={handleGenerateQuote}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+                >
+                  <Image
+                    src="/Submit_Icon.png"
+                    alt="Submit"
+                    width={20}
+                    height={20}
+                    className="invert brightness-0"
+                    unoptimized
+                  />
                 </div>
-              </motion.div>
-            )}
-
-            {/* Input Field */}
-            <div className="mb-6 relative">
-              <Input
-                type="text"
-                placeholder="Enter a topic/word for your quote"
-                value={userPrompt}
-                onChange={(e) => setUserPrompt(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
-              />
-              <div 
-                onClick={handleGenerateQuote}
-                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
-              >
-                <Image
-                  src="/Submit_Icon.png"
-                  alt="Submit"
-                  width={20}
-                  height={20}
-                  className="invert brightness-0"
-                  unoptimized
-                />
               </div>
-            </div>
-          </CardContent>
+            </CardContent>
 
-          <CardFooter className="flex flex-col gap-4">
-            {/* Remove the Cast Away button section entirely */}
-          </CardFooter>
-        </Card>
+            <CardFooter className="flex flex-col gap-4">
+              {/* Remove the Cast Away button section entirely */}
+            </CardFooter>
+          </Card>
+        </div>
       </main>
 
       {/* History Modal */}
