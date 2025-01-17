@@ -1279,13 +1279,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <Button
                     onClick={() => {
                       handleGifToggle();
-                      // Show notification
                       toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
                     }}
                     className={`${
                       gifEnabled 
-                        ? 'text-purple-600 hover:text-purple-700' 
-                        : 'text-gray-600 hover:text-gray-700'
+                        ? 'text-black hover:text-purple-600 font-semibold' 
+                        : 'text-black hover:text-gray-600 font-semibold'
                     } w-20 text-sm flex items-center justify-center bg-transparent transition-all duration-200`}
                   >
                     {gifEnabled ? 'On' : 'Off'}
@@ -1304,7 +1303,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     toast.success('History cleared successfully');
                   }}
                   disabled={isClearing}
-                  className="text-gray-900 hover:text-red-600 bg-transparent w-20 text-sm transition-colors duration-200"
+                  className="text-black hover:text-red-600 bg-transparent w-20 text-sm font-semibold transition-colors duration-200"
                 >
                   Clear
                 </Button>
@@ -1320,7 +1319,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       toast.success('Favorites cleared successfully');
                     }
                   }}
-                  className="text-gray-900 hover:text-red-600 bg-transparent w-20 text-sm transition-colors duration-200"
+                  className="text-black hover:text-red-600 bg-transparent w-20 text-sm font-semibold transition-colors duration-200"
                 >
                   Clear
                 </Button>
