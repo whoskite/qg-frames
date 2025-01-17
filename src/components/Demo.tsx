@@ -922,41 +922,43 @@ export default function Demo({ title = "Fun Quotes" }) {
             }} />
           </div>
         )}
-        <div className="relative z-10">
-          <AnimatePresence mode="wait">
-            {isInitialState && (
-              <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="mb-8 text-2xl text-white font-medium text-center"
-              >
-                Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="relative z-10 w-full flex flex-col items-center">
+          <div className="flex flex-col items-center gap-4 mb-8 w-full max-w-[95%] sm:max-w-sm">
+            <AnimatePresence mode="wait">
+              {isInitialState && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-2xl text-white font-medium text-center"
+                >
+                  Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {/* Streak Counter */}
-          <AnimatePresence mode="wait">
-            {isInitialState && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="mb-6 text-center"
-              >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
-                  <span className="text-xl">🔥</span>
-                  <span className="text-white font-medium">{userStreak} Day Streak</span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            {/* Streak Counter */}
+            <AnimatePresence mode="wait">
+              {isInitialState && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-center"
+                >
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                    <span className="text-xl">🔥</span>
+                    <span className="text-white font-medium">{userStreak} Day Streak</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Card Component */}
-          <Card className="w-[95%] sm:w-full sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+          <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
             <CardContent className="p-6 sm:p-4">
               {/* GIF Display */}
               <AnimatePresence mode="wait">
