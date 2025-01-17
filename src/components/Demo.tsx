@@ -924,18 +924,31 @@ export default function Demo({ title = "Fun Quotes" }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="mb-8 text-2xl text-white font-medium text-center flex flex-col items-center gap-2"
+                className="mb-8 text-2xl text-white font-medium text-center"
               >
-                <div className="text-3xl mb-1">🔥</div>
-                <div>Daily Streak: {userStreak}</div>
-                <div className="text-base opacity-80">
-                  {userStreak === 1 
-                    ? "First day! Keep it going!" 
-                    : `You've logged in ${userStreak} days in a row!`}
+                Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Streak Counter */}
+          <AnimatePresence mode="wait">
+            {isInitialState && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="mb-6 text-center"
+              >
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                  <span className="text-xl">🔥</span>
+                  <span className="text-white font-medium">{userStreak} Day Streak</span>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+
           {/* Card Component */}
           <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
             <CardContent className="p-4">
