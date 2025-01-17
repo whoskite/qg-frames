@@ -1212,6 +1212,16 @@ export default function Demo({ title = "Fun Quotes" }) {
                   path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
                 },
                 {
+                  id: 'flower',
+                  name: 'Flower',
+                  path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
+                },
+                {
+                  id: 'sazon',
+                  name: 'TheMrSazon',
+                  path: '/Background_TheMrSazon_1.png'
+                },
+                {
                   id: 'gradient',
                   name: 'Gradient',
                   path: 'gradient',
