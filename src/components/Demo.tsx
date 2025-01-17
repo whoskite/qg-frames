@@ -556,26 +556,28 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Update the background music effect
   useEffect(() => {
-    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
-    audio.loop = true;
-    audio.volume = 0.3;
-    
-    // Play audio when enabled
-    if (isMusicEnabled) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-        });
+    const initializeAudio = async () => {
+      const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
+      audio.loop = true;
+      audio.volume = 0.3;
+      setAudioPlayer(audio);
+
+      try {
+        // Try to play immediately
+        await audio.play();
+      } catch (error) {
+        console.error('Error auto-playing audio:', error);
+        // If autoplay fails, we'll rely on user interaction to start the music
       }
-    }
+    };
 
-    setAudioPlayer(audio);
+    initializeAudio();
 
-    // Cleanup function
     return () => {
-      audio.pause();
-      audio.src = '';
+      if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.src = '';
+      }
     };
   }, []); // Only run once on mount
 
