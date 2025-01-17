@@ -801,17 +801,23 @@ export default function Demo({ title = "Fun Quotes" }) {
         try {
           const newStreak = await updateUserStreak(context.user.fid);
           const currentStreak = userStreak;
+          setIsInitialState(true);
           
-          // Play sound first
-          await playStreakSound();
+          // Start animation and play sound
+          const audio = new Audio('/streak-sound.wav');
+          audio.volume = 0.5;
           
           // Animate the streak count
           for (let i = currentStreak; i <= newStreak; i++) {
+            if (i === currentStreak) {
+              // Play sound at the start of animation
+              await audio.play().catch(error => {
+                console.error('Error playing sound:', error);
+              });
+            }
             setUserStreak(i);
             await sleep(100); // 100ms delay between each number
           }
-          
-          setIsInitialState(true);
         } catch (error) {
           console.error('Error updating streak:', error);
         }
