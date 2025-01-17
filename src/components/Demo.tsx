@@ -345,6 +345,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add to state declarations
   const [lastTapTime, setLastTapTime] = useState(0);
 
+  // Add to state declarations
+  const [showProfile, setShowProfile] = useState(false);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -773,7 +776,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   {context?.user && (
-                    <div className="px-2 py-1.5 text-sm">
+                    <div 
+                      className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={() => setShowProfile(true)}
+                    >
                       <div className="font-medium">{context.user.displayName}</div>
                       <div className="text-xs text-muted-foreground">@{context.user.username}</div>
                     </div>
@@ -1612,6 +1618,11 @@ export default function Demo({ title = "Fun Quotes" }) {
           </motion.div>
         </div>
       )}
+
+      {/* Profile Modal */}
+      {showProfile && (
+        <ProfileModal />
+      )}
     </div>
   );
 }
@@ -1624,3 +1635,76 @@ const formatDate = (timestamp: number) => {
     minute: '2-digit'
   });
 };
+
+const ProfileModal = () => (
+  <div 
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={() => setShowProfile(false)}
+  >
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Profile
+        </h2>
+        <Button
+          className="rounded-full h-7 w-7 p-0"
+          onClick={() => setShowProfile(false)}
+        >
+          <X className="h-4 w-4 text-black" />
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        {/* Profile Image and Basic Info */}
+        <div className="flex items-center gap-4">
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-purple-600">
+            <Image
+              src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+              alt="Profile"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {context?.user?.displayName || "User"}
+            </h3>
+            <p className="text-gray-600">@{context?.user?.username}</p>
+          </div>
+        </div>
+
+        {/* User Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Favorites</p>
+            <p className="text-2xl font-semibold text-gray-900">{favorites.length}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Generated</p>
+            <p className="text-2xl font-semibold text-gray-900">{quoteHistory.length}</p>
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Account Info</h4>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              FID: {context?.user?.fid}
+            </p>
+            <p className="text-sm text-gray-600">
+              Joined: {formatDate(sessionStartTime)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);
