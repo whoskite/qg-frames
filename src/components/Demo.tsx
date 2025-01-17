@@ -801,10 +801,17 @@ export default function Demo({ title = "Fun Quotes" }) {
       {/* Main Content - Centered */}
       <main 
         className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
-          bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
+          bgImage?.includes('gradient') ? '' : ''
         }`}
-        style={bgImage !== 'none' && !bgImage.includes('TheMrSazon') ? {
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
+        style={bgImage?.includes('gradient') ? {
+          backgroundImage: bgImage === 'gradient-pink' ? 'linear-gradient(to bottom right, rgb(192, 132, 252), rgb(244, 114, 182), rgb(239, 68, 68))' :
+                          bgImage === 'gradient-black' ? 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81), rgb(31, 41, 55))' :
+                          bgImage === 'gradient-yellow' ? 'linear-gradient(to bottom right, rgb(251, 191, 36), rgb(249, 115, 22), rgb(239, 68, 68))' :
+                          bgImage === 'gradient-green' ? 'linear-gradient(to bottom right, rgb(52, 211, 153), rgb(16, 185, 129), rgb(20, 184, 166))' :
+                          bgImage === 'gradient-purple' ? 'linear-gradient(to bottom right, #472A91, rgb(147, 51, 234), rgb(107, 33, 168))' :
+                          'none'
+        } : bgImage !== 'none' && !bgImage?.includes('TheMrSazon') ? {
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -1257,16 +1264,45 @@ export default function Demo({ title = "Fun Quotes" }) {
                   path: '/Background_TheMrSazon_1.png'
                 },
                 {
-                  id: 'gradient',
-                  name: 'Gradient',
-                  path: 'gradient',
-                  isGradient: true
+                  id: 'gradient-pink',
+                  name: 'Pink Gradient',
+                  path: 'gradient-pink',
+                  isGradient: true,
+                  gradientClass: 'from-purple-400 via-pink-500 to-red-500'
+                },
+                {
+                  id: 'gradient-black',
+                  name: 'Black Gradient',
+                  path: 'gradient-black',
+                  isGradient: true,
+                  gradientClass: 'from-gray-900 via-gray-700 to-gray-800'
+                },
+                {
+                  id: 'gradient-yellow',
+                  name: 'Yellow Gradient',
+                  path: 'gradient-yellow',
+                  isGradient: true,
+                  gradientClass: 'from-yellow-400 via-orange-500 to-red-500'
+                },
+                {
+                  id: 'gradient-green',
+                  name: 'Green Gradient',
+                  path: 'gradient-green',
+                  isGradient: true,
+                  gradientClass: 'from-green-400 via-emerald-500 to-teal-500'
+                },
+                {
+                  id: 'gradient-purple',
+                  name: 'Purple Gradient',
+                  path: 'gradient-purple',
+                  isGradient: true,
+                  gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
                 }
               ].map((bg) => (
                 <div
                   key={bg.id}
                   onClick={async () => {
-                    const newTheme = bg.isGradient ? 'none' : bg.path;
+                    const newTheme = bg.isGradient ? bg.path : bg.path;
                     setBgImage(newTheme);
                     if (context?.user?.fid) {
                       try {
@@ -1278,11 +1314,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                     }
                   }}
                   className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
-                    (bg.isGradient ? bgImage === 'none' : bgImage === bg.path) ? 'ring-4 ring-purple-600 ring-offset-2' : ''
+                    bgImage === bg.path ? 'ring-4 ring-purple-600 ring-offset-2' : ''
                   }`}
                 >
                   {bg.isGradient ? (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500" />
+                    <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
                   ) : (
                     <Image
                       src={bg.path}
@@ -1293,7 +1329,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       unoptimized
                     />
                   )}
-                  {(bg.isGradient ? bgImage === 'none' : bgImage === bg.path) && (
+                  {bgImage === bg.path && (
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                       <Check className="w-8 h-8 text-white" />
                     </div>
