@@ -845,7 +845,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                   {context?.user && (
                     <div 
                       className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
-                      onClick={() => setShowProfile(true)}
+                      onClick={() => {
+                        setShowProfile(true);
+                        // Close the dropdown menu
+                        const dropdownTrigger = document.querySelector('[data-state="open"]');
+                        if (dropdownTrigger instanceof HTMLElement) {
+                          dropdownTrigger.click();
+                        }
+                      }}
                     >
                       <div className="font-medium">{context.user.displayName}</div>
                       <div className="text-xs text-muted-foreground">@{context.user.username}</div>
