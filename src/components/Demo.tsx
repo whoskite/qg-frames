@@ -500,11 +500,17 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  const handleReuseQuote = (item: QuoteHistoryItem) => {
+  const handleReuseQuote = (item: QuoteHistoryItem | FavoriteQuote) => {
     setQuote(item.text);
-    setBgColor(item.bgColor);
-    setGifUrl(item.gifUrl);
+    if (item.gifUrl) {
+      setGifUrl(item.gifUrl);
+    }
     setShowHistory(false);
+    setShowFavorites(false);
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Show success notification
+    toast.success('Quote loaded successfully');
   };
 
   // Add clear function
