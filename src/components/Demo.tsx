@@ -339,6 +339,12 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
+  // Add to state declarations
+  const [showHeartAnimation, setShowHeartAnimation] = useState(false);
+
+  // Add to state declarations
+  const [lastTapTime, setLastTapTime] = useState(0);
+
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
     if (analytics) {
@@ -710,6 +716,20 @@ export default function Demo({ title = "Fun Quotes" }) {
     loadThemePreference();
   }, [context?.user?.fid, isFirebaseInitialized]);
 
+  // Add helper function for double tap/click
+  const handleQuoteDoubleTap = () => {
+    const quoteItem: QuoteHistoryItem = {
+      text: quote,
+      style: 'default',
+      gifUrl,
+      timestamp: new Date(),
+      bgColor
+    };
+    toggleFavorite(quoteItem);
+    setShowHeartAnimation(true);
+    setTimeout(() => setShowHeartAnimation(false), 1000);
+  };
+
   // 10. Main Render
   return (
     <div className="relative min-h-screen">
@@ -885,11 +905,32 @@ export default function Demo({ title = "Fun Quotes" }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -50 }}
                   transition={{ duration: 0.5 }}
-                  className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center"
+                  className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center relative"
+                  onDoubleClick={handleQuoteDoubleTap}
+                  onTouchStart={(e) => {
+                    const now = Date.now();
+                    if (now - lastTapTime < 300) {  // 300ms between taps
+                      handleQuoteDoubleTap();
+                    }
+                    setLastTapTime(now);
+                  }}
                 >
-                  <p className="text-center text-white text-2xl font-medium">
+                  <p className="text-center text-white text-2xl font-medium select-none">
                     {quote || ""}
                   </p>
+                  <AnimatePresence>
+                    {showHeartAnimation && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1.5, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      >
+                        <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </AnimatePresence>
 
@@ -908,6 +949,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                         bgColor
                       };
                       toggleFavorite(quoteItem);
+                      // Show heart animation
+                      setShowHeartAnimation(true);
+                      setTimeout(() => setShowHeartAnimation(false), 1000);
                     }}
                     className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
                       favorites.some(fav => fav.text === quote)
