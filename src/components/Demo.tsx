@@ -694,7 +694,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     <div className="relative min-h-screen">
       <Toaster position="top-center" richColors />
       {/* Fixed Navigation */}
-      <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-10 shadow-lg">
+      <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             {/* Left side - Logo */}
@@ -779,7 +779,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
       {/* Main Content - Centered */}
       <main 
-        className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-24 relative ${
+        className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
           bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
         }`}
         style={bgImage !== 'none' ? {
