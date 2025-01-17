@@ -230,8 +230,6 @@ export const updateUserStreak = async (fid: number) => {
   }
 
   const userRef = doc(db as Firestore, 'users', fid.toString());
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   try {
     const userDoc = await getDoc(userRef);
@@ -240,35 +238,20 @@ export const updateUserStreak = async (fid: number) => {
     if (!userData) {
       // First visit ever
       await setDoc(userRef, {
-        lastVisit: today.getTime(),
+        lastVisit: Date.now(),
         currentStreak: 1,
-        streakStartDate: today.getTime()
+        streakStartDate: Date.now()
       }, { merge: true });
       return 1;
     }
 
-    const lastVisit = new Date(userData.lastVisit);
-    lastVisit.setHours(0, 0, 0, 0);
-    
-    const diffDays = Math.floor((today.getTime() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
-    
-    let newStreak = userData.currentStreak || 0;
-    
-    if (diffDays === 0) {
-      // Already visited today, maintain streak
-      return newStreak;
-    } else if (diffDays === 1) {
-      // Consecutive day, increment streak
-      newStreak += 1;
-    } else {
-      // Streak broken, start new streak
-      newStreak = 1;
-    }
+    // For testing: Increment streak on every login
+    const newStreak = (userData.currentStreak || 0) + 1;
     
     await updateDoc(userRef, {
-      lastVisit: today.getTime(),
+      lastVisit: Date.now(),
       currentStreak: newStreak,
-      streakStartDate: newStreak === 1 ? today.getTime() : userData.streakStartDate
+      streakStartDate: userData.streakStartDate || Date.now()
     });
     
     return newStreak;
