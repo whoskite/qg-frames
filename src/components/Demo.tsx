@@ -1034,7 +1034,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                             Use Prompt
                           </Button>
                           <Button
-                            onClick={() => handleRemoveFavorite(index)}
+                            onClick={() => {
+                              const newFavorites = [...favorites];
+                              newFavorites.splice(index, 1);
+                              setFavorites(newFavorites);
+                              toast.success('Removed from favorites');
+                            }}
                             className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200"
                           >
                             Remove
