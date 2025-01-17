@@ -1006,8 +1006,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       onClick={() => handleReuseQuote(item)}
                     >
                       <div 
-                        className="p-4 cursor-pointer"
-                        style={{ backgroundColor: item.bgColor }}
+                        className="p-4 cursor-pointer bg-gradient-to-br from-purple-600 via-pink-500 to-red-500"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-white font-medium flex-1">{item.text}</p>
@@ -1111,8 +1110,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       onClick={() => handleReuseQuote(item)}
                     >
                       <div 
-                        className="p-4 cursor-pointer"
-                        style={{ backgroundColor: item.bgColor }}
+                        className="p-4 cursor-pointer bg-gradient-to-br from-purple-600 via-pink-500 to-red-500"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-white font-medium flex-1">{item.text}</p>
