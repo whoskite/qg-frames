@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -532,28 +533,62 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  // Add this effect to handle background music
+  // Update the streak effect
   useEffect(() => {
-    const audio = new Audio('/ES_Calm_Cadence.mp3');
-    audio.loop = true;
-    audio.volume = 0.3;
-    setAudioPlayer(audio);
-
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
+    const updateUserStreakCount = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const newStreak = await updateUserStreak(context.user.fid);
+          // Only animate if the streak has changed
+          if (newStreak !== userStreak) {
+            setIsInitialState(true);
+            setUserStreak(newStreak);
+          }
+        } catch (error) {
+          console.error('Error updating streak:', error);
+        }
       }
     };
-  }, []);
 
-  // Add effect to control music playback
+    updateUserStreakCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context?.user?.fid, isFirebaseInitialized]); // Remove userStreak from dependencies
+
+  // Update the background music effect
+  useEffect(() => {
+    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+    
+    // Play audio when enabled
+    if (isMusicEnabled) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Error playing audio:', error);
+        });
+      }
+    }
+
+    setAudioPlayer(audio);
+
+    // Cleanup function
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, []); // Only run once on mount
+
+  // Separate effect to handle music toggle
   useEffect(() => {
     if (audioPlayer) {
       if (isMusicEnabled) {
-        audioPlayer.play().catch(error => {
-          console.error('Error playing audio:', error);
-        });
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error('Error playing audio:', error);
+          });
+        }
       } else {
         audioPlayer.pause();
       }
@@ -825,39 +860,6 @@ export default function Demo({ title = "Fun Quotes" }) {
       throw error;
     }
   };
-
-  // Update the streak effect
-  useEffect(() => {
-    const updateUserStreakCount = async () => {
-      if (context?.user?.fid && isFirebaseInitialized) {
-        try {
-          const newStreak = await updateUserStreak(context.user.fid);
-          const currentStreak = userStreak;
-          setIsInitialState(true);
-          
-          // Start animation and play sound
-          const audio = new Audio('/streak-sound.wav');
-          audio.volume = 0.5;
-          
-          // Animate the streak count
-          for (let i = currentStreak; i <= newStreak; i++) {
-            if (i === currentStreak) {
-              // Play sound at the start of animation
-              await audio.play().catch(error => {
-                console.error('Error playing sound:', error);
-              });
-            }
-            setUserStreak(i);
-            await sleep(100); // 100ms delay between each number
-          }
-        } catch (error) {
-          console.error('Error updating streak:', error);
-        }
-      }
-    };
-
-    updateUserStreakCount();
-  }, [context?.user?.fid, isFirebaseInitialized, userStreak]);
 
   // 10. Main Render
   return (
