@@ -945,103 +945,42 @@ export default function Demo({ title = "Fun Quotes" }) {
             className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Quote History
-              </h2>
-              <div className="flex items-center gap-2">
-                {quoteHistory.length > 0 && (
-                  <Button
-                    onClick={handleClearHistory}
-                    disabled={isClearing}
-                    className="text-purple-600 hover:text-red-500 transition-colors text-xs px-2 h-7"
-                  >
-                    {isClearing ? (
-                      <motion.span
-                        animate={{ opacity: [1, 0.5, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="text-xs text-purple-600"
-                      >
-                        •••
-                      </motion.span>
-                    ) : (
-                      <span className="text-purple-600">
-                        Clear
-                      </span>
-                    )}
-                  </Button>
-                )}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+                <h2 className="text-xl font-semibold text-gray-800">Chat History</h2>
                 <Button
-                  className="rounded-full h-7 w-7 p-0"
-                  onClick={() => setShowHistory(false)}
+                  onClick={() => {
+                    handleClearHistory();
+                    toast.success('History cleared successfully');
+                  }}
+                  disabled={isClearing}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200"
                 >
-                  <X className="h-4 w-4 text-black" />
+                  Clear All
                 </Button>
               </div>
-            </div>
-            
-            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-              {quoteHistory.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center text-gray-500 py-12"
-                >
-                  <div className="mb-4">✨</div>
-                  <p className="font-medium">No quotes generated yet</p>
-                  <p className="text-sm mt-2 text-gray-400">
-                    Your generated quotes will appear here
-                  </p>
-                </motion.div>
-              ) : (
-                <AnimatePresence mode="popLayout">
-                  {quoteHistory.map((item, index) => (
-                    <motion.div
-                      key={item.timestamp.toString()}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                      onClick={() => handleReuseQuote(item)}
-                    >
-                      <div 
-                        className="p-4 cursor-pointer"
-                        style={{ backgroundColor: item.bgColor }}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="text-white font-medium flex-1">{item.text}</p>
-                          <span className="text-xs text-white/70 ml-2">
-                            {formatTimestamp(item.timestamp)}
-                          </span>
-                        </div>
-                        
-                        {item.gifUrl && (
-                          <div className="relative h-32 mt-3 rounded-md overflow-hidden">
-                            <Image
-                              src={item.gifUrl}
-                              alt="Quote GIF"
-                              fill
-                              className="object-cover transition-transform group-hover:scale-105"
-                              unoptimized
-                            />
-                          </div>
-                        )}
-                        
-                        <div className="mt-3 flex items-center gap-2 text-white/80">
-                          <span className="text-xs">Click to reuse</span>
-                          <motion.div
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            →
-                          </motion.div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
+              
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {quoteHistory.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-100 rounded-lg p-4 hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+                    onClick={() => handleReuseQuote(item)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <p className="text-gray-800 font-medium line-clamp-2">{item.text}</p>
+                      <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                        {formatTimestamp(item.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {quoteHistory.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No history yet</p>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1060,91 +999,60 @@ export default function Demo({ title = "Fun Quotes" }) {
             className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Favorite Quotes
-              </h2>
-              <Button
-                className="rounded-full h-7 w-7 p-0 ml-auto"
-                onClick={() => setShowFavorites(false)}
-              >
-                <X className="h-4 w-4 text-black" />
-              </Button>
-            </div>
-            
-            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-              {favorites.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center text-gray-500 py-12"
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+                <h2 className="text-xl font-semibold text-gray-800">Favorites</h2>
+                <Button
+                  onClick={() => {
+                    if (context?.user?.fid) {
+                      setFavorites([]);
+                      toast.success('Favorites cleared successfully');
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200"
                 >
-                  <div className="mb-4">💖</div>
-                  <p className="font-medium">No favorites yet</p>
-                  <p className="text-sm mt-2 text-gray-400">
-                    Your favorite quotes will appear here
-                  </p>
-                </motion.div>
-              ) : (
-                <AnimatePresence mode="popLayout">
-                  {favorites.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                      onClick={() => handleReuseQuote(item)}
-                    >
-                      <div 
-                        className="p-4 cursor-pointer"
-                        style={{ backgroundColor: item.bgColor }}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="text-white font-medium flex-1">{item.text}</p>
-                          <span className="text-xs text-white/70 ml-2">
-                            {formatTimestamp(item.timestamp)}
-                          </span>
-                        </div>
-                        
-                        {item.gifUrl && (
-                          <div className="relative h-32 mt-3 rounded-md overflow-hidden">
-                            <Image
-                              src={item.gifUrl}
-                              alt="Quote GIF"
-                              fill
-                              className="object-cover transition-transform group-hover:scale-105"
-                              unoptimized
-                            />
-                          </div>
-                        )}
-                        
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-white/80">
-                            <span className="text-xs">Click to reuse</span>
-                            <motion.div
-                              animate={{ x: [0, 5, 0] }}
-                              transition={{ duration: 1, repeat: Infinity }}
-                            >
-                              →
-                            </motion.div>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(item);
-                            }}
-                            className="text-white/80 hover:text-pink-500 transition-colors"
+                  Clear All
+                </Button>
+              </div>
+
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {favorites.map((favorite, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-100 rounded-lg p-4 hover:bg-gray-200 transition-colors duration-200"
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="text-gray-800 font-medium mb-2 line-clamp-2">
+                          {favorite.text}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => handleReuseQuote(favorite)}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200"
                           >
-                            <Heart className="w-5 h-5 fill-current" />
-                          </button>
+                            Use Prompt
+                          </Button>
+                          <Button
+                            onClick={() => handleRemoveFavorite(index)}
+                            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200"
+                          >
+                            Remove
+                          </Button>
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
+                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                        {formatTimestamp(favorite.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {favorites.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No favorites yet</p>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1468,3 +1376,12 @@ export default function Demo({ title = "Fun Quotes" }) {
     </div>
   );
 }
+
+const formatDate = (timestamp: number) => {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
