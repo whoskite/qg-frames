@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
 import { logEvent, setUserProperties } from "firebase/analytics";
+import { Toaster, toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -685,6 +686,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   // 10. Main Render
   return (
     <div className="relative min-h-screen">
+      <Toaster position="top-center" richColors />
       {/* Fixed Navigation */}
       <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -1270,16 +1272,25 @@ export default function Demo({ title = "Fun Quotes" }) {
               {/* GIF Toggle Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-medium text-gray-900">GIF Generation</h3>
-                <Button
-                  onClick={handleGifToggle}
-                  className={`${
-                    gifEnabled 
-                      ? 'text-purple-600 hover:text-purple-700' 
-                      : 'text-gray-400 hover:text-gray-500'
-                  } w-20 text-sm flex items-center justify-center bg-transparent`}
+                <motion.div
+                  animate={{ x: gifEnabled ? 0 : -5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  {gifEnabled ? 'On' : 'Off'}
-                </Button>
+                  <Button
+                    onClick={() => {
+                      handleGifToggle();
+                      // Show notification
+                      toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
+                    }}
+                    className={`${
+                      gifEnabled 
+                        ? 'text-purple-600 hover:text-purple-700' 
+                        : 'text-gray-600 hover:text-gray-700'
+                    } w-20 text-sm flex items-center justify-center bg-transparent transition-all duration-200`}
+                  >
+                    {gifEnabled ? 'On' : 'Off'}
+                  </Button>
+                </motion.div>
               </div>
 
               <div className="h-px bg-gray-200" />
@@ -1288,9 +1299,12 @@ export default function Demo({ title = "Fun Quotes" }) {
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-medium text-gray-900">Clear History</h3>
                 <Button
-                  onClick={handleClearHistory}
+                  onClick={() => {
+                    handleClearHistory();
+                    toast.success('History cleared successfully');
+                  }}
                   disabled={isClearing}
-                  className="text-red-500 hover:text-red-600 bg-transparent w-20 text-sm"
+                  className="text-gray-900 hover:text-red-600 bg-transparent w-20 text-sm transition-colors duration-200"
                 >
                   Clear
                 </Button>
@@ -1303,9 +1317,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                   onClick={() => {
                     if (context?.user?.fid) {
                       setFavorites([]);
+                      toast.success('Favorites cleared successfully');
                     }
                   }}
-                  className="text-red-500 hover:text-red-600 bg-transparent w-20 text-sm"
+                  className="text-gray-900 hover:text-red-600 bg-transparent w-20 text-sm transition-colors duration-200"
                 >
                   Clear
                 </Button>
