@@ -109,192 +109,49 @@ interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
   timestamp: string;
 }
 
-// Add this function before the Demo component
-const generateQuoteImage = async (quote: string, bgImage: string, userContext?: FrameContext): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    try {
-      // Create canvas
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get canvas context');
-
-      // Set canvas size
-      canvas.width = 800;
-      canvas.height = 400;
-
-      // Create and load background image
-      const img = document.createElement('img');
-      img.crossOrigin = 'anonymous';
-
-      // Create profile image element
-      const profileImg = document.createElement('img');
-      profileImg.crossOrigin = 'anonymous';
-      profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
-
-      const handleLoad = () => {
-        if (bgImage === 'none') {
-          // Create gradient background
-          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-          gradient.addColorStop(0, '#9b5de5');
-          gradient.addColorStop(0.5, '#f15bb5');
-          gradient.addColorStop(1, '#ff6b6b');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        } else {
-          // Calculate dimensions to cover the entire canvas while maintaining aspect ratio
-          const imgAspectRatio = img.width / img.height;
-          const canvasAspectRatio = canvas.width / canvas.height;
-          let drawWidth = canvas.width;
-          let drawHeight = canvas.height;
-          let offsetX = 0;
-          let offsetY = 0;
-
-          if (imgAspectRatio > canvasAspectRatio) {
-            // Image is wider - scale based on height and center horizontally
-            drawHeight = canvas.height;
-            drawWidth = drawHeight * imgAspectRatio;
-            offsetX = (canvas.width - drawWidth) / 2;
-          } else {
-            // Image is taller - scale based on width and center vertically
-            drawWidth = canvas.width;
-            drawHeight = drawWidth / imgAspectRatio;
-            offsetY = (canvas.height - drawHeight) / 2;
-          }
-
-          // Fill background with black
-          ctx.fillStyle = '#000000';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // Draw background image centered
-          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-          
-          // Add semi-transparent overlay
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Add quote text
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 32px Inter, sans-serif';
-        
-        // Word wrap the text
-        const words = quote.split(' ');
-        const lines = [];
-        let currentLine = '';
-        const maxWidth = canvas.width - 100;
-
-        words.forEach(word => {
-          const testLine = currentLine + word + ' ';
-          const metrics = ctx.measureText(testLine);
-          if (metrics.width > maxWidth) {
-            lines.push(currentLine);
-            currentLine = word + ' ';
-          } else {
-            currentLine = testLine;
-          }
-        });
-        lines.push(currentLine);
-
-        // Draw the wrapped text
-        const lineHeight = 40;
-        const totalHeight = lines.length * lineHeight;
-        const startY = (canvas.height - totalHeight) / 2 - 20; // Move quote up to make room for profile
-
-        lines.forEach((line, index) => {
-          ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
-        });
-
-        // Draw profile image and username
-        const profileSize = 40;
-        const profileY = canvas.height - 70; // Position from bottom
-        const username = `@${userContext?.user?.username || 'user'}`;
-        
-        // Measure text width to calculate total width of profile + username
-        ctx.font = '20px Inter, sans-serif';
-        const textMetrics = ctx.measureText(username);
-        const totalWidth = profileSize + 15 + textMetrics.width; // profile width + gap + text width
-        
-        // Calculate starting X position to center everything
-        const startX = (canvas.width - totalWidth) / 2;
-        const profileX = startX;
-        const usernameX = startX + profileSize + 15;
-
-        // Draw circular profile image
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
-        ctx.closePath();
-        ctx.clip();
-
-        // Draw the profile image
-        ctx.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
-        ctx.restore();
-
-        // Draw white border around profile image
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
-        ctx.stroke();
-
-        // Add username next to profile image
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'left';
-        ctx.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
-
-        resolve(canvas.toDataURL('image/png'));
-      };
-
-      // Load profile image first, then proceed with the rest
-      profileImg.onload = () => {
-        if (bgImage === 'none') {
-          handleLoad();
-        } else {
-          img.onload = handleLoad;
-          img.src = bgImage;
-        }
-      };
-
-      profileImg.onerror = () => {
-        // If profile image fails, use default image
-        profileImg.src = "/Profile_Image.jpg";
-      };
-
-      img.onerror = (_event: string | Event) => {
-        reject(new Error('Failed to load image'));
-      };
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-const uploadImage = async (imageData: string): Promise<string> => {
-  try {
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ image: imageData }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload image');
-    }
-
-    const data = await response.json();
-    if (!data.url) {
-      throw new Error('No URL in response');
-    }
-
-    return data.url;
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    throw error;
+// Add a new state for Firebase initialization
+const customScrollbarStyles = `
+  /* Default scrollbar styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
   }
-};
+
+  /* Webkit scrollbar styles */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Thinner scrollbar for mobile */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+    min-height: 40px; /* Minimum height for better touch targets */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  /* Media query for larger screens */
+  @media (min-width: 768px) {
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px; /* Slightly wider scrollbar for desktop */
+    }
+  }
+
+  /* For Firefox */
+  @supports (scrollbar-width: thin) {
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #888 #f1f1f1;
+    }
+  }
+`;
 
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
@@ -733,9 +590,197 @@ export default function Demo({ title = "Fun Quotes" }) {
     setTimeout(() => setShowHeartAnimation(false), 1000);
   };
 
+  // Add these functions inside the Demo component
+  const generateQuoteImage = async (quote: string, bgImage: string, userContext?: FrameContext): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Could not get canvas context');
+
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 400;
+
+        // Create and load background image
+        const img = document.createElement('img');
+        img.crossOrigin = 'anonymous';
+
+        // Create profile image element
+        const profileImg = document.createElement('img');
+        profileImg.crossOrigin = 'anonymous';
+        profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
+
+        const handleLoad = () => {
+          if (bgImage === 'none') {
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#9b5de5');
+            gradient.addColorStop(0.5, '#f15bb5');
+            gradient.addColorStop(1, '#ff6b6b');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          } else {
+            // Calculate dimensions to cover the entire canvas while maintaining aspect ratio
+            const imgAspectRatio = img.width / img.height;
+            const canvasAspectRatio = canvas.width / canvas.height;
+            let drawWidth = canvas.width;
+            let drawHeight = canvas.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (imgAspectRatio > canvasAspectRatio) {
+              // Image is wider - scale based on height and center horizontally
+              drawHeight = canvas.height;
+              drawWidth = drawHeight * imgAspectRatio;
+              offsetX = (canvas.width - drawWidth) / 2;
+            } else {
+              // Image is taller - scale based on width and center vertically
+              drawWidth = canvas.width;
+              drawHeight = drawWidth / imgAspectRatio;
+              offsetY = (canvas.height - drawHeight) / 2;
+            }
+
+            // Fill background with black
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background image centered
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            
+            // Add semi-transparent overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          }
+
+          // Add quote text
+          ctx.fillStyle = 'white';
+          ctx.textAlign = 'center';
+          ctx.font = 'bold 32px Inter, sans-serif';
+          
+          // Word wrap the text
+          const words = quote.split(' ');
+          const lines = [];
+          let currentLine = '';
+          const maxWidth = canvas.width - 100;
+
+          words.forEach(word => {
+            const testLine = currentLine + word + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth) {
+              lines.push(currentLine);
+              currentLine = word + ' ';
+            } else {
+              currentLine = testLine;
+            }
+          });
+          lines.push(currentLine);
+
+          // Draw the wrapped text
+          const lineHeight = 40;
+          const totalHeight = lines.length * lineHeight;
+          const startY = (canvas.height - totalHeight) / 2 - 20; // Move quote up to make room for profile
+
+          lines.forEach((line, index) => {
+            ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
+          });
+
+          // Draw profile image and username
+          const profileSize = 40;
+          const profileY = canvas.height - 70; // Position from bottom
+          const username = `@${userContext?.user?.username || 'user'}`;
+          
+          // Measure text width to calculate total width of profile + username
+          ctx.font = '20px Inter, sans-serif';
+          const textMetrics = ctx.measureText(username);
+          const totalWidth = profileSize + 15 + textMetrics.width; // profile width + gap + text width
+          
+          // Calculate starting X position to center everything
+          const startX = (canvas.width - totalWidth) / 2;
+          const profileX = startX;
+          const usernameX = startX + profileSize + 15;
+
+          // Draw circular profile image
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.clip();
+
+          // Draw the profile image
+          ctx.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
+          ctx.restore();
+
+          // Draw white border around profile image
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
+          ctx.stroke();
+
+          // Add username next to profile image
+          ctx.fillStyle = 'white';
+          ctx.textAlign = 'left';
+          ctx.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
+
+          resolve(canvas.toDataURL('image/png'));
+        };
+
+        // Load profile image first, then proceed with the rest
+        profileImg.onload = () => {
+          if (bgImage === 'none') {
+            handleLoad();
+          } else {
+            img.onload = handleLoad;
+            img.src = bgImage;
+          }
+        };
+
+        profileImg.onerror = () => {
+          // If profile image fails, use default image
+          profileImg.src = "/Profile_Image.jpg";
+        };
+
+        img.onerror = (_event: string | Event) => {
+          reject(new Error('Failed to load image'));
+        };
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  const uploadImage = async (imageData: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: imageData }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      if (!data.url) {
+        throw new Error('No URL in response');
+      }
+
+      return data.url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   // 10. Main Render
   return (
     <div className="relative min-h-screen">
+      <style>{customScrollbarStyles}</style>
       <Toaster position="top-center" richColors />
       {/* Fixed Navigation */}
       <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
@@ -1286,109 +1331,111 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                {
-                  id: 'nature1',
-                  name: 'Nature 1',
-                  path: '/Background_Nature_1_pexels-asumaani-16545605.jpg'
-                },
-                {
-                  id: 'urban',
-                  name: 'Urban',
-                  path: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg'
-                },
-                {
-                  id: 'nature2',
-                  name: 'Nature 2',
-                  path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
-                },
-                {
-                  id: 'flower',
-                  name: 'Flower',
-                  path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
-                },
-                {
-                  id: 'sazon',
-                  name: 'TheMrSazon',
-                  path: '/Background_TheMrSazon_1.png'
-                },
-                {
-                  id: 'gradient-pink',
-                  name: 'Pink Gradient',
-                  path: 'gradient-pink',
-                  isGradient: true,
-                  gradientClass: 'from-purple-400 via-pink-500 to-red-500'
-                },
-                {
-                  id: 'gradient-black',
-                  name: 'Black Gradient',
-                  path: 'gradient-black',
-                  isGradient: true,
-                  gradientClass: 'from-gray-900 via-gray-700 to-gray-800'
-                },
-                {
-                  id: 'gradient-yellow',
-                  name: 'Yellow Gradient',
-                  path: 'gradient-yellow',
-                  isGradient: true,
-                  gradientClass: 'from-yellow-400 via-orange-500 to-red-500'
-                },
-                {
-                  id: 'gradient-green',
-                  name: 'Green Gradient',
-                  path: 'gradient-green',
-                  isGradient: true,
-                  gradientClass: 'from-green-400 via-emerald-500 to-teal-500'
-                },
-                {
-                  id: 'gradient-purple',
-                  name: 'Purple Gradient',
-                  path: 'gradient-purple',
-                  isGradient: true,
-                  gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
-                }
-              ].map((bg) => (
-                <div
-                  key={bg.id}
-                  onClick={async () => {
-                    const newTheme = bg.isGradient ? bg.path : bg.path;
-                    setBgImage(newTheme);
-                    if (context?.user?.fid) {
-                      try {
-                        await saveThemePreference(context.user.fid, newTheme);
-                        toast.success('Theme preference saved');
-                      } catch (error) {
-                        console.error('Error saving theme preference:', error);
+            <div className="overflow-y-auto max-h-[330px] pr-2 custom-scrollbar">
+              <div className="grid grid-cols-3 gap-4 pb-4">
+                {[
+                  {
+                    id: 'nature1',
+                    name: 'Nature 1',
+                    path: '/Background_Nature_1_pexels-asumaani-16545605.jpg'
+                  },
+                  {
+                    id: 'urban',
+                    name: 'Urban',
+                    path: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg'
+                  },
+                  {
+                    id: 'nature2',
+                    name: 'Nature 2',
+                    path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
+                  },
+                  {
+                    id: 'flower',
+                    name: 'Flower',
+                    path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
+                  },
+                  {
+                    id: 'sazon',
+                    name: 'TheMrSazon',
+                    path: '/Background_TheMrSazon_1.png'
+                  },
+                  {
+                    id: 'gradient-pink',
+                    name: 'Pink Gradient',
+                    path: 'gradient-pink',
+                    isGradient: true,
+                    gradientClass: 'from-purple-400 via-pink-500 to-red-500'
+                  },
+                  {
+                    id: 'gradient-black',
+                    name: 'Black Gradient',
+                    path: 'gradient-black',
+                    isGradient: true,
+                    gradientClass: 'from-gray-900 via-gray-700 to-gray-800'
+                  },
+                  {
+                    id: 'gradient-yellow',
+                    name: 'Yellow Gradient',
+                    path: 'gradient-yellow',
+                    isGradient: true,
+                    gradientClass: 'from-yellow-400 via-orange-500 to-red-500'
+                  },
+                  {
+                    id: 'gradient-green',
+                    name: 'Green Gradient',
+                    path: 'gradient-green',
+                    isGradient: true,
+                    gradientClass: 'from-green-400 via-emerald-500 to-teal-500'
+                  },
+                  {
+                    id: 'gradient-purple',
+                    name: 'Purple Gradient',
+                    path: 'gradient-purple',
+                    isGradient: true,
+                    gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
+                  }
+                ].map((bg) => (
+                  <div
+                    key={bg.id}
+                    onClick={async () => {
+                      const newTheme = bg.isGradient ? bg.path : bg.path;
+                      setBgImage(newTheme);
+                      if (context?.user?.fid) {
+                        try {
+                          await saveThemePreference(context.user.fid, newTheme);
+                          toast.success('Theme preference saved');
+                        } catch (error) {
+                          console.error('Error saving theme preference:', error);
+                        }
                       }
-                    }
-                  }}
-                  className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
-                    bgImage === bg.path ? 'ring-4 ring-purple-600 ring-offset-2' : ''
-                  }`}
-                >
-                  {bg.isGradient ? (
-                    <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
-                  ) : (
-                    <Image
-                      src={bg.path}
-                      alt={bg.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      unoptimized
-                    />
-                  )}
-                  {bgImage === bg.path && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <Check className="w-8 h-8 text-white" />
+                    }}
+                    className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
+                      bgImage === bg.path ? 'ring-4 ring-purple-600 ring-offset-2' : ''
+                    }`}
+                  >
+                    {bg.isGradient ? (
+                      <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
+                    ) : (
+                      <Image
+                        src={bg.path}
+                        alt={bg.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        unoptimized
+                      />
+                    )}
+                    {bgImage === bg.path && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <Check className="w-8 h-8 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center text-sm">
+                      {bg.name}
                     </div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center text-sm">
-                    {bg.name}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>
