@@ -956,8 +956,8 @@ export default function Demo({ title = "Fun Quotes" }) {
           </AnimatePresence>
 
           {/* Card Component */}
-          <Card className="w-full max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
-            <CardContent className="p-4">
+          <Card className="w-[95%] sm:w-full sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+            <CardContent className="p-6 sm:p-4">
               {/* GIF Display */}
               <AnimatePresence mode="wait">
                 {gifUrl && (
@@ -968,7 +968,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
                     onClick={handleRegenerateGif}
                   >
-                    <div className="relative w-full h-[200px]">
+                    <div className="relative w-full h-[250px] sm:h-[200px]">
                       <Image
                         src={gifUrl}
                         alt="Quote-related GIF"
