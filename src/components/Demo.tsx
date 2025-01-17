@@ -240,6 +240,24 @@ export default function Demo({ title = "Fun Quotes" }) {
           try {
             const streak = await updateUserStreak(frameContext.user.fid);
             setUserStreak(streak);
+            
+            // Show streak notification
+            if (streak > 0) {
+              toast.success(
+                <div className="flex flex-col items-center gap-1">
+                  <div className="text-lg font-bold">🔥 Daily Streak: {streak}</div>
+                  <div className="text-sm">
+                    {streak === 1 
+                      ? "First day! Keep it going!" 
+                      : `You've logged in ${streak} days in a row!`}
+                  </div>
+                </div>,
+                {
+                  duration: 4000,
+                  className: "streak-toast"
+                }
+              );
+            }
           } catch (error) {
             console.error('Error updating streak on login:', error);
           }
