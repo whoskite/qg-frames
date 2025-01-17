@@ -857,7 +857,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
 
     updateUserStreakCount();
-  }, [context?.user?.fid, isFirebaseInitialized]);
+  }, [context?.user?.fid, isFirebaseInitialized, userStreak]);
 
   // 10. Main Render
   return (
