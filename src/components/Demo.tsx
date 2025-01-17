@@ -1165,12 +1165,14 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Choose Background
               </h2>
-              <Button
-                className="rounded-full h-7 w-7 p-0 ml-auto"
-                onClick={() => setShowThemeMenu(false)}
-              >
-                <X className="h-4 w-4 text-black" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => setShowThemeMenu(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
             </div>
             
             <div className="grid grid-cols-3 gap-4">
@@ -1254,12 +1256,14 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Settings
               </h2>
-              <Button
-                className="rounded-full h-7 w-7 p-0 ml-auto"
-                onClick={() => setShowSettings(false)}
-              >
-                <X className="h-4 w-4 text-black" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => setShowSettings(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
             </div>
             
             <div className="space-y-6">
@@ -1349,15 +1353,17 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Preview Share
               </h2>
-              <Button
-                className="rounded-full h-7 w-7 p-0 ml-auto"
-                onClick={() => {
-                  setShowPreview(false);
-                  setPreviewImage(null);
-                }}
-              >
-                <X className="h-4 w-4 text-black" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => {
+                    setShowPreview(false);
+                    setPreviewImage(null);
+                  }}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-4">
