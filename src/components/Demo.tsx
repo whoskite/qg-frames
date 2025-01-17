@@ -2,7 +2,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, Download } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -335,11 +335,6 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [showPreview, setShowPreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-
-  // Add new state for download preview
-  const [showDownloadPreview, setShowDownloadPreview] = useState(false);
-  const [downloadPreviewImage, setDownloadPreviewImage] = useState<string | null>(null);
-  const [isGeneratingDownloadPreview, setIsGeneratingDownloadPreview] = useState(false);
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
@@ -872,23 +867,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                   }`}
                 />
                 <div className="flex gap-4">
-                  {quote && (
-                    <Download
-                      onClick={async () => {
-                        setShowDownloadPreview(true);
-                        setIsGeneratingDownloadPreview(true);
-                        try {
-                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          setDownloadPreviewImage(dataUrl);
-                        } catch (error) {
-                          console.error('Error generating preview:', error);
-                        } finally {
-                          setIsGeneratingDownloadPreview(false);
-                        }
-                      }}
-                      className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
-                    />
-                  )}
                   {isCasting ? (
                     <motion.span
                       animate={{ opacity: [0, 1, 0] }}
@@ -1481,99 +1459,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                       •••
                     </motion.span>
                   ) : 'Share'}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Add Download Preview Modal */}
-      {showDownloadPreview && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={() => {
-            setShowDownloadPreview(false);
-            setDownloadPreviewImage(null);
-          }}
-        >
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Download Preview
-              </h2>
-              <Button
-                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
-                onClick={() => {
-                  setShowDownloadPreview(false);
-                  setDownloadPreviewImage(null);
-                }}
-              >
-                <X className="h-4 w-4 text-black" />
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Preview Area */}
-              <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
-                {isGeneratingDownloadPreview ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="text-purple-600 text-sm"
-                    >
-                      Generating preview...
-                    </motion.div>
-                  </div>
-                ) : downloadPreviewImage ? (
-                  <Image
-                    src={downloadPreviewImage}
-                    alt="Download Preview"
-                    width={800}
-                    height={400}
-                    className="w-full h-full object-contain"
-                    unoptimized
-                  />
-                ) : null}
-              </div>
-
-              {/* Download Button */}
-              <div className="flex justify-end">
-                <Button
-                  onClick={async () => {
-                    try {
-                      if (downloadPreviewImage) {
-                        // Upload the image to Firebase Storage
-                        const uploadedUrl = await uploadImage(downloadPreviewImage);
-                        
-                        // Create a download link
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = uploadedUrl;
-                        downloadLink.download = `funquote-${Date.now()}.png`;
-                        
-                        // Trigger download
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
-                        
-                        setShowDownloadPreview(false);
-                        setDownloadPreviewImage(null);
-                      }
-                    } catch (error) {
-                      console.error('Error downloading image:', error);
-                    }
-                  }}
-                  disabled={!downloadPreviewImage}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  Download
                 </Button>
               </div>
             </div>
