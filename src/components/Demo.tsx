@@ -783,7 +783,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
         }`}
         style={bgImage !== 'none' ? {
-          backgroundImage: `url(${bgImage})`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.5' : '0.3'}), rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.5' : '0.3'})), url(${bgImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
