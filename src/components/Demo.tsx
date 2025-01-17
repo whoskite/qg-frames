@@ -1269,17 +1269,14 @@ export default function Demo({ title = "Fun Quotes" }) {
             <div className="space-y-6">
               {/* GIF Toggle Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-4">
-                  <h3 className="font-medium text-gray-900">GIF Generation</h3>
-                  <p className="text-sm text-gray-500">Toggle automatic GIF generation</p>
-                </div>
+                <h3 className="font-medium text-gray-900">GIF Generation</h3>
                 <Button
                   onClick={handleGifToggle}
                   className={`${
                     gifEnabled 
-                      ? 'bg-purple-600 hover:bg-purple-700' 
-                      : 'bg-gray-400 hover:bg-gray-500'
-                  } text-white w-20 text-sm flex items-center justify-center`}
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                      : 'bg-gray-400 hover:bg-gray-500 text-white'
+                  } w-20 text-sm flex items-center justify-center`}
                 >
                   {gifEnabled ? 'On' : 'Off'}
                 </Button>
@@ -1289,10 +1286,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Clear History Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-4">
-                  <h3 className="font-medium text-gray-900">Clear History</h3>
-                  <p className="text-sm text-gray-500">Remove all generated quotes</p>
-                </div>
+                <h3 className="font-medium text-gray-900">Clear History</h3>
                 <Button
                   onClick={handleClearHistory}
                   disabled={isClearing}
@@ -1304,10 +1298,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Clear Favorites Option */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-4">
-                  <h3 className="font-medium text-gray-900">Clear Favorites</h3>
-                  <p className="text-sm text-gray-500">Remove all favorite quotes</p>
-                </div>
+                <h3 className="font-medium text-gray-900">Clear Favorites</h3>
                 <Button
                   onClick={() => {
                     if (context?.user?.fid) {
@@ -1322,10 +1313,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Version Info */}
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1 mr-4">
-                  <h3 className="font-medium text-gray-900">Version</h3>
-                  <p className="text-sm text-gray-500">Current app version</p>
-                </div>
+                <h3 className="font-medium text-gray-900">Version</h3>
                 <span className="text-sm text-gray-500 w-20 text-right">1.0.0</span>
               </div>
             </div>
