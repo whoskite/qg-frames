@@ -947,12 +947,12 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Quote History
               </h2>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {quoteHistory.length > 0 && (
                   <Button
                     onClick={handleClearHistory}
                     disabled={isClearing}
-                    className="text-purple-600 hover:text-red-500 transition-colors text-xs min-w-[32px] h-5 px-1 flex items-center justify-center"
+                    className="text-purple-600 hover:text-red-500 transition-colors text-xs px-2 h-7"
                   >
                     {isClearing ? (
                       <motion.span
@@ -970,7 +970,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </Button>
                 )}
                 <Button
-                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
+                  className="rounded-full h-7 w-7 p-0"
                   onClick={() => setShowHistory(false)}
                 >
                   <X className="h-4 w-4 text-black" />
@@ -1062,14 +1062,12 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Favorite Quotes
               </h2>
-              <div className="flex items-center gap-1">
-                <Button
-                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
-                  onClick={() => setShowFavorites(false)}
-                >
-                  <X className="h-4 w-4 text-black" />
-                </Button>
-              </div>
+              <Button
+                className="rounded-full h-7 w-7 p-0 ml-auto"
+                onClick={() => setShowFavorites(false)}
+              >
+                <X className="h-4 w-4 text-black" />
+              </Button>
             </div>
             
             <div className="overflow-y-auto flex-1 space-y-4 pr-2">
@@ -1168,7 +1166,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                 Choose Background
               </h2>
               <Button
-                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                className="rounded-full h-7 w-7 p-0 ml-auto"
                 onClick={() => setShowThemeMenu(false)}
               >
                 <X className="h-4 w-4 text-black" />
@@ -1257,7 +1255,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                 Settings
               </h2>
               <Button
-                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                className="rounded-full h-7 w-7 p-0 ml-auto"
                 onClick={() => setShowSettings(false)}
               >
                 <X className="h-4 w-4 text-black" />
@@ -1352,7 +1350,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                 Preview Share
               </h2>
               <Button
-                className="rounded-full h-7 w-7 p-0 flex items-center justify-center"
+                className="rounded-full h-7 w-7 p-0 ml-auto"
                 onClick={() => {
                   setShowPreview(false);
                   setPreviewImage(null);
