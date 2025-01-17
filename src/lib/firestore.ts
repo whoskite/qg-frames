@@ -234,24 +234,37 @@ export const updateUserStreak = async (fid: number) => {
   try {
     const userDoc = await getDoc(userRef);
     const userData = userDoc.data();
+    const now = Date.now();
     
-    if (!userData) {
+    if (!userData || !userData.lastVisit) {
       // First visit ever
       await setDoc(userRef, {
-        lastVisit: Date.now(),
+        lastVisit: now,
         currentStreak: 1,
-        streakStartDate: Date.now()
+        streakStartDate: now
       }, { merge: true });
       return 1;
     }
 
-    // For testing: Increment streak on every login
-    const newStreak = (userData.currentStreak || 0) + 1;
+    const lastVisit = userData.lastVisit;
+    const hoursSinceLastVisit = (now - lastVisit) / (1000 * 60 * 60);
+
+    // If more than 24 hours have passed, reset streak
+    if (hoursSinceLastVisit >= 24) {
+      await updateDoc(userRef, {
+        lastVisit: now,
+        currentStreak: 1,
+        streakStartDate: now
+      });
+      return 1;
+    }
     
+    // If less than 24 hours, increment streak
+    const newStreak = (userData.currentStreak || 0) + 1;
     await updateDoc(userRef, {
-      lastVisit: Date.now(),
+      lastVisit: now,
       currentStreak: newStreak,
-      streakStartDate: userData.streakStartDate || Date.now()
+      streakStartDate: userData.streakStartDate || now
     });
     
     return newStreak;
