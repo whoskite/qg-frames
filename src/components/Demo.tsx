@@ -1621,7 +1621,13 @@ export default function Demo({ title = "Fun Quotes" }) {
 
       {/* Profile Modal */}
       {showProfile && (
-        <ProfileModal />
+        <ProfileModal 
+          onClose={() => setShowProfile(false)}
+          context={context}
+          favorites={favorites}
+          quoteHistory={quoteHistory}
+          sessionStartTime={sessionStartTime}
+        />
       )}
     </div>
   );
@@ -1636,10 +1642,26 @@ const formatDate = (timestamp: number) => {
   });
 };
 
-const ProfileModal = () => (
+// Update the ProfileModal interface
+interface ProfileModalProps {
+  onClose: () => void;
+  context: FrameContext | undefined;
+  favorites: FavoriteQuote[];
+  quoteHistory: QuoteHistoryItem[];
+  sessionStartTime: number;
+}
+
+// Update the ProfileModal component
+const ProfileModal: React.FC<ProfileModalProps> = ({ 
+  onClose, 
+  context, 
+  favorites, 
+  quoteHistory, 
+  sessionStartTime 
+}) => (
   <div 
     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-    onClick={() => setShowProfile(false)}
+    onClick={onClose}
   >
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -1654,7 +1676,7 @@ const ProfileModal = () => (
         </h2>
         <Button
           className="rounded-full h-7 w-7 p-0"
-          onClick={() => setShowProfile(false)}
+          onClick={onClose}
         >
           <X className="h-4 w-4 text-black" />
         </Button>
