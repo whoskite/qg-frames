@@ -1274,9 +1274,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                   onClick={handleGifToggle}
                   className={`${
                     gifEnabled 
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                      : 'bg-gray-400 hover:bg-gray-500 text-white'
-                  } w-20 text-sm flex items-center justify-center`}
+                      ? 'text-purple-600 hover:text-purple-700' 
+                      : 'text-gray-400 hover:text-gray-500'
+                  } w-20 text-sm flex items-center justify-center bg-transparent`}
                 >
                   {gifEnabled ? 'On' : 'Off'}
                 </Button>
@@ -1290,7 +1290,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                 <Button
                   onClick={handleClearHistory}
                   disabled={isClearing}
-                  className="bg-red-500 hover:bg-red-600 text-white w-20 text-sm"
+                  className="text-red-500 hover:text-red-600 bg-transparent w-20 text-sm"
                 >
                   Clear
                 </Button>
@@ -1305,7 +1305,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       setFavorites([]);
                     }
                   }}
-                  className="bg-red-500 hover:bg-red-600 text-white w-20 text-sm"
+                  className="text-red-500 hover:text-red-600 bg-transparent w-20 text-sm"
                 >
                   Clear
                 </Button>
@@ -1399,27 +1399,21 @@ export default function Demo({ title = "Fun Quotes" }) {
                       let mediaUrl = '';
 
                       if (gifEnabled && gifUrl) {
-                        // If GIF is enabled and available, use it directly
                         mediaUrl = gifUrl;
                       } else if (quote) {
-                        // Generate and upload the canvas image
                         try {
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          // Get the URL from the upload response
                           const uploadedUrl = await uploadImage(dataUrl);
-                          // Ensure the URL is properly encoded
                           mediaUrl = encodeURIComponent(uploadedUrl);
                         } catch (error) {
                           console.error('Error generating/uploading image:', error);
                         }
                       }
 
-                      // Construct Warpcast URL with properly encoded parameters
                       const params = new URLSearchParams();
                       params.append('text', shareText);
                       params.append('embeds[]', shareUrl);
                       if (mediaUrl) {
-                        // Add the media URL without additional encoding since it's already encoded
                         params.append('embeds[]', mediaUrl);
                       }
                       
@@ -1441,7 +1435,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     }
                   }}
                   disabled={false}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                  className="text-purple-600 hover:text-purple-700 bg-transparent px-8"
                 >
                   {isCasting ? (
                     <motion.span
