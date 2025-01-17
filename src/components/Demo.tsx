@@ -782,16 +782,26 @@ export default function Demo({ title = "Fun Quotes" }) {
         className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
           bgImage === 'none' ? 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500' : ''
         }`}
-        style={bgImage !== 'none' ? {
+        style={bgImage !== 'none' && !bgImage.includes('TheMrSazon') ? {
           backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          filter: bgImage.includes('TheMrSazon') ? 'blur(1.5px)' : 'none'
+          backgroundRepeat: 'no-repeat'
         } : {}}
       >
-        <div className={`absolute inset-0 ${bgImage.includes('TheMrSazon') ? 'backdrop-blur-sm' : ''}`} style={{ zIndex: 1 }} />
-        <div className="relative" style={{ zIndex: 2 }}>
+        {bgImage.includes('TheMrSazon') && (
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0" style={{ 
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'blur(2px)',
+              transform: 'scale(1.1)'  // Prevent blur edges from showing
+            }} />
+          </div>
+        )}
+        <div className="relative z-10">
           <AnimatePresence mode="wait">
             {isInitialState && (
               <motion.div 
