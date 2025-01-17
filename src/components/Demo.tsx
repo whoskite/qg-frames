@@ -1270,8 +1270,8 @@ export default function Demo({ title = "Fun Quotes" }) {
             
             <div className="space-y-6">
               {/* GIF Toggle Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900">GIF Generation</h3>
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">GIF Generation</h3>
                 <motion.div
                   animate={{ x: gifEnabled ? 0 : -5 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -1283,9 +1283,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                     }}
                     className={`${
                       gifEnabled 
-                        ? 'text-black hover:text-purple-600 font-semibold' 
-                        : 'text-black hover:text-gray-600 font-semibold'
-                    } w-20 text-sm flex items-center justify-center bg-transparent transition-all duration-200`}
+                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                    } w-20 text-sm flex items-center justify-center transition-all duration-200`}
                   >
                     {gifEnabled ? 'On' : 'Off'}
                   </Button>
@@ -1295,23 +1295,23 @@ export default function Demo({ title = "Fun Quotes" }) {
               <div className="h-px bg-gray-200" />
 
               {/* Clear History Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900">Clear History</h3>
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Clear History</h3>
                 <Button
                   onClick={() => {
                     handleClearHistory();
                     toast.success('History cleared successfully');
                   }}
                   disabled={isClearing}
-                  className="text-black hover:text-red-600 bg-transparent w-20 text-sm font-semibold transition-colors duration-200"
+                  className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
                 >
                   Clear
                 </Button>
               </div>
 
               {/* Clear Favorites Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900">Clear Favorites</h3>
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Clear Favorites</h3>
                 <Button
                   onClick={() => {
                     if (context?.user?.fid) {
@@ -1319,16 +1319,16 @@ export default function Demo({ title = "Fun Quotes" }) {
                       toast.success('Favorites cleared successfully');
                     }
                   }}
-                  className="text-black hover:text-red-600 bg-transparent w-20 text-sm font-semibold transition-colors duration-200"
+                  className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
                 >
                   Clear
                 </Button>
               </div>
 
               {/* Version Info */}
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900">Version</h3>
-                <span className="text-sm text-gray-500 w-20 text-right">1.0.0</span>
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Version</h3>
+                <span className="text-sm font-medium text-gray-700 w-20 text-right">1.0.0</span>
               </div>
             </div>
           </motion.div>
