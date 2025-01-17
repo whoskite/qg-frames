@@ -240,24 +240,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           try {
             const streak = await updateUserStreak(frameContext.user.fid);
             setUserStreak(streak);
-            
-            // Show streak notification on every login
-            toast.message(
-              <div className="flex flex-col items-center gap-2">
-                <div className="text-2xl mb-1">🔥</div>
-                <div className="text-xl font-bold">Daily Streak: {streak}</div>
-                <div className="text-sm text-center">
-                  {streak === 1 
-                    ? "First day! Keep it going!" 
-                    : `You've logged in ${streak} days in a row!`}
-                </div>
-              </div>,
-              {
-                duration: 4000,
-                position: 'top-center',
-                className: 'bg-white text-gray-900'
-              }
-            );
+            setIsInitialState(true); // Set to true to show the streak message
           } catch (error) {
             console.error('Error updating streak on login:', error);
           }
@@ -941,9 +924,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="mb-8 text-2xl text-white font-medium text-center"
+                className="mb-8 text-2xl text-white font-medium text-center flex flex-col items-center gap-2"
               >
-                Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                <div className="text-3xl mb-1">🔥</div>
+                <div>Daily Streak: {userStreak}</div>
+                <div className="text-base opacity-80">
+                  {userStreak === 1 
+                    ? "First day! Keep it going!" 
+                    : `You've logged in ${userStreak} days in a row!`}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
