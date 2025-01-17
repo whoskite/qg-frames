@@ -1784,7 +1784,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
       <div className="space-y-6">
         {/* Profile Image and Basic Info */}
-        <div className="flex items-center gap-4">
+        <div 
+          className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors"
+          onClick={() => {
+            if (context?.user?.username) {
+              sdk.actions.openUrl(`https://warpcast.com/${context.user.username}`);
+            }
+          }}
+        >
           <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-purple-600">
             <Image
               src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
@@ -1795,8 +1802,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               {context?.user?.displayName || "User"}
+              <span className="text-sm text-gray-500">↗</span>
             </h3>
             <p className="text-gray-600">@{context?.user?.username}</p>
           </div>
