@@ -830,20 +830,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="space-y-2 mb-8 text-center"
+                className="mb-8 text-2xl text-white font-medium text-center"
               >
-                <div className="text-2xl text-white font-medium">
-                  Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
-                </div>
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-white/80 text-sm flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Try typing a topic or mood to generate your quote</span>
-                </motion.div>
+                Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
               </motion.div>
             )}
           </AnimatePresence>
