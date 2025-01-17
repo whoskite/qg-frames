@@ -556,28 +556,35 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Update the background music effect
   useEffect(() => {
-    const initializeAudio = async () => {
-      const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
-      audio.loop = true;
-      audio.volume = 0.3;
-      setAudioPlayer(audio);
+    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+    setAudioPlayer(audio);
 
-      try {
-        // Try to play immediately
-        await audio.play();
-      } catch (error) {
-        console.error('Error auto-playing audio:', error);
-        // If autoplay fails, we'll rely on user interaction to start the music
+    // Don't try to play immediately, wait for user interaction
+    const handleFirstInteraction = () => {
+      if (isMusicEnabled && audio) {
+        audio.play().catch(error => {
+          console.error('Error playing audio:', error);
+        });
       }
+      // Remove the event listeners after first interaction
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
     };
 
-    initializeAudio();
+    // Add event listeners for user interaction
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
 
     return () => {
-      if (audioPlayer) {
-        audioPlayer.pause();
-        audioPlayer.src = '';
+      if (audio) {
+        audio.pause();
+        audio.src = '';
       }
+      // Clean up event listeners
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
     };
   }, []); // Only run once on mount
 
