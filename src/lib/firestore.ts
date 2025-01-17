@@ -7,7 +7,8 @@ import {
   deleteDoc,
   addDoc,
   type Firestore,
-  Timestamp
+  Timestamp,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
@@ -182,5 +183,40 @@ export const getGifPreference = async (fid: number): Promise<boolean> => {
   } catch (error) {
     console.error('Error getting GIF preference:', error);
     return true; // Default to true on error
+  }
+};
+
+// Save theme preference
+export const saveThemePreference = async (fid: number, theme: string) => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return false;
+  }
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    await setDoc(userRef, {
+      themePreference: theme,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error saving theme preference:', error);
+    return false;
+  }
+};
+
+// Get theme preference
+export const getThemePreference = async (fid: number): Promise<string | null> => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return null;
+  }
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data()?.themePreference || null : null;
+  } catch (error) {
+    console.error('Error getting theme preference:', error);
+    return null;
   }
 }; 

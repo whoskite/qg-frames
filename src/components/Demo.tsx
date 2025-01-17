@@ -25,7 +25,9 @@ import {
   removeFavoriteQuote,
   clearUserHistory,
   saveGifPreference,
-  getGifPreference
+  getGifPreference,
+  saveThemePreference,
+  getThemePreference
 } from '../lib/firestore';
 
 // UI Components
@@ -689,6 +691,24 @@ export default function Demo({ title = "Fun Quotes" }) {
     loadGifPreference();
   }, [context?.user?.fid, isFirebaseInitialized]);
 
+  // Add effect to load theme preference
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const savedTheme = await getThemePreference(context.user.fid);
+          if (savedTheme) {
+            setBgImage(savedTheme);
+          }
+        } catch (error) {
+          console.error('Error loading theme preference:', error);
+        }
+      }
+    };
+
+    loadThemePreference();
+  }, [context?.user?.fid, isFirebaseInitialized]);
+
   // 10. Main Render
   return (
     <div className="relative min-h-screen">
@@ -1244,11 +1264,16 @@ export default function Demo({ title = "Fun Quotes" }) {
               ].map((bg) => (
                 <div
                   key={bg.id}
-                  onClick={() => {
-                    if (bg.isGradient) {
-                      setBgImage('none');
-                    } else {
-                      setBgImage(bg.path);
+                  onClick={async () => {
+                    const newTheme = bg.isGradient ? 'none' : bg.path;
+                    setBgImage(newTheme);
+                    if (context?.user?.fid) {
+                      try {
+                        await saveThemePreference(context.user.fid, newTheme);
+                        toast.success('Theme preference saved');
+                      } catch (error) {
+                        console.error('Error saving theme preference:', error);
+                      }
                     }
                   }}
                   className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
