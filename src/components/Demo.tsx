@@ -235,17 +235,6 @@ export default function Demo({ title = "Fun Quotes" }) {
           setAdded(frameContext.client.added);
         }
 
-        // Update streak when user logs in with Farcaster
-        if (frameContext.user?.fid && isFirebaseInitialized) {
-          try {
-            const streak = await updateUserStreak(frameContext.user.fid);
-            setUserStreak(streak);
-            setIsInitialState(true); // Set to true to show the streak message
-          } catch (error) {
-            console.error('Error updating streak on login:', error);
-          }
-        }
-
         // Setup Frame event listeners
         sdk.on("frameAdded", ({ notificationDetails }) => {
           setLastEvent(`frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`);
@@ -792,6 +781,28 @@ export default function Demo({ title = "Fun Quotes" }) {
       throw error;
     }
   };
+
+  // Add this effect after other useEffects
+  useEffect(() => {
+    const updateUserStreakCount = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const streak = await updateUserStreak(context.user.fid);
+          setUserStreak(streak);
+          setIsInitialState(true);
+          
+          // Hide streak message after 4 seconds
+          setTimeout(() => {
+            setIsInitialState(false);
+          }, 4000);
+        } catch (error) {
+          console.error('Error updating streak:', error);
+        }
+      }
+    };
+
+    updateUserStreakCount();
+  }, [context?.user?.fid, isFirebaseInitialized]);
 
   // 10. Main Render
   return (
