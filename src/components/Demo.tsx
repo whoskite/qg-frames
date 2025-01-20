@@ -2396,7 +2396,6 @@ export default function Demo({ title = "Fun Quotes" }) {
           setOnboarding={setOnboarding}
           onComplete={() => {
             setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: true }));
-            setShowProfile(true);
           }}
           context={context}
           setBgImage={setBgImage}

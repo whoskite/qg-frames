@@ -224,7 +224,10 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             className="text-center space-y-6 p-4"
           >
             <h2 className="text-2xl font-bold text-white">Pick Your Theme</h2>
-            <p className="text-white/90 text-sm">Choose a background that speaks to you</p>
+            <div className="space-y-2">
+              <p className="text-white/90 text-sm">Choose a background that speaks to you</p>
+              <p className="text-white/70 text-xs">Don't worry, you can explore more themes later in settings</p>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
               {[
                 { name: 'Nature', value: '/Background_Nature_1_pexels-asumaani-16545605.jpg' },
