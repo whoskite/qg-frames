@@ -1963,7 +1963,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       }
                     }}
                     disabled={!gifUrl || isCasting}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
                   >
                     {isCasting ? (
                       <motion.span
@@ -2020,7 +2020,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       }
                     }}
                     disabled={isCasting}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
                   >
                     {isCasting ? (
                       <motion.span
