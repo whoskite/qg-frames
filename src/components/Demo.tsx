@@ -1631,16 +1631,45 @@ export default function Demo({ title = "Fun Quotes" }) {
                       onClick={async () => {
                         setIsGenerating(true);
                         try {
+                          // Get personalized prompt from OpenAI
+                          const response = await fetch('/api/openai', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              userPreferences: {
+                                gender: onboarding.personalInfo.gender,
+                                relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                                areasToImprove: onboarding.personalInfo.areasToImprove,
+                                personalGoals: onboarding.personalInfo.personalGoals,
+                                preferredStyles: onboarding.personalInfo.preferredStyles,
+                                userStreak
+                              }
+                            }),
+                          });
+
+                          if (!response.ok) {
+                            throw new Error('Failed to get AI suggestion');
+                          }
+
+                          const data = await response.json();
+                          if (!data.result) {
+                            throw new Error('No suggestion received');
+                          }
+
+                          // Use the AI-generated prompt
+                          setUserPrompt(data.result);
+                          await handleGenerateQuote();
+                          
+                          toast.success('Generated a personalized quote based on AI suggestions!');
+                        } catch (error) {
+                          console.error('Error generating random quote:', error);
+                          // Fallback to the original randomizer if AI fails
                           const randomPrompt = generateRandomPrompt(favorites);
                           setUserPrompt(randomPrompt);
                           await handleGenerateQuote();
-                          const message = favorites.length > 0 
-                            ? 'Generated a personalized quote based on your preferences!'
-                            : 'Generated a unique quote based on current time and season!';
-                          toast.success(message);
-                        } catch (error) {
-                          console.error('Error generating random quote:', error);
-                          toast.error('Failed to generate quote');
+                          toast.success('Generated a quote based on your preferences!');
                         } finally {
                           setIsGenerating(false);
                         }
