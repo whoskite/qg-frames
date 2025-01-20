@@ -286,26 +286,6 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-6 p-4"
-          >
-            <h2 className="text-xl font-bold text-white text-center">Personal Goals</h2>
-            <p className="text-white/90 text-center text-sm">Share your aspirations to get more relevant quotes</p>
-            
-            <textarea
-              value={onboarding.personalInfo.personalGoals}
-              onChange={(e) => updatePersonalInfo('personalGoals', e.target.value)}
-              placeholder="What do you want to achieve? 🎯"
-              className="w-full h-32 p-4 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none text-sm"
-            />
-          </motion.div>
-        );
-
-      case 8:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
             className="text-center space-y-6 p-4"
           >
             <div className="text-5xl sm:text-6xl mb-4">✨</div>
@@ -356,17 +336,16 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
         {/* Fixed Footer */}
         <div className="border-t border-white/10 p-4 bg-purple-900/50 backdrop-blur-sm">
           <Button
-            onClick={onboarding.step === 8 ? handleComplete : handleNext}
+            onClick={onboarding.step === 7 ? handleComplete : handleNext}
             disabled={
               (onboarding.step === 2 && !onboarding.personalInfo.gender) ||
               (onboarding.step === 3 && !onboarding.personalInfo.relationshipStatus) ||
               (onboarding.step === 4 && !onboarding.personalInfo.areasToImprove.length) ||
               (onboarding.step === 5 && !onboarding.personalInfo.personalGoals.trim()) ||
-              (onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0) ||
-              (onboarding.step === 7 && !onboarding.personalInfo.personalGoals.trim())
+              (onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0)
             }
             className={`w-full ${
-              onboarding.step === 8 
+              onboarding.step === 7 
                 ? 'bg-purple-600 hover:bg-purple-700'
                 : !onboarding.personalInfo.gender && onboarding.step === 2
                 ? 'bg-purple-400 cursor-not-allowed'
@@ -378,12 +357,10 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
                 ? 'bg-purple-400 cursor-not-allowed'
                 : onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0
                 ? 'bg-purple-400 cursor-not-allowed'
-                : onboarding.step === 7 && !onboarding.personalInfo.personalGoals.trim()
-                ? 'bg-purple-400 cursor-not-allowed'
                 : 'bg-purple-600 hover:bg-purple-700'
             } text-white py-2 rounded-lg transition-colors`}
           >
-            {onboarding.step === 8 ? 'Get Started' : 'Continue'}
+            {onboarding.step === 7 ? 'Get Started' : 'Continue'}
             {onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length > 0 && 
               ` (${onboarding.personalInfo.areasToImprove.length} selected)`
             }
