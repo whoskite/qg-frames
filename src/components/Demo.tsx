@@ -1374,15 +1374,6 @@ export default function Demo({ title = "Fun Quotes" }) {
   return (
     <ErrorBoundary>
       <div className="relative min-h-screen">
-        {/* Add keyboard shortcuts tooltip */}
-        <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-sm opacity-50 hover:opacity-100 transition-opacity z-50">
-          <h4 className="font-bold mb-2">Keyboard Shortcuts</h4>
-          <ul className="space-y-1">
-            <li><kbd className="px-2 py-1 bg-gray-700 rounded">G</kbd> Generate quote</li>
-            {gifEnabled && <li><kbd className="px-2 py-1 bg-gray-700 rounded">R</kbd> Regenerate GIF</li>}
-            <li><kbd className="px-2 py-1 bg-gray-700 rounded">F</kbd> Toggle favorite</li>
-          </ul>
-        </div>
         {/* Fixed Navigation */}
         <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -1616,11 +1607,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                 </AnimatePresence>
 
                 {/* Action Buttons */}
-                {quote && (
-                  <motion.div 
-                    className="mb-4 flex justify-between items-center"
-                  >
-                    <div className="flex items-center gap-4">
+                <motion.div 
+                  className="mb-4 flex justify-between items-center"
+                >
+                  <div className="flex items-center gap-4">
+                    {quote && (
                       <Heart 
                         onClick={() => {
                           const quoteItem: QuoteHistoryItem = {
@@ -1642,60 +1633,31 @@ export default function Demo({ title = "Fun Quotes" }) {
                             : 'text-white hover:text-pink-200'
                         }`}
                       />
-                      <Shuffle
-                        onClick={async () => {
-                          setIsGenerating(true);
-                          try {
-                            const randomPrompt = generateRandomPrompt(favorites);
-                            setUserPrompt(randomPrompt);
-                            await handleGenerateQuote();
-                            const message = favorites.length > 0 
-                              ? 'Generated a personalized quote based on your preferences!'
-                              : 'Generated a unique quote based on current time and season!';
-                            toast.success(message);
-                          } catch (error) {
-                            console.error('Error generating random quote:', error);
-                            toast.error('Failed to generate quote');
-                          } finally {
-                            setIsGenerating(false);
-                          }
-                        }}
-                        className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                          isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
-                        }`}
-                      />
-                    </div>
-                    <div className="flex gap-4">
-                      {isCasting ? (
-                        <motion.span
-                          animate={{ opacity: [0, 1, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                          className="text-white"
-                        >
-                          •••
-                        </motion.span>
-                      ) : (
-                        <Share2 
-                          onClick={async () => {
-                            setShowPreview(true);
-                            if (!gifEnabled) {
-                              setIsGeneratingPreview(true);
-                              try {
-                                const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                                setPreviewImage(dataUrl);
-                              } catch (error) {
-                                console.error('Error generating preview:', error);
-                              } finally {
-                                setIsGeneratingPreview(false);
-                              }
-                            }
-                          }}
-                          className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
-                        />
-                      )}
-                    </div>
-                  </motion.div>
-                )}
+                    )}
+                    <Shuffle
+                      onClick={async () => {
+                        setIsGenerating(true);
+                        try {
+                          const randomPrompt = generateRandomPrompt(favorites);
+                          setUserPrompt(randomPrompt);
+                          await handleGenerateQuote();
+                          const message = favorites.length > 0 
+                            ? 'Generated a personalized quote based on your preferences!'
+                            : 'Generated a unique quote based on current time and season!';
+                          toast.success(message);
+                        } catch (error) {
+                          console.error('Error generating random quote:', error);
+                          toast.error('Failed to generate quote');
+                        } finally {
+                          setIsGenerating(false);
+                        }
+                      }}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
+                      }`}
+                    />
+                  </div>
+                </motion.div>
 
                 {/* Input Field */}
                 <div className="mb-6 relative">
