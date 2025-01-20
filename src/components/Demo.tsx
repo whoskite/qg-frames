@@ -441,6 +441,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(true);
   const [lastStreakNotification, setLastStreakNotification] = useState<number | null>(null);
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
 
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
@@ -1323,10 +1324,12 @@ export default function Demo({ title = "Fun Quotes" }) {
           console.error('Error loading onboarding data:', error);
         } finally {
           setIsLoadingOnboarding(false);
+          setHasCheckedOnboarding(true);
         }
       } else if (!context?.user?.fid || !isFirebaseInitialized) {
         // If no user or Firebase isn't initialized, we can show onboarding
         setIsLoadingOnboarding(false);
+        setHasCheckedOnboarding(true);
       }
     };
 
@@ -2408,7 +2411,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       )}
 
       {/* Onboarding Modal */}
-      {!isLoadingOnboarding && !onboarding.hasCompletedOnboarding && (
+      {hasCheckedOnboarding && !onboarding.hasCompletedOnboarding && (
         <OnboardingFlow 
           onboarding={onboarding}
           setOnboarding={setOnboarding}
