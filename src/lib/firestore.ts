@@ -302,4 +302,52 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
     console.error('Error updating user streak:', error);
     throw error;
   }
+};
+
+// Save onboarding data
+export const saveOnboardingData = async (fid: number, onboardingData: {
+  gender: string;
+  relationshipStatus: string;
+  selectedTheme: string;
+  areasToImprove: string[];
+  personalGoals: string;
+}) => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return false;
+  }
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    await setDoc(userRef, {
+      onboardingData,
+      hasCompletedOnboarding: true,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error saving onboarding data:', error);
+    return false;
+  }
+};
+
+// Get onboarding data
+export const getOnboardingData = async (fid: number) => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return null;
+  }
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      return {
+        onboardingData: userDoc.data()?.onboardingData || null,
+        hasCompletedOnboarding: userDoc.data()?.hasCompletedOnboarding || false
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting onboarding data:', error);
+    return null;
+  }
 }; 

@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,8 +30,13 @@ import {
   saveThemePreference,
   getThemePreference,
   updateUserStreak,
-  getUserStreak
+  getUserStreak,
+  saveOnboardingData,
+  getOnboardingData
 } from '../lib/firestore';
+import type { OnboardingState } from '../types/onboarding';
+import { OnboardingFlow } from './OnboardingFlow';
+import { useOnboarding } from '../hooks/useOnboarding';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -156,6 +161,18 @@ interface StreakUpdate {
   streak_deadline: Date;
 }
 
+// Add this after the imports
+const playStreakSound = () => {
+  const audio = new Audio('/streak-sound.wav');
+  audio.volume = 0.5;
+  return audio.play().catch(error => {
+    console.error('Error playing sound:', error);
+  });
+};
+
+// Add this helper function
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Add a new state for Firebase initialization
 const customScrollbarStyles = `
   /* Default scrollbar styles */
@@ -200,17 +217,169 @@ const customScrollbarStyles = `
   }
 `;
 
-// Add this after the imports
-const playStreakSound = () => {
-  const audio = new Audio('/streak-sound.wav');
-  audio.volume = 0.5;
-  return audio.play().catch(error => {
-    console.error('Error playing sound:', error);
+// Add after the calculateStreakStatus function and before the Demo component
+
+// Add after generateRandomPrompt function
+const analyzeUserPreferences = (favorites: FavoriteQuote[]) => {
+  if (!favorites.length) return null;
+
+  // Initialize preference tracking
+  const preferences = {
+    averageLength: 0,
+    commonWords: new Map<string, number>(),
+    themes: new Map<string, number>(),
+    emotionalTone: {
+      positive: 0,
+      negative: 0,
+      neutral: 0
+    },
+    complexity: {
+      simple: 0,
+      moderate: 0,
+      complex: 0
+    }
+  };
+
+  // Emotional words for sentiment analysis
+  const emotionalWords = {
+    positive: ['happy', 'joy', 'love', 'hope', 'inspire', 'success', 'beautiful', 'courage', 'dream', 'peace'],
+    negative: ['fear', 'doubt', 'struggle', 'pain', 'difficult', 'challenge', 'dark', 'lost', 'hard', 'fail'],
+    neutral: ['think', 'know', 'understand', 'see', 'find', 'way', 'time', 'life', 'world', 'mind']
+  };
+
+  // Process each favorite quote
+  favorites.forEach(favorite => {
+    const words = favorite.text.toLowerCase().split(/\s+/);
+    
+    // Track length
+    preferences.averageLength += words.length;
+
+    // Analyze words and themes
+    words.forEach(word => {
+      // Track word frequency
+      preferences.commonWords.set(word, (preferences.commonWords.get(word) || 0) + 1);
+
+      // Analyze emotional tone
+      if (emotionalWords.positive.includes(word)) preferences.emotionalTone.positive++;
+      else if (emotionalWords.negative.includes(word)) preferences.emotionalTone.negative++;
+      else preferences.emotionalTone.neutral++;
+
+      // Analyze complexity based on word length
+      if (word.length <= 4) preferences.complexity.simple++;
+      else if (word.length <= 7) preferences.complexity.moderate++;
+      else preferences.complexity.complex++;
+    });
   });
+
+  // Calculate averages
+  preferences.averageLength /= favorites.length;
+
+  // Sort and get top themes/words
+  const sortedWords = Array.from(preferences.commonWords.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  // Determine dominant preferences
+  const dominantTone = Object.entries(preferences.emotionalTone)
+    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+
+  const dominantComplexity = Object.entries(preferences.complexity)
+    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+
+  return {
+    preferredLength: Math.round(preferences.averageLength),
+    favoriteWords: sortedWords.map(([word]) => word),
+    dominantTone,
+    dominantComplexity
+  };
 };
 
-// Add this helper function
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Modify the generateRandomPrompt function to use user preferences
+const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
+  const now = new Date();
+  const day = now.getDay();
+  const hour = now.getHours();
+  const month = now.getMonth();
+  
+  // Get user preferences
+  const userPreferences = analyzeUserPreferences(favorites);
+  
+  // Arrays of themes and modifiers
+  const themes = [
+    'life', 'success', 'happiness', 'wisdom', 'courage', 'peace',
+    'growth', 'creativity', 'friendship', 'love', 'adventure', 'mindfulness'
+  ];
+  
+  const toneModifiers = [
+    'inspiring', 'philosophical', 'humorous', 'profound',
+    'thought-provoking', 'uplifting', 'reflective', 'motivational'
+  ];
+  
+  const styleModifiers = [
+    'metaphorical', 'simple yet deep', 'poetic', 'direct',
+    'storytelling', 'paradoxical', 'zen-like', 'analytical'
+  ];
+
+  // Adjust based on user preferences if available
+  if (userPreferences) {
+    // Add user's favorite words to themes
+    themes.push(...userPreferences.favoriteWords.filter(word => word.length > 3));
+    
+    // Adjust tone based on user's preferred emotional tone
+    if (userPreferences.dominantTone === 'positive') {
+      toneModifiers.push('optimistic', 'joyful', 'enthusiastic');
+    } else if (userPreferences.dominantTone === 'negative') {
+      toneModifiers.push('contemplative', 'challenging', 'transformative');
+    }
+    
+    // Adjust style based on complexity preference
+    if (userPreferences.dominantComplexity === 'simple') {
+      styleModifiers.push('clear', 'concise', 'straightforward');
+    } else if (userPreferences.dominantComplexity === 'complex') {
+      styleModifiers.push('elaborate', 'intricate', 'sophisticated');
+    }
+  }
+
+  // Use day to select base theme with preference weighting
+  const themeIndex = Math.floor((day + month + (userPreferences?.favoriteWords.length || 0)) % themes.length);
+  const selectedTheme = themes[themeIndex];
+
+  // Use hour to influence tone with preference weighting
+  const toneIndex = Math.floor((hour + day + (userPreferences?.dominantTone === 'positive' ? 2 : 0)) % toneModifiers.length);
+  const selectedTone = toneModifiers[toneIndex];
+
+  // Use minutes to select style with complexity preference
+  const styleIndex = Math.floor((now.getMinutes() + hour + (userPreferences?.dominantComplexity === 'complex' ? 3 : 0)) % styleModifiers.length);
+  const selectedStyle = styleModifiers[styleIndex];
+
+  // Add time-based context
+  let timeContext = '';
+  if (hour >= 5 && hour < 12) {
+    timeContext = 'morning reflection';
+  } else if (hour >= 12 && hour < 17) {
+    timeContext = 'midday insight';
+  } else if (hour >= 17 && hour < 22) {
+    timeContext = 'evening contemplation';
+  } else {
+    timeContext = 'night wisdom';
+  }
+
+  // Add seasonal influence
+  const seasons = ['winter', 'spring', 'summer', 'fall'];
+  const currentSeason = seasons[Math.floor(month / 3)];
+
+  // Add length preference if available
+  const lengthPreference = userPreferences?.preferredLength 
+    ? `with approximately ${userPreferences.preferredLength} words` 
+    : '';
+
+  // Combine all factors into a unique prompt
+  return `Generate a ${selectedTone} quote about ${selectedTheme} with a ${selectedStyle} style, incorporating elements of ${timeContext} and the essence of ${currentSeason} ${lengthPreference}. ${
+    userPreferences?.favoriteWords.length 
+      ? `Consider incorporating themes like: ${userPreferences.favoriteWords.join(', ')}` 
+      : ''
+  }`;
+};
 
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
@@ -270,6 +439,8 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+
+  const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
@@ -335,7 +506,81 @@ export default function Demo({ title = "Fun Quotes" }) {
     
     try {
       setGifUrl(null);
-      const quoteResponse = await generateQuote(userPrompt);
+      
+      // Create a personalized prompt based on user preferences
+      let personalizedPrompt = userPrompt;
+
+      // Add emotional context based on time of day
+      const hour = new Date().getHours();
+      let timeBasedMood = '';
+      if (hour >= 5 && hour < 12) {
+        timeBasedMood = 'energetic and motivational';
+      } else if (hour >= 12 && hour < 17) {
+        timeBasedMood = 'focused and productive';
+      } else if (hour >= 17 && hour < 22) {
+        timeBasedMood = 'reflective and peaceful';
+      } else {
+        timeBasedMood = 'calm and contemplative';
+      }
+
+      // Add style preference
+      let styleContext = '';
+      switch (onboarding.personalInfo.preferredQuoteStyle) {
+        case 'casual':
+          styleContext = 'in a casual, friendly, and conversational tone';
+          break;
+        case 'direct':
+          styleContext = 'in a direct, blunt, and straightforward manner';
+          break;
+        case 'eloquent':
+          styleContext = 'in an eloquent, sophisticated, and precise manner';
+          break;
+        case 'poetic':
+          styleContext = 'in a poetic and metaphorical style';
+          break;
+        case 'humorous':
+          styleContext = 'with wit and humor';
+          break;
+        case 'spiritual':
+          styleContext = 'in an enlightening and holistic manner';
+          break;
+        case 'philosophical':
+          styleContext = 'in a thought-provoking and introspective way';
+          break;
+        default:
+          styleContext = 'in a casual, friendly tone';
+      }
+
+      // Add areas of improvement context
+      if (onboarding.personalInfo.areasToImprove.length > 0) {
+        const randomArea = onboarding.personalInfo.areasToImprove[
+          Math.floor(Math.random() * onboarding.personalInfo.areasToImprove.length)
+        ];
+        personalizedPrompt = `${userPrompt || randomArea} ${
+          userPrompt ? `with a focus on ${randomArea}` : ''
+        }`;
+      }
+
+      // Add relationship context if available
+      if (onboarding.personalInfo.relationshipStatus && 
+          onboarding.personalInfo.relationshipStatus !== 'Prefer not to say') {
+        personalizedPrompt += ` for someone who is ${onboarding.personalInfo.relationshipStatus.toLowerCase()}`;
+      }
+
+      // Add personal goals context if available
+      if (onboarding.personalInfo.personalGoals) {
+        personalizedPrompt += ` aligned with goals of ${onboarding.personalInfo.personalGoals}`;
+      }
+
+      // Add emotional and style context
+      personalizedPrompt += ` with a ${timeBasedMood} tone ${styleContext}`;
+
+      // Add streak-based motivation
+      if (userStreak > 0) {
+        personalizedPrompt += ` to encourage maintaining a ${userStreak}-day streak of personal growth`;
+      }
+
+      const quoteResponse = await generateQuote(personalizedPrompt);
       
       if (quoteResponse) {
         const newQuote = quoteResponse.text.slice(0, MAX_CHARS);
@@ -356,8 +601,11 @@ export default function Demo({ title = "Fun Quotes" }) {
         }, ...prev.slice(0, 9)]); // Keep last 10 quotes
         
         logAnalyticsEvent('quote_generated_success', {
-          prompt: userPrompt || 'empty_prompt',
-          quote_length: quoteResponse.text.length
+          prompt: personalizedPrompt || 'empty_prompt',
+          quote_length: quoteResponse.text.length,
+          area_of_improvement: onboarding.personalInfo.areasToImprove.join(','),
+          relationship_status: onboarding.personalInfo.relationshipStatus,
+          has_personal_goals: !!onboarding.personalInfo.personalGoals
         });
       }
     } catch (error) {
@@ -1041,6 +1289,33 @@ export default function Demo({ title = "Fun Quotes" }) {
     return null;
   };
 
+  // Add effect to load onboarding data
+  useEffect(() => {
+    const loadOnboardingData = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const data = await getOnboardingData(context.user.fid);
+          if (data) {
+            setOnboarding((prev: OnboardingState) => ({
+              ...prev,
+              hasCompletedOnboarding: data.hasCompletedOnboarding,
+              personalInfo: data.onboardingData || prev.personalInfo
+            }));
+
+            // If they have a theme preference, apply it
+            if (data.onboardingData?.selectedTheme) {
+              setBgImage(data.onboardingData.selectedTheme);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading onboarding data:', error);
+        }
+      }
+    };
+
+    loadOnboardingData();
+  }, [context?.user?.fid, isFirebaseInitialized, setBgImage]);
+
   // 10. Main Render
   return (
     <div className="relative min-h-screen">
@@ -1283,26 +1558,50 @@ export default function Demo({ title = "Fun Quotes" }) {
                 <motion.div 
                   className="mb-4 flex justify-between items-center"
                 >
-                  <Heart 
-                    onClick={() => {
-                      const quoteItem: QuoteHistoryItem = {
-                        text: quote,
-                        style: 'default',
-                        gifUrl,
-                        timestamp: new Date(),
-                        bgColor
-                      };
-                      toggleFavorite(quoteItem);
-                      // Show heart animation
-                      setShowHeartAnimation(true);
-                      setTimeout(() => setShowHeartAnimation(false), 1000);
-                    }}
-                    className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                      favorites.some(fav => fav.text === quote)
-                        ? 'fill-pink-500 text-pink-500' 
-                        : 'text-white hover:text-pink-200'
-                    }`}
-                  />
+                  <div className="flex items-center gap-4">
+                    <Heart 
+                      onClick={() => {
+                        const quoteItem: QuoteHistoryItem = {
+                          text: quote,
+                          style: 'default',
+                          gifUrl,
+                          timestamp: new Date(),
+                          bgColor
+                        };
+                        toggleFavorite(quoteItem);
+                        // Show heart animation
+                        setShowHeartAnimation(true);
+                        setTimeout(() => setShowHeartAnimation(false), 1000);
+                      }}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        favorites.some(fav => fav.text === quote)
+                          ? 'fill-pink-500 text-pink-500' 
+                          : 'text-white hover:text-pink-200'
+                      }`}
+                    />
+                    <Shuffle
+                      onClick={async () => {
+                        setIsLoading(true);
+                        try {
+                          const randomPrompt = generateRandomPrompt(favorites);
+                          setUserPrompt(randomPrompt);
+                          await handleGenerateQuote();
+                          const message = favorites.length > 0 
+                            ? 'Generated a personalized quote based on your preferences!'
+                            : 'Generated a unique quote based on current time and season!';
+                          toast.success(message);
+                        } catch (error) {
+                          console.error('Error generating random quote:', error);
+                          toast.error('Failed to generate quote');
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        isLoading ? 'opacity-50' : 'text-white hover:text-blue-200'
+                      }`}
+                    />
+                  </div>
                   <div className="flex gap-4">
                     {isCasting ? (
                       <motion.span
@@ -1752,7 +2051,7 @@ export default function Demo({ title = "Fun Quotes" }) {
             className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Settings
               </h2>
@@ -1766,90 +2065,125 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
             </div>
             
-            <div className="space-y-6">
-              {/* GIF Toggle Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                <h3 className="font-semibold text-gray-800">GIF Generation</h3>
-                <motion.div
-                  animate={{ x: gifEnabled ? 0 : -5 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
+            <div className="overflow-y-auto custom-scrollbar pr-2">
+              <div className="space-y-6 pb-4">
+                {/* GIF Toggle Option */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                  <h3 className="font-semibold text-gray-800">GIF Generation</h3>
+                  <motion.div
+                    animate={{ x: gifEnabled ? 0 : -5 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Button
+                      onClick={() => {
+                        handleGifToggle();
+                        toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
+                      }}
+                      className={`${
+                        gifEnabled 
+                          ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                          : 'bg-gray-600 text-white hover:bg-gray-700'
+                      } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                    >
+                      {gifEnabled ? 'On' : 'Off'}
+                    </Button>
+                  </motion.div>
+                </div>
+
+                <div className="h-px bg-gray-200" />
+
+                {/* Clear History Option */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                  <h3 className="font-semibold text-gray-800">Clear History</h3>
                   <Button
                     onClick={() => {
-                      handleGifToggle();
-                      toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
+                      handleClearHistory();
+                      toast.success('History cleared successfully');
                     }}
-                    className={`${
-                      gifEnabled 
-                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                        : 'bg-gray-600 text-white hover:bg-gray-700'
-                    } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                    disabled={isClearing}
+                    className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
                   >
-                    {gifEnabled ? 'On' : 'Off'}
+                    Clear
                   </Button>
-                </motion.div>
-              </div>
+                </div>
 
-              <div className="h-px bg-gray-200" />
-
-              {/* Clear History Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                <h3 className="font-semibold text-gray-800">Clear History</h3>
-                <Button
-                  onClick={() => {
-                    handleClearHistory();
-                    toast.success('History cleared successfully');
-                  }}
-                  disabled={isClearing}
-                  className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
-                >
-                  Clear
-                </Button>
-              </div>
-
-              {/* Clear Favorites Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                <h3 className="font-semibold text-gray-800">Clear Favorites</h3>
-                <Button
-                  onClick={() => {
-                    if (context?.user?.fid) {
-                      setFavorites([]);
-                      toast.success('Favorites cleared successfully');
-                    }
-                  }}
-                  className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
-                >
-                  Clear
-                </Button>
-              </div>
-
-              {/* Music Toggle Option */}
-              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                <h3 className="font-semibold text-gray-800">Background Music</h3>
-                <motion.div
-                  animate={{ x: isMusicEnabled ? 0 : -5 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
+                {/* Clear Favorites Option */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                  <h3 className="font-semibold text-gray-800">Clear Favorites</h3>
                   <Button
                     onClick={() => {
-                      setIsMusicEnabled(!isMusicEnabled);
-                      toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
+                      if (context?.user?.fid) {
+                        setFavorites([]);
+                        toast.success('Favorites cleared successfully');
+                      }
                     }}
-                    className={`${
-                      isMusicEnabled 
-                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                        : 'bg-gray-600 text-white hover:bg-gray-700'
-                    } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                    className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
                   >
-                    {isMusicEnabled ? 'On' : 'Off'}
+                    Clear
                   </Button>
-                </motion.div>
-              </div>
+                </div>
 
-              {/* Version Info */}
-              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                <h3 className="font-semibold text-gray-800">Version</h3>
-                <span className="text-sm font-medium text-gray-700 w-20 text-right">2.0.0</span>
+                {/* Music Toggle Option */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                  <h3 className="font-semibold text-gray-800">Background Music</h3>
+                  <motion.div
+                    animate={{ x: isMusicEnabled ? 0 : -5 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Button
+                      onClick={() => {
+                        setIsMusicEnabled(!isMusicEnabled);
+                        toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
+                      }}
+                      className={`${
+                        isMusicEnabled 
+                          ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                          : 'bg-gray-600 text-white hover:bg-gray-700'
+                      } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                    >
+                      {isMusicEnabled ? 'On' : 'Off'}
+                    </Button>
+                  </motion.div>
+                </div>
+
+                {/* Reset Onboarding Option */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Reset Onboarding</h3>
+                    <p className="text-xs text-gray-500">For testing purposes</p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setOnboarding({
+                        step: 1,
+                        personalInfo: {
+                          gender: '',
+                          relationshipStatus: '',
+                          selectedTheme: '',
+                          areasToImprove: [],
+                          personalGoals: '',
+                          preferredQuoteStyle: '',
+                          preferredLength: '',
+                          favoriteAuthors: [],
+                          dailyReminders: false,
+                          preferredLanguage: ''
+                        },
+                        hasCompletedOnboarding: false
+                      });
+                      setShowSettings(false);
+                      toast.success('Onboarding reset successfully');
+                    }}
+                    className="bg-orange-600 text-white hover:bg-orange-700 w-20 text-sm font-semibold transition-colors duration-200"
+                  >
+                    Reset
+                  </Button>
+                </div>
+
+                {/* Version Info */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                  <h3 className="font-semibold text-gray-800">Version</h3>
+                  <span className="text-sm font-medium text-gray-700 w-20 text-right">2.0.0</span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -2053,6 +2387,19 @@ export default function Demo({ title = "Fun Quotes" }) {
           quoteHistory={quoteHistory}
           sessionStartTime={sessionStartTime}
           userStreak={userStreak}
+        />
+      )}
+
+      {/* Onboarding Modal */}
+      {!onboarding.hasCompletedOnboarding && (
+        <OnboardingFlow 
+          onboarding={onboarding}
+          setOnboarding={setOnboarding}
+          onComplete={() => {
+            setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: true }));
+          }}
+          context={context}
+          setBgImage={setBgImage}
         />
       )}
     </div>
