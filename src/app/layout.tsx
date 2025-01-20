@@ -17,6 +17,10 @@ export default async function RootLayout({
   
   return (
     <html lang="en">
+      <head>
+        <meta name="theme-color" content="#000000" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+      </head>
       <body>
         <Providers session={session}>{children}</Providers>
       </body>

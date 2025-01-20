@@ -4,6 +4,8 @@
 
 body {
   font-family: 'Inter', Helvetica, Arial, sans-serif;
+  background-color: #000000;
+  min-height: 100vh;
 }
 
 * {
@@ -17,7 +19,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 0%;  /* Black */
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -77,5 +79,16 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+html {
+  background-color: #000000;
+}
+
+@supports (-webkit-touch-callout: none) {
+  body {
+    /* The hack for Safari */
+    min-height: -webkit-fill-available;
   }
 }
