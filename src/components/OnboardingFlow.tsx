@@ -142,76 +142,57 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-6 p-4"
+            className="space-y-6"
           >
-            <h2 className="text-xl font-bold text-white text-center">Choose Your Style</h2>
-            <p className="text-white/90 text-center text-sm">How would you like your quotes to sound?</p>
-            
-            <div className="grid grid-cols-1 gap-3">
+            <h2 className="text-xl font-bold text-white text-center">What matters to you?</h2>
+            <p className="text-white/90 text-center">Choose areas you&apos;d like to focus on (max 3)</p>
+            <div className="space-y-3">
               {[
-                {
-                  style: 'casual',
-                  name: 'Casual & Friendly',
-                  description: 'Like chatting with a friend',
-                  icon: '👋'
-                },
-                {
-                  style: 'direct',
-                  name: 'Direct & Blunt',
-                  description: 'Straight to the point, no sugar coating',
-                  icon: '🎯'
-                },
-                {
-                  style: 'eloquent',
-                  name: 'Eloquent & Precise',
-                  description: 'Sophisticated and well-crafted',
-                  icon: '✨'
-                },
-                {
-                  style: 'poetic',
-                  name: 'Poetic & Flowing',
-                  description: 'Artistic and metaphorical',
-                  icon: '🎭'
-                },
-                {
-                  style: 'humorous',
-                  name: 'Witty & Playful',
-                  description: 'With a touch of humor',
-                  icon: '😄'
-                }
-              ].map((style) => (
+                { id: 'personal-growth', label: '🌱 Personal Growth', description: 'Self-improvement and development' },
+                { id: 'motivation', label: '🔥 Motivation', description: 'Drive and inspiration' },
+                { id: 'mindfulness', label: '🧘 Mindfulness', description: 'Peace and mental clarity' },
+                { id: 'success', label: '⭐ Success', description: 'Achievement and goals' },
+                { id: 'relationships', label: '💝 Relationships', description: 'Love and connections' },
+                { id: 'happiness', label: '😊 Happiness', description: 'Joy and positivity' }
+              ].map((area) => (
                 <button
-                  key={style.style}
+                  key={area.id}
                   onClick={() => {
-                    updatePersonalInfo('preferredQuoteStyle', style.style);
-                  }}
-                  className={`
-                    group relative overflow-hidden rounded-xl p-4 transition-all duration-300
-                    ${onboarding.personalInfo.preferredQuoteStyle === style.style
-                      ? 'bg-white text-purple-600 shadow-lg scale-[0.98]'
-                      : 'bg-white/10 text-white hover:bg-white/20'
+                    const currentAreas = onboarding.personalInfo.areasToImprove;
+                    const isSelected = currentAreas.includes(area.id);
+                    if (!isSelected && currentAreas.length >= 3) {
+                      toast.error('Maximum 3 areas can be selected');
+                      return;
                     }
-                  `}
+                    const newAreas = isSelected
+                      ? currentAreas.filter(a => a !== area.id)
+                      : [...currentAreas, area.id];
+                    updatePersonalInfo('areasToImprove', newAreas);
+                  }}
+                  className={`w-full p-4 rounded-lg text-left transition-colors ${
+                    onboarding.personalInfo.areasToImprove.includes(area.id)
+                      ? 'bg-white text-purple-600'
+                      : onboarding.personalInfo.areasToImprove.length >= 3
+                        ? 'bg-white/10 text-white/50 cursor-not-allowed'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                  disabled={!onboarding.personalInfo.areasToImprove.includes(area.id) && onboarding.personalInfo.areasToImprove.length >= 3}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{style.icon}</span>
-                    <div className="text-left">
-                      <div className="font-medium">{style.name}</div>
-                      <div className="text-xs opacity-80">{style.description}</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{area.label}</div>
+                      <div className="text-sm opacity-80">{area.description}</div>
                     </div>
+                    {onboarding.personalInfo.areasToImprove.includes(area.id) && (
+                      <Check className="w-5 h-5" />
+                    )}
                   </div>
-                  {onboarding.personalInfo.preferredQuoteStyle === style.style && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute top-2 right-2"
-                    >
-                      <Check className="w-4 h-4" />
-                    </motion.div>
-                  )}
                 </button>
               ))}
             </div>
+            <p className="text-white/70 text-sm text-center">
+              {3 - onboarding.personalInfo.areasToImprove.length} selection{3 - onboarding.personalInfo.areasToImprove.length !== 1 ? 's' : ''} remaining
+            </p>
           </motion.div>
         );
 
@@ -221,53 +202,17 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="text-center space-y-6 p-4"
+            className="space-y-6 p-4"
           >
-            <h2 className="text-2xl font-bold text-white">Pick Your Theme</h2>
-            <div className="space-y-2">
-              <p className="text-white/90 text-sm">Choose a background that speaks to you</p>
-              <p className="text-white/70 text-xs">Don&apos;t worry, you can explore more themes later in settings</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-              {[
-                { name: 'Nature', value: '/Background_Nature_1_pexels-asumaani-16545605.jpg' },
-                { name: 'Urban', value: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg' },
-                { name: 'Gradient', value: 'gradient-purple' },
-                { name: 'Minimal', value: 'gradient-black' }
-              ].map((theme) => (
-                <button
-                  key={theme.value}
-                  onClick={() => {
-                    updatePersonalInfo('selectedTheme', theme.value);
-                  }}
-                  className="relative aspect-square rounded-xl overflow-hidden group"
-                >
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                      backgroundImage: theme.value.includes('gradient') 
-                        ? theme.value === 'gradient-purple'
-                          ? 'linear-gradient(to bottom right, #472A91, rgb(147, 51, 234), rgb(107, 33, 168))'
-                          : 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81), rgb(31, 41, 55))'
-                        : `url(${theme.value})`
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors" />
-                  <span className="absolute inset-0 flex items-center justify-center text-white font-medium text-sm">
-                    {theme.name}
-                  </span>
-                  {onboarding.personalInfo.selectedTheme === theme.value && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute top-2 right-2 bg-white/20 rounded-full p-1"
-                    >
-                      <Check className="w-4 h-4 text-white" />
-                    </motion.div>
-                  )}
-                </button>
-              ))}
-            </div>
+            <h2 className="text-xl font-bold text-white text-center">Personal Goals</h2>
+            <p className="text-white/90 text-center text-sm">Tell us what you want to work towards in life - this helps us find quotes that match your journey</p>
+            
+            <textarea
+              value={onboarding.personalInfo.personalGoals}
+              onChange={(e) => updatePersonalInfo('personalGoals', e.target.value)}
+              placeholder="e.g., I want to be more confident, start a business, improve my relationships..."
+              className="w-full h-32 p-4 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none text-sm"
+            />
           </motion.div>
         );
 
@@ -415,8 +360,8 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             disabled={
               (onboarding.step === 2 && !onboarding.personalInfo.gender) ||
               (onboarding.step === 3 && !onboarding.personalInfo.relationshipStatus) ||
-              (onboarding.step === 4 && !onboarding.personalInfo.preferredQuoteStyle) ||
-              (onboarding.step === 5 && !onboarding.personalInfo.selectedTheme) ||
+              (onboarding.step === 4 && !onboarding.personalInfo.areasToImprove.length) ||
+              (onboarding.step === 5 && !onboarding.personalInfo.personalGoals.trim()) ||
               (onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0) ||
               (onboarding.step === 7 && !onboarding.personalInfo.personalGoals.trim())
             }
@@ -427,9 +372,9 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
                 ? 'bg-purple-400 cursor-not-allowed'
                 : !onboarding.personalInfo.relationshipStatus && onboarding.step === 3
                 ? 'bg-purple-400 cursor-not-allowed'
-                : !onboarding.personalInfo.preferredQuoteStyle && onboarding.step === 4
+                : !onboarding.personalInfo.areasToImprove.length && onboarding.step === 4
                 ? 'bg-purple-400 cursor-not-allowed'
-                : !onboarding.personalInfo.selectedTheme && onboarding.step === 5
+                : !onboarding.personalInfo.personalGoals.trim() && onboarding.step === 5
                 ? 'bg-purple-400 cursor-not-allowed'
                 : onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0
                 ? 'bg-purple-400 cursor-not-allowed'

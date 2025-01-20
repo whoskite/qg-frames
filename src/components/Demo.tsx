@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Film, Share } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1371,31 +1371,6 @@ export default function Demo({ title = "Fun Quotes" }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleGenerateQuote, handleRegenerateGif, gifEnabled, quote, toggleFavorite, onboarding.personalInfo.preferredQuoteStyle, gifUrl, bgColor, isGenerating, isLoadingGif, isSaving]);
 
-  const handleShareImage = async () => {
-    if (!quote) return;
-    
-    try {
-      const imageUrl = await generateQuoteImage(quote, bgImage, context);
-      if (imageUrl) {
-        const shareData = {
-          title: 'Fun Quotes',
-          text: quote,
-          url: imageUrl
-        };
-
-        if (navigator.share && navigator.canShare(shareData)) {
-          await navigator.share(shareData);
-        } else {
-          // Fallback for browsers that don't support Web Share API
-          window.open(imageUrl, '_blank');
-        }
-      }
-    } catch (error) {
-      console.error('Error sharing image:', error);
-      toast.error('Failed to share image');
-    }
-  };
-
   return (
     <ErrorBoundary>
       <div className="relative min-h-screen">
@@ -1561,7 +1536,7 @@ export default function Demo({ title = "Fun Quotes" }) {
             </div>
 
             {/* Card Component */}
-            <Card className="w-full max-w-xl bg-white/10 backdrop-blur-sm border-white/20">
+            <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
               <CardContent className="p-6 sm:p-4">
                 {/* GIF Display */}
                 <AnimatePresence mode="wait">
@@ -1613,62 +1588,106 @@ export default function Demo({ title = "Fun Quotes" }) {
                     }}
                   >
                     <p className="text-center text-white text-2xl font-medium select-none">
-                      {quote || "Click generate to create a quote"}
+                      {quote || ""}
                     </p>
+                    <AnimatePresence>
+                      {showHeartAnimation && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1.5, opacity: 1 }}
+                          exit={{ scale: 0.5, opacity: 0 }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                        >
+                          <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 </AnimatePresence>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleGenerateQuote()}
-                      className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                      title="Generate new quote"
-                    >
-                      <Shuffle className="w-5 h-5 text-white" />
-                    </button>
-                    <button
-                      onClick={() => toggleFavorite({
-                        text: quote,
-                        style: 'default',
-                        gifUrl,
-                        timestamp: new Date(),
-                        bgColor,
-                        id: ''
-                      })}
-                      className={`p-3 rounded-full transition-colors ${
-                        favorites.some(fav => fav.text === quote)
-                          ? 'bg-white text-purple-600'
-                          : 'bg-white/10 hover:bg-white/20 text-white'
+                <motion.div 
+                  className="mb-4 flex justify-between items-center"
+                >
+                  <div className="flex items-center gap-4">
+                    {quote && (
+                      <Heart 
+                        onClick={() => {
+                          const quoteItem: QuoteHistoryItem = {
+                            text: quote,
+                            style: 'default',
+                            gifUrl,
+                            timestamp: new Date(),
+                            bgColor,
+                            id: ''
+                          };
+                          toggleFavorite(quoteItem);
+                          // Show heart animation
+                          setShowHeartAnimation(true);
+                          setTimeout(() => setShowHeartAnimation(false), 1000);
+                        }}
+                        className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                          favorites.some(fav => fav.text === quote)
+                            ? 'fill-pink-500 text-pink-500' 
+                            : 'text-white hover:text-pink-200'
+                        }`}
+                      />
+                    )}
+                    <Shuffle
+                      onClick={async () => {
+                        setIsGenerating(true);
+                        try {
+                          const randomPrompt = generateRandomPrompt(favorites);
+                          setUserPrompt(randomPrompt);
+                          await handleGenerateQuote();
+                          const message = favorites.length > 0 
+                            ? 'Generated a personalized quote based on your preferences!'
+                            : 'Generated a unique quote based on current time and season!';
+                          toast.success(message);
+                        } catch (error) {
+                          console.error('Error generating random quote:', error);
+                          toast.error('Failed to generate quote');
+                        } finally {
+                          setIsGenerating(false);
+                        }
+                      }}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
                       }`}
-                      title={favorites.some(fav => fav.text === quote)
-                        ? "Remove from favorites"
-                        : "Add to favorites"}
-                    >
-                      <Heart className="w-5 h-5" />
-                    </button>
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleGifToggle()}
-                      className={`p-3 rounded-full transition-colors ${
-                        gifEnabled ? 'bg-white text-purple-600' : 'bg-white/10 hover:bg-white/20 text-white'
-                      }`}
-                      title="Toggle GIF background"
-                    >
-                      <Film className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleShareImage()}
-                      className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                      title="Share"
-                    >
-                      <Share2 className="w-5 h-5 text-white" />
-                    </button>
+                </motion.div>
+
+                {/* Input Field */}
+                <div className="mb-6 relative">
+                  <Input
+                    type="text"
+                    placeholder="Enter a topic/word for your quote"
+                    value={userPrompt}
+                    onChange={(e) => setUserPrompt(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
+                  />
+                  <div 
+                    onClick={handleGenerateQuote}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+                  >
+                    <Image
+                      src="/Submit_Icon.png"
+                      alt="Submit"
+                      width={20}
+                      height={20}
+                      className="invert brightness-0 object-contain"
+                      unoptimized
+                    />
                   </div>
                 </div>
               </CardContent>
+
+              <CardFooter className="flex flex-col gap-4">
+                {/* Remove the Cast Away button section entirely */}
+              </CardFooter>
             </Card>
           </div>
         </main>
