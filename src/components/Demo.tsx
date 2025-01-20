@@ -48,6 +48,7 @@ import { Button } from "../components/ui/Button";
 // Utils and Services
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
+import { generateQuoteImage } from '../app/utils/generateQuoteImage';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -2340,33 +2341,29 @@ export default function Demo({ title = "Fun Quotes" }) {
                     </Button>
                     <Button
                       onClick={async () => {
-                        setIsCasting(true);
                         try {
+                          setIsGeneratingPreview(true);
+                          // Generate the image first
+                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                          // Show the preview immediately
+                          setPreviewImage(dataUrl);
+                          
+                          // Then start the upload process
+                          setIsCasting(true);
+                          const uploadedUrl = await uploadImage(dataUrl);
                           const shareText = `"${quote}" - Created by @kite /thepod`;
                           const shareUrl = 'https://qg-frames.vercel.app';
-                          let mediaUrl = '';
-
-                          try {
-                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                            const uploadedUrl = await uploadImage(dataUrl);
-                            // Use the Firebase Storage URL directly
-                            mediaUrl = uploadedUrl;
-                          } catch (error) {
-                            console.error('Error generating/uploading image:', error);
-                          }
-
+                          
                           const params = new URLSearchParams();
                           params.append('text', shareText);
                           params.append('embeds[]', shareUrl);
-                          if (mediaUrl) {
-                            params.append('embeds[]', mediaUrl);
-                          }
+                          params.append('embeds[]', uploadedUrl);
                           
                           const url = `https://warpcast.com/~/compose?${params.toString()}`;
                           
                           logAnalyticsEvent('cast_created', {
                             quote: quote,
-                            hasMedia: !!mediaUrl,
+                            hasMedia: true,
                             mediaType: 'canvas'
                           });
                           
@@ -2375,7 +2372,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                           setPreviewImage(null);
                         } catch (error) {
                           console.error('Error sharing:', error);
+                          toast.error('Failed to share quote. Please try again.');
                         } finally {
+                          setIsGeneratingPreview(false);
                           setIsCasting(false);
                         }
                       }}
