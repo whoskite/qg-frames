@@ -1652,7 +1652,19 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </div>
                   {quote && (
                     <Share2
-                      onClick={() => setShowPreview(true)}
+                      onClick={async () => {
+                        try {
+                          setIsGeneratingPreview(true);
+                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                          setPreviewImage(dataUrl);
+                          setShowPreview(true);
+                        } catch (error) {
+                          console.error('Error generating preview:', error);
+                          toast.error('Failed to generate preview');
+                        } finally {
+                          setIsGeneratingPreview(false);
+                        }
+                      }}
                       className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
                     />
                   )}
