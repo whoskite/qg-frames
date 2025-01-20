@@ -226,7 +226,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             <h2 className="text-2xl font-bold text-white">Pick Your Theme</h2>
             <div className="space-y-2">
               <p className="text-white/90 text-sm">Choose a background that speaks to you</p>
-              <p className="text-white/70 text-xs">Don't worry, you can explore more themes later in settings</p>
+              <p className="text-white/70 text-xs">Don&apos;t worry, you can explore more themes later in settings</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
               {[
