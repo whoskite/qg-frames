@@ -222,73 +222,84 @@ export const getThemePreference = async (fid: number): Promise<string | null> =>
   }
 };
 
-// Add these functions to handle streaks
-export const updateUserStreak = async (fid: number) => {
+// Add these interfaces
+export interface UserStreak {
+  current_streak: number;
+  longest_streak: number;
+  last_login_timestamp: { toMillis: () => number } | null;
+  next_eligible_login: Date | null;
+  streak_deadline: Date | null;
+}
+
+export interface StreakUpdate {
+  current_streak: number;
+  last_login_timestamp: Date;
+  next_eligible_login: Date;
+  streak_deadline: Date;
+}
+
+// Update the getUserStreak function
+export const getUserStreak = async (fid: number): Promise<UserStreak> => {
   if (!db) {
-    console.error('Firestore not initialized');
-    return 0;
-  }
-
-  const userRef = doc(db as Firestore, 'users', fid.toString());
-
-  try {
-    const userDoc = await getDoc(userRef);
-    const userData = userDoc.data();
-    const now = Date.now();
-    
-    if (!userData || !userData.lastVisit) {
-      // First visit ever
-      await setDoc(userRef, {
-        lastVisit: now,
-        currentStreak: 1,
-        streakStartDate: now
-      }, { merge: true });
-      return 1;
-    }
-
-    const lastVisit = userData.lastVisit;
-    const hoursSinceLastVisit = (now - lastVisit) / (1000 * 60 * 60);
-
-    // If more than 24 hours have passed, reset streak
-    if (hoursSinceLastVisit >= 24) {
-      await updateDoc(userRef, {
-        lastVisit: now,
-        currentStreak: 1,
-        streakStartDate: now
-      });
-      return 1;
-    }
-    
-    // If less than 24 hours, increment streak
-    const newStreak = (userData.currentStreak || 0) + 1;
-    await updateDoc(userRef, {
-      lastVisit: now,
-      currentStreak: newStreak,
-      streakStartDate: userData.streakStartDate || now
-    });
-    
-    return newStreak;
-  } catch (error) {
-    console.error('Error updating streak:', error);
-    return 0;
-  }
-};
-
-export const getUserStreak = async (fid: number): Promise<number> => {
-  if (!db) {
-    console.error('Firestore not initialized');
-    return 0;
+    throw new Error('Firestore not initialized');
   }
 
   try {
     const userRef = doc(db as Firestore, 'users', fid.toString());
     const userDoc = await getDoc(userRef);
-    const userData = userDoc.data();
     
-    if (!userData) return 0;
-    return userData.currentStreak || 0;
+    if (!userDoc.exists()) {
+      return {
+        current_streak: 0,
+        longest_streak: 0,
+        last_login_timestamp: null,
+        next_eligible_login: null,
+        streak_deadline: null
+      };
+    }
+    
+    const data = userDoc.data();
+    return {
+      current_streak: data.current_streak || 0,
+      longest_streak: data.longest_streak || 0,
+      last_login_timestamp: data.last_login_timestamp || null,
+      next_eligible_login: data.next_eligible_login || null,
+      streak_deadline: data.streak_deadline || null
+    };
   } catch (error) {
-    console.error('Error getting streak:', error);
-    return 0;
+    console.error('Error getting user streak:', error);
+    throw error;
+  }
+};
+
+// Update the updateUserStreak function
+export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise<void> => {
+  if (!db) {
+    throw new Error('Firestore not initialized');
+  }
+
+  try {
+    const userRef = doc(db as Firestore, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      // Create new user document
+      await setDoc(userRef, {
+        ...data,
+        longest_streak: data.current_streak,
+        created_at: serverTimestamp()
+      });
+    } else {
+      // Update existing user document
+      const currentData = userDoc.data();
+      await updateDoc(userRef, {
+        ...data,
+        longest_streak: Math.max(data.current_streak, currentData.longest_streak || 0),
+        updated_at: serverTimestamp()
+      });
+    }
+  } catch (error) {
+    console.error('Error updating user streak:', error);
+    throw error;
   }
 }; 

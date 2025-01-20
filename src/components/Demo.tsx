@@ -100,6 +100,37 @@ const formatTimestamp = (date: Date) => {
 };
 
 // Add these helper functions at the top with other helper functions
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+const calculateStreakStatus = (lastLoginTimestamp: number | null): {
+  isValidStreak: boolean;
+  hoursSinceLastLogin: number | null;
+  nextEligibleLogin: number | null;
+  streakDeadline: number | null;
+} => {
+  if (!lastLoginTimestamp) {
+    return {
+      isValidStreak: true,
+      hoursSinceLastLogin: null,
+      nextEligibleLogin: null,
+      streakDeadline: null
+    };
+  }
+
+  const now = Date.now();
+  const hoursSinceLastLogin = (now - lastLoginTimestamp) / (60 * 60 * 1000);
+  const nextEligibleLogin = lastLoginTimestamp + TWENTY_FOUR_HOURS;
+  const streakDeadline = lastLoginTimestamp + TWENTY_FOUR_HOURS;
+
+  return {
+    isValidStreak: now <= streakDeadline,
+    hoursSinceLastLogin,
+    nextEligibleLogin,
+    streakDeadline
+  };
+};
+
+// Add these helper functions at the top with other helper functions
 const getStorageKey = (fid: number) => `funquotes_history_${fid}`;
 const getFavoritesKey = (fid: number) => `funquotes_favorites_${fid}`;
 
@@ -110,6 +141,19 @@ interface StoredQuoteHistoryItem extends Omit<QuoteHistoryItem, 'timestamp'> {
 
 interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
   timestamp: string;
+}
+
+// Add these interfaces near the top with other interfaces
+interface UserStreak {
+  current_streak: number;
+  last_login_timestamp: { toMillis: () => number } | null;
+}
+
+interface StreakUpdate {
+  current_streak: number;
+  last_login_timestamp: Date;
+  next_eligible_login: Date;
+  streak_deadline: Date;
 }
 
 // Add a new state for Firebase initialization
@@ -533,26 +577,77 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  // Update the streak effect
+  // Update the streak effect with proper type handling
   useEffect(() => {
     const updateUserStreakCount = async () => {
       if (context?.user?.fid && isFirebaseInitialized) {
         try {
-          const newStreak = await updateUserStreak(context.user.fid);
+          const userDoc = await getUserStreak(context.user.fid);
+          const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
+          
+          const {
+            isValidStreak,
+            hoursSinceLastLogin,
+            nextEligibleLogin,
+            streakDeadline
+          } = calculateStreakStatus(lastLoginTimestamp);
+
+          let newStreak = userDoc?.current_streak || 0;
+          const now = Date.now();
+
+          if (!lastLoginTimestamp) {
+            // First login ever
+            newStreak = 1;
+          } else if (!isValidStreak) {
+            // Reset streak if more than 24 hours have passed
+            newStreak = 1;
+            // Play sound effect for streak reset
+            playStreakSound();
+          } else if (nextEligibleLogin && now >= nextEligibleLogin) {
+            // Increment streak if it's been at least 24 hours
+            newStreak += 1;
+            // Play sound effect for streak increment
+            playStreakSound();
+          }
+          // If it's too early (< 24 hours), keep current streak
+
+          // Update the streak in Firestore
+          const streakUpdate: StreakUpdate = {
+            current_streak: newStreak,
+            last_login_timestamp: new Date(),
+            next_eligible_login: new Date(now + TWENTY_FOUR_HOURS),
+            streak_deadline: new Date(now + TWENTY_FOUR_HOURS)
+          };
+          
+          await updateUserStreak(context.user.fid, streakUpdate);
+
           // Only animate if the streak has changed
           if (newStreak !== userStreak) {
-            setIsInitialState(true);
             setUserStreak(newStreak);
+            // Show toast notification for streak update
+            if (newStreak > 1) {
+              toast.success(`🔥 ${newStreak} Day Streak!`);
+            } else if (newStreak === 1) {
+              toast.info('Streak started! Come back in 24 hours to continue.');
+            }
           }
+
+          // Log analytics
+          logAnalyticsEvent('streak_updated', {
+            new_streak: newStreak,
+            hours_since_last_login: hoursSinceLastLogin || 0,
+            streak_maintained: isValidStreak
+          });
+
         } catch (error) {
           console.error('Error updating streak:', error);
+          toast.error('Failed to update streak');
         }
       }
     };
 
     updateUserStreakCount();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context?.user?.fid, isFirebaseInitialized]); // Remove userStreak from dependencies
+  }, [context?.user?.fid, isFirebaseInitialized, userStreak]);
 
   // Update the background music effect
   useEffect(() => {
