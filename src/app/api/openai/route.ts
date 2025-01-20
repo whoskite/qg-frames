@@ -1,14 +1,12 @@
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const openai = new OpenAIApi(configuration);
-
 export async function POST(req: Request) {
-  if (!configuration.apiKey) {
+  if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
       { error: 'OpenAI API key not configured' },
       { status: 500 }
@@ -19,7 +17,7 @@ export async function POST(req: Request) {
     const { userPreferences } = await req.json();
     
     const prompt = generatePrompt(userPreferences);
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -35,7 +33,7 @@ export async function POST(req: Request) {
       max_tokens: 100
     });
 
-    const suggestion = completion.data.choices[0]?.message?.content;
+    const suggestion = completion.choices[0]?.message?.content;
     return NextResponse.json({ result: suggestion });
   } catch (error) {
     console.error('Error with OpenAI API:', error);
@@ -46,9 +44,17 @@ export async function POST(req: Request) {
   }
 }
 
-function generatePrompt(preferences: any) {
+interface UserPreferences {
+  gender?: string;
+  relationshipStatus?: string;
+  areasToImprove?: string[];
+  personalGoals?: string;
+  preferredStyles?: string[];
+  userStreak?: number;
+}
+
+function generatePrompt(preferences: UserPreferences): string {
   const {
-    gender,
     relationshipStatus,
     areasToImprove,
     personalGoals,
@@ -59,7 +65,7 @@ function generatePrompt(preferences: any) {
   let prompt = "Generate a creative and unique quote prompt that:";
 
   // Add style preferences
-  if (preferredStyles?.length > 0) {
+  if (preferredStyles && preferredStyles.length > 0) {
     prompt += `\n- Incorporates one or more of these styles: ${preferredStyles.join(', ')}`;
   }
 
@@ -69,7 +75,7 @@ function generatePrompt(preferences: any) {
   }
 
   // Add areas of improvement
-  if (areasToImprove?.length > 0) {
+  if (areasToImprove && areasToImprove.length > 0) {
     prompt += `\n- Focuses on these areas: ${areasToImprove.join(', ')}`;
   }
 
@@ -79,7 +85,7 @@ function generatePrompt(preferences: any) {
   }
 
   // Add streak motivation
-  if (userStreak > 0) {
+  if (userStreak && userStreak > 0) {
     prompt += `\n- Incorporates motivation for maintaining a ${userStreak}-day streak`;
   }
 
