@@ -1054,9 +1054,10 @@ export default function Demo({ title = "Fun Quotes" }) {
             <div className="flex-shrink-0">
               <Image
                 src="/logo.png"
-                alt="FunQuoteLogo"
+                alt="Logo"
                 width={60}
                 height={60}
+                priority  // Add this to optimize LCP
                 className="object-contain"
               />
             </div>
@@ -1353,7 +1354,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     alt="Submit"
                     width={20}
                     height={20}
-                    className="invert brightness-0"
+                    className="invert brightness-0 object-contain"
                     unoptimized
                   />
                 </div>
@@ -1969,7 +1970,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     }
                   }}
                   disabled={false}
-                  className="text-purple-600 hover:text-purple-700 bg-transparent px-8"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 rounded-lg transition-colors"
                 >
                   {isCasting ? (
                     <motion.span
