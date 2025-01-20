@@ -786,6 +786,9 @@ export default function Demo({ title = "Fun Quotes" }) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('Could not get canvas context');
+        
+        // Ensure ctx is treated as CanvasRenderingContext2D
+        const context = ctx as CanvasRenderingContext2D;
 
         // Set canvas size
         canvas.width = 800;
@@ -796,51 +799,51 @@ export default function Demo({ title = "Fun Quotes" }) {
           let gradient;
           switch (bgImage) {
             case 'gradient-pink':
-              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(192, 132, 252)');
               gradient.addColorStop(0.5, 'rgb(244, 114, 182)');
               gradient.addColorStop(1, 'rgb(239, 68, 68)');
               break;
             case 'gradient-black':
-              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(17, 24, 39)');
               gradient.addColorStop(0.5, 'rgb(55, 65, 81)');
               gradient.addColorStop(1, 'rgb(31, 41, 55)');
               break;
             case 'gradient-yellow':
-              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(251, 191, 36)');
               gradient.addColorStop(0.5, 'rgb(249, 115, 22)');
               gradient.addColorStop(1, 'rgb(239, 68, 68)');
               break;
             case 'gradient-green':
-              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(52, 211, 153)');
               gradient.addColorStop(0.5, 'rgb(16, 185, 129)');
               gradient.addColorStop(1, 'rgb(20, 184, 166)');
               break;
             case 'gradient-purple':
-              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, '#472A91');
               gradient.addColorStop(0.5, 'rgb(147, 51, 234)');
               gradient.addColorStop(1, 'rgb(107, 33, 168)');
               break;
             default:
-              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, '#9b5de5');
               gradient.addColorStop(0.5, '#f15bb5');
               gradient.addColorStop(1, '#ff6b6b');
           }
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, canvas.width, canvas.height);
         } else if (bgImage === 'none') {
           // Create default gradient background
-          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+          const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
           gradient.addColorStop(0, '#9b5de5');
           gradient.addColorStop(0.5, '#f15bb5');
           gradient.addColorStop(1, '#ff6b6b');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, canvas.width, canvas.height);
         } else {
           // Handle image backgrounds
           const img = document.createElement('img');
@@ -866,29 +869,35 @@ export default function Demo({ title = "Fun Quotes" }) {
             }
 
             // Fill background with black
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#000000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
 
             // Draw background image centered
-            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
             
             // Add semi-transparent overlay
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Continue with text and profile rendering
+            addTextAndProfile();
           };
+          return; // Return early as we'll resolve in the addTextAndProfile function
         }
 
-        // Create profile image element
-        const profileImg = document.createElement('img');
-        profileImg.crossOrigin = 'anonymous';
-        profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
+        // If we didn't return early (for image backgrounds), add text and profile immediately
+        addTextAndProfile();
 
-        // Handle profile image load
-        profileImg.onload = () => {
+        function addTextAndProfile() {
+          if (!context) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          
           // Add quote text
-          ctx.fillStyle = 'white';
-          ctx.textAlign = 'center';
-          ctx.font = 'bold 32px Inter, sans-serif';
+          context.fillStyle = 'white';
+          context.textAlign = 'center';
+          context.font = 'bold 32px Inter, sans-serif';
           
           // Word wrap the text
           const words = quote.split(' ');
@@ -898,7 +907,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           words.forEach(word => {
             const testLine = currentLine + word + ' ';
-            const metrics = ctx.measureText(testLine);
+            const metrics = context.measureText(testLine);
             if (metrics.width > maxWidth) {
               lines.push(currentLine);
               currentLine = word + ' ';
@@ -914,50 +923,57 @@ export default function Demo({ title = "Fun Quotes" }) {
           const startY = (canvas.height - totalHeight) / 2 - 20;
 
           lines.forEach((line, index) => {
-            ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
+            context.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
           });
 
-          // Draw profile section
-          const profileSize = 40;
-          const profileY = canvas.height - 70;
-          const username = `@${userContext?.user?.username || 'user'}`;
-          
-          ctx.font = '20px Inter, sans-serif';
-          const textMetrics = ctx.measureText(username);
-          const totalWidth = profileSize + 15 + textMetrics.width;
-          const startX = (canvas.width - totalWidth) / 2;
-          const profileX = startX;
-          const usernameX = startX + profileSize + 15;
+          // Create profile image element
+          const profileImg = document.createElement('img');
+          profileImg.crossOrigin = 'anonymous';
+          profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
 
-          // Draw circular profile image
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
-          ctx.closePath();
-          ctx.clip();
+          profileImg.onload = () => {
+            // Draw profile section
+            const profileSize = 40;
+            const profileY = canvas.height - 70;
+            const username = `@${userContext?.user?.username || 'user'}`;
+            
+            context.font = '20px Inter, sans-serif';
+            const textMetrics = context.measureText(username);
+            const totalWidth = profileSize + 15 + textMetrics.width;
+            const startX = (canvas.width - totalWidth) / 2;
+            const profileX = startX;
+            const usernameX = startX + profileSize + 15;
 
-          ctx.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
-          ctx.restore();
+            // Draw circular profile image
+            context.save();
+            context.beginPath();
+            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
+            context.closePath();
+            context.clip();
 
-          // Draw white border around profile image
-          ctx.strokeStyle = 'white';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
-          ctx.stroke();
+            context.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
+            context.restore();
 
-          // Add username
-          ctx.fillStyle = 'white';
-          ctx.textAlign = 'left';
-          ctx.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
+            // Draw white border around profile image
+            context.strokeStyle = 'white';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
+            context.stroke();
 
-          resolve(canvas.toDataURL('image/png'));
-        };
+            // Add username
+            context.fillStyle = 'white';
+            context.textAlign = 'left';
+            context.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
 
-        // Handle profile image load error
-        profileImg.onerror = () => {
-          profileImg.src = "/Profile_Image.jpg";
-        };
+            resolve(canvas.toDataURL('image/png'));
+          };
+
+          // Handle profile image load error
+          profileImg.onerror = () => {
+            profileImg.src = "/Profile_Image.jpg";
+          };
+        }
 
       } catch (error) {
         reject(error);
@@ -992,7 +1008,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   };
 
   const renderBackground = () => {
-    if (bgImage.includes('TheMrSazon')) {
+    if (bgImage.includes('TheMrSazon') || bgImage.includes('Background_Water')) {
       return (
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0" style={{ 
@@ -1629,6 +1645,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                     id: 'flower',
                     name: 'Flower',
                     path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
+                  },
+                  {
+                    id: 'opensea',
+                    name: 'Open Sea',
+                    path: '/Background_Water_pexels-jeremy-bishop-1260133-2397652.jpg'
                   },
                   {
                     id: 'sazon',
