@@ -1990,8 +1990,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                         try {
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
                           const uploadedUrl = await uploadImage(dataUrl);
-                          // Don't encode the full URL, as Warpcast will handle that
-                          mediaUrl = uploadedUrl;
+                          // Ensure the URL is absolute and properly formatted
+                          mediaUrl = uploadedUrl.startsWith('http') ? uploadedUrl : `https://qg-frames.vercel.app${uploadedUrl}`;
                         } catch (error) {
                           console.error('Error generating/uploading image:', error);
                         }
