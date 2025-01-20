@@ -117,7 +117,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             <h2 className="text-xl font-bold text-white text-center">Question #2</h2>
             <p className="text-white/90 text-center">What&apos;s your relationship status?</p>
             <div className="space-y-3">
-              {['Single', 'In a relationship', 'Married', 'It&apos;s complicated', 'Prefer not to say'].map((status) => (
+              {['Single', 'In a relationship', 'Married', 'It\'s complicated', 'Prefer not to say'].map((status) => (
                 <button
                   key={status}
                   onClick={() => {
