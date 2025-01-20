@@ -429,7 +429,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
-  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(true);
+  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(false);
   const [lastStreakNotification, setLastStreakNotification] = useState<number | null>(null);
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
 
@@ -1308,7 +1308,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     return null;
   };
 
-  // Add effect to load onboarding data
+  // Remove the onboarding data loading effect
   useEffect(() => {
     const loadOnboardingData = async () => {
       if (context?.user?.fid && isFirebaseInitialized) {
@@ -1328,14 +1328,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           }
         } catch (error) {
           console.error('Error loading onboarding data:', error);
-        } finally {
-          setIsLoadingOnboarding(false);
-          setHasCheckedOnboarding(true);
         }
-      } else if (!context?.user?.fid || !isFirebaseInitialized) {
-        // If no user or Firebase isn't initialized, we can show onboarding
-        setIsLoadingOnboarding(false);
-        setHasCheckedOnboarding(true);
       }
     };
 
@@ -1657,6 +1650,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                       }`}
                     />
                   </div>
+                  {quote && (
+                    <Share2
+                      onClick={() => setShowPreview(true)}
+                      className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
+                    />
+                  )}
                 </motion.div>
 
                 {/* Input Field */}
@@ -2174,8 +2173,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                   {/* Reset Onboarding Option */}
                   <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
                     <div>
-                      <h3 className="font-semibold text-gray-800">Reset Preference</h3>
-                      <p className="text-xs text-gray-500">For testing purposes</p>
+                      <h3 className="font-semibold text-gray-800">Start Onboarding</h3>
+                      <p className="text-xs text-gray-500">Customize your quote preferences</p>
                     </div>
                     <Button
                       onClick={() => {
@@ -2196,11 +2195,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                           hasCompletedOnboarding: false
                         });
                         setShowSettings(false);
-                        toast.success('Onboarding reset successfully');
+                        setHasCheckedOnboarding(true);
+                        toast.success('Starting onboarding flow...');
                       }}
-                      className="bg-orange-600 text-white hover:bg-orange-700 w-20 text-sm font-semibold transition-colors duration-200"
+                      className="bg-purple-600 text-white hover:bg-purple-700 w-20 text-sm font-semibold transition-colors duration-200"
                     >
-                      Reset
+                      Start
                     </Button>
                   </div>
 
@@ -2349,8 +2349,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                           try {
                             const dataUrl = await generateQuoteImage(quote, bgImage, context);
                             const uploadedUrl = await uploadImage(dataUrl);
-                            // Ensure the URL is absolute and properly formatted
-                            mediaUrl = uploadedUrl.startsWith('http') ? uploadedUrl : `https://qg-frames.vercel.app${uploadedUrl}`;
+                            // Firebase already returns a complete URL, so we can use it directly
+                            mediaUrl = uploadedUrl;
                           } catch (error) {
                             console.error('Error generating/uploading image:', error);
                           }
