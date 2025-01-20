@@ -1371,6 +1371,31 @@ export default function Demo({ title = "Fun Quotes" }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleGenerateQuote, handleRegenerateGif, gifEnabled, quote, toggleFavorite, onboarding.personalInfo.preferredQuoteStyle, gifUrl, bgColor, isGenerating, isLoadingGif, isSaving]);
 
+  const handleShareImage = async () => {
+    if (!quote) return;
+    
+    try {
+      const imageUrl = await generateQuoteImage(quote, bgImage, context);
+      if (imageUrl) {
+        const shareData = {
+          title: 'Fun Quotes',
+          text: quote,
+          url: imageUrl
+        };
+
+        if (navigator.share && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+        } else {
+          // Fallback for browsers that don't support Web Share API
+          window.open(imageUrl, '_blank');
+        }
+      }
+    } catch (error) {
+      console.error('Error sharing image:', error);
+      toast.error('Failed to share image');
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="relative min-h-screen">
@@ -1536,7 +1561,31 @@ export default function Demo({ title = "Fun Quotes" }) {
             </div>
 
             {/* Card Component */}
-            <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+            <Card className="w-full max-w-xl bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-xl font-bold text-white">
+                  {title}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleShareImage()}
+                    className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                    title="Share"
+                  >
+                    <Share2 className="w-5 h-5 text-white" />
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                        <Settings className="w-5 h-5 text-white" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {/* ... existing dropdown menu items ... */}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
               <CardContent className="p-6 sm:p-4">
                 {/* GIF Display */}
                 <AnimatePresence mode="wait">
