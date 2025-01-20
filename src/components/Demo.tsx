@@ -1,13 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X } from 'lucide-react';
-import { useEffect, useCallback, useState } from "react";
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings } from 'lucide-react';
+import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
 import { logEvent, setUserProperties } from "firebase/analytics";
+import { Toaster, toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +24,13 @@ import {
   saveFavoriteQuote,
   getUserFavorites,
   removeFavoriteQuote,
-  clearUserHistory
+  clearUserHistory,
+  saveGifPreference,
+  getGifPreference,
+  saveThemePreference,
+  getThemePreference,
+  updateUserStreak,
+  getUserStreak
 } from '../lib/firestore';
 
 // UI Components
@@ -92,6 +100,37 @@ const formatTimestamp = (date: Date) => {
 };
 
 // Add these helper functions at the top with other helper functions
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+const calculateStreakStatus = (lastLoginTimestamp: number | null): {
+  isValidStreak: boolean;
+  hoursSinceLastLogin: number | null;
+  nextEligibleLogin: number | null;
+  streakDeadline: number | null;
+} => {
+  if (!lastLoginTimestamp) {
+    return {
+      isValidStreak: true,
+      hoursSinceLastLogin: null,
+      nextEligibleLogin: null,
+      streakDeadline: null
+    };
+  }
+
+  const now = Date.now();
+  const hoursSinceLastLogin = (now - lastLoginTimestamp) / (60 * 60 * 1000);
+  const nextEligibleLogin = lastLoginTimestamp + TWENTY_FOUR_HOURS;
+  const streakDeadline = lastLoginTimestamp + TWENTY_FOUR_HOURS;
+
+  return {
+    isValidStreak: now <= streakDeadline,
+    hoursSinceLastLogin,
+    nextEligibleLogin,
+    streakDeadline
+  };
+};
+
+// Add these helper functions at the top with other helper functions
 const getStorageKey = (fid: number) => `funquotes_history_${fid}`;
 const getFavoritesKey = (fid: number) => `funquotes_favorites_${fid}`;
 
@@ -104,12 +143,82 @@ interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
   timestamp: string;
 }
 
+// Add these interfaces near the top with other interfaces
+interface UserStreak {
+  current_streak: number;
+  last_login_timestamp: { toMillis: () => number } | null;
+}
+
+interface StreakUpdate {
+  current_streak: number;
+  last_login_timestamp: Date;
+  next_eligible_login: Date;
+  streak_deadline: Date;
+}
+
+// Add a new state for Firebase initialization
+const customScrollbarStyles = `
+  /* Default scrollbar styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+  }
+
+  /* Webkit scrollbar styles */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Thinner scrollbar for mobile */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+    min-height: 40px; /* Minimum height for better touch targets */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  /* Media query for larger screens */
+  @media (min-width: 768px) {
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px; /* Slightly wider scrollbar for desktop */
+    }
+  }
+
+  /* For Firefox */
+  @supports (scrollbar-width: thin) {
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #888 #f1f1f1;
+    }
+  }
+`;
+
+// Add this after the imports
+const playStreakSound = () => {
+  const audio = new Audio('/streak-sound.wav');
+  audio.volume = 0.5;
+  return audio.play().catch(error => {
+    console.error('Error playing sound:', error);
+  });
+};
+
+// Add this helper function
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [bgColor, setBgColor] = useState(getRandomColor());
+  const [bgImage, setBgImage] = useState<string>('/Background_Nature_1_pexels-asumaani-16545605.jpg');
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<FrameContext>();
@@ -117,6 +226,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [sessionStartTime] = useState(Date.now());
   const [quoteHistory, setQuoteHistory] = useState<QuoteHistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 
   // Frame-specific state
@@ -132,6 +242,34 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Add a new state for Firebase initialization
   const [isFirebaseInitialized, setIsFirebaseInitialized] = useState(false);
+
+  // Add to state declarations
+  const [showSettings, setShowSettings] = useState(false);
+  const [gifEnabled, setGifEnabled] = useState(true);
+
+  // Add a new state to track if it's the initial state
+  const [isInitialState, setIsInitialState] = useState(true);
+
+  // Add new state for preview modal
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+
+  // Add to state declarations
+  const [showHeartAnimation, setShowHeartAnimation] = useState(false);
+
+  // Add to state declarations
+  const [lastTapTime, setLastTapTime] = useState(0);
+
+  // Add to state declarations
+  const [showProfile, setShowProfile] = useState(false);
+
+  // Add to state declarations
+  const [userStreak, setUserStreak] = useState(0);
+
+  // Add new state for music
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
@@ -187,10 +325,11 @@ export default function Demo({ title = "Fun Quotes" }) {
       setIsSDKLoaded(true);
       initializeFrameSDK();
     }
-  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent]);
+  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent, isFirebaseInitialized]);
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = async () => {
+    setIsInitialState(false);
     if (isLoading) return;
     setIsLoading(true);
     
@@ -200,20 +339,20 @@ export default function Demo({ title = "Fun Quotes" }) {
       
       if (quoteResponse) {
         const newQuote = quoteResponse.text.slice(0, MAX_CHARS);
-        const newColor = getRandomColor();
         setQuote(newQuote);
-        setBgColor(newColor);
         
-        const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
-        setGifUrl(gifUrl);
+        if (gifEnabled) {
+          const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
+          setGifUrl(gifUrl);
+        }
         
         // Add to history
         setQuoteHistory(prev => [{
           text: newQuote,
           style: quoteResponse.style,
-          gifUrl,
+          gifUrl: gifEnabled ? gifUrl : null,
           timestamp: new Date(),
-          bgColor: newColor
+          bgColor
         }, ...prev.slice(0, 9)]); // Keep last 10 quotes
         
         logAnalyticsEvent('quote_generated_success', {
@@ -295,11 +434,18 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  const handleReuseQuote = (item: QuoteHistoryItem) => {
+  const handleReuseQuote = (item: QuoteHistoryItem | FavoriteQuote) => {
     setQuote(item.text);
-    setBgColor(item.bgColor);
-    setGifUrl(item.gifUrl);
+    if (item.gifUrl) {
+      setGifUrl(item.gifUrl);
+    }
     setShowHistory(false);
+    setShowFavorites(false);
+    setIsInitialState(false);
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Show success notification
+    toast.success('Quote loaded successfully');
   };
 
   // Add clear function
@@ -431,6 +577,128 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
+  // Update the streak effect with proper type handling
+  useEffect(() => {
+    const updateUserStreakCount = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const userDoc = await getUserStreak(context.user.fid);
+          const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
+          
+          const {
+            isValidStreak,
+            hoursSinceLastLogin,
+            nextEligibleLogin,
+            streakDeadline
+          } = calculateStreakStatus(lastLoginTimestamp);
+
+          let newStreak = userDoc?.current_streak || 0;
+          const now = Date.now();
+
+          if (!lastLoginTimestamp) {
+            // First login ever
+            newStreak = 1;
+          } else if (!isValidStreak) {
+            // Reset streak if more than 24 hours have passed
+            newStreak = 1;
+            // Play sound effect for streak reset
+            playStreakSound();
+          } else if (nextEligibleLogin && now >= nextEligibleLogin) {
+            // Increment streak if it's been at least 24 hours
+            newStreak += 1;
+            // Play sound effect for streak increment
+            playStreakSound();
+          }
+          // If it's too early (< 24 hours), keep current streak
+
+          // Update the streak in Firestore
+          const streakUpdate: StreakUpdate = {
+            current_streak: newStreak,
+            last_login_timestamp: new Date(),
+            next_eligible_login: new Date(now + TWENTY_FOUR_HOURS),
+            streak_deadline: new Date(now + TWENTY_FOUR_HOURS)
+          };
+          
+          await updateUserStreak(context.user.fid, streakUpdate);
+
+          // Only animate if the streak has changed
+          if (newStreak !== userStreak) {
+            setUserStreak(newStreak);
+            // Show toast notification for streak update
+            if (newStreak > 1) {
+              toast.success(`🔥 ${newStreak} Day Streak!`);
+            } else if (newStreak === 1) {
+              toast.info('Streak started! Come back in 24 hours to continue.');
+            }
+          }
+
+          // Log analytics
+          logAnalyticsEvent('streak_updated', {
+            new_streak: newStreak,
+            hours_since_last_login: hoursSinceLastLogin || 0,
+            streak_maintained: isValidStreak
+          });
+
+        } catch (error) {
+          console.error('Error updating streak:', error);
+          toast.error('Failed to update streak');
+        }
+      }
+    };
+
+    updateUserStreakCount();
+  }, [context?.user?.fid, isFirebaseInitialized, userStreak]);
+
+  // Update the background music effect
+  useEffect(() => {
+    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+    setAudioPlayer(audio);
+
+    // Don't try to play immediately, wait for user interaction
+    const handleFirstInteraction = () => {
+      if (isMusicEnabled && audio) {
+        audio.play().catch(error => {
+          console.error('Error playing audio:', error);
+        });
+      }
+      // Remove the event listeners after first interaction
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+
+    // Add event listeners for user interaction
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.src = '';
+      }
+      // Clean up event listeners
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, []); // Only run once on mount
+
+  // Separate effect to handle music toggle
+  useEffect(() => {
+    if (audioPlayer) {
+      if (isMusicEnabled) {
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error('Error playing audio:', error);
+          });
+        }
+      } else {
+        audioPlayer.pause();
+      }
+    }
+  }, [isMusicEnabled, audioPlayer]);
+
   // Add this effect to load favorites when component mounts
   useEffect(() => {
     const loadFavorites = async () => {
@@ -449,11 +717,337 @@ export default function Demo({ title = "Fun Quotes" }) {
     loadFavorites();
   }, [context?.user?.fid, isFirebaseInitialized]);
 
+  // Update the GIF toggle handler
+  const handleGifToggle = async () => {
+    const newState = !gifEnabled;
+    setGifEnabled(newState);
+    if (context?.user?.fid) {
+      try {
+        await saveGifPreference(context.user.fid, newState);
+      } catch (error) {
+        console.error('Error saving GIF preference:', error);
+      }
+    }
+  };
+
+  // Add effect to load GIF preference
+  useEffect(() => {
+    const loadGifPreference = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const preference = await getGifPreference(context.user.fid);
+          setGifEnabled(preference);
+        } catch (error) {
+          console.error('Error loading GIF preference:', error);
+        }
+      }
+    };
+
+    loadGifPreference();
+  }, [context?.user?.fid, isFirebaseInitialized]);
+
+  // Add effect to load theme preference
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      if (context?.user?.fid && isFirebaseInitialized) {
+        try {
+          const savedTheme = await getThemePreference(context.user.fid);
+          if (savedTheme) {
+            setBgImage(savedTheme);
+          }
+        } catch (error) {
+          console.error('Error loading theme preference:', error);
+        }
+      }
+    };
+
+    loadThemePreference();
+  }, [context?.user?.fid, isFirebaseInitialized]);
+
+  // Add helper function for double tap/click
+  const handleQuoteDoubleTap = () => {
+    const quoteItem: QuoteHistoryItem = {
+      text: quote,
+      style: 'default',
+      gifUrl,
+      timestamp: new Date(),
+      bgColor
+    };
+    toggleFavorite(quoteItem);
+    setShowHeartAnimation(true);
+    setTimeout(() => setShowHeartAnimation(false), 1000);
+  };
+
+  // Add these functions inside the Demo component
+  const generateQuoteImage = async (quote: string, bgImage: string, userContext?: FrameContext): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Could not get canvas context');
+        
+        // Ensure ctx is treated as CanvasRenderingContext2D
+        const context = ctx as CanvasRenderingContext2D;
+
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 400;
+
+        // Handle gradient backgrounds
+        if (bgImage?.includes('gradient')) {
+          let gradient;
+          switch (bgImage) {
+            case 'gradient-pink':
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(192, 132, 252)');
+              gradient.addColorStop(0.5, 'rgb(244, 114, 182)');
+              gradient.addColorStop(1, 'rgb(239, 68, 68)');
+              break;
+            case 'gradient-black':
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(17, 24, 39)');
+              gradient.addColorStop(0.5, 'rgb(55, 65, 81)');
+              gradient.addColorStop(1, 'rgb(31, 41, 55)');
+              break;
+            case 'gradient-yellow':
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(251, 191, 36)');
+              gradient.addColorStop(0.5, 'rgb(249, 115, 22)');
+              gradient.addColorStop(1, 'rgb(239, 68, 68)');
+              break;
+            case 'gradient-green':
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(52, 211, 153)');
+              gradient.addColorStop(0.5, 'rgb(16, 185, 129)');
+              gradient.addColorStop(1, 'rgb(20, 184, 166)');
+              break;
+            case 'gradient-purple':
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, '#472A91');
+              gradient.addColorStop(0.5, 'rgb(147, 51, 234)');
+              gradient.addColorStop(1, 'rgb(107, 33, 168)');
+              break;
+            default:
+              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, '#9b5de5');
+              gradient.addColorStop(0.5, '#f15bb5');
+              gradient.addColorStop(1, '#ff6b6b');
+          }
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (bgImage === 'none') {
+          // Create default gradient background
+          const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+          gradient.addColorStop(0, '#9b5de5');
+          gradient.addColorStop(0.5, '#f15bb5');
+          gradient.addColorStop(1, '#ff6b6b');
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          // Handle image backgrounds
+          const img = document.createElement('img');
+          img.crossOrigin = 'anonymous';
+          img.src = bgImage;
+          img.onload = () => {
+            // Calculate dimensions to cover the entire canvas while maintaining aspect ratio
+            const imgAspectRatio = img.width / img.height;
+            const canvasAspectRatio = canvas.width / canvas.height;
+            let drawWidth = canvas.width;
+            let drawHeight = canvas.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (imgAspectRatio > canvasAspectRatio) {
+              drawHeight = canvas.height;
+              drawWidth = drawHeight * imgAspectRatio;
+              offsetX = (canvas.width - drawWidth) / 2;
+            } else {
+              drawWidth = canvas.width;
+              drawHeight = drawWidth / imgAspectRatio;
+              offsetY = (canvas.height - drawHeight) / 2;
+            }
+
+            // Fill background with black
+            context.fillStyle = '#000000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background image centered
+            context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            
+            // Add semi-transparent overlay
+            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Continue with text and profile rendering
+            addTextAndProfile();
+          };
+          return; // Return early as we'll resolve in the addTextAndProfile function
+        }
+
+        // If we didn't return early (for image backgrounds), add text and profile immediately
+        addTextAndProfile();
+
+        function addTextAndProfile() {
+          if (!context) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          
+          // Add quote text
+          context.fillStyle = 'white';
+          context.textAlign = 'center';
+          context.font = 'bold 32px Inter, sans-serif';
+          
+          // Word wrap the text
+          const words = quote.split(' ');
+          const lines = [];
+          let currentLine = '';
+          const maxWidth = canvas.width - 100;
+
+          words.forEach(word => {
+            const testLine = currentLine + word + ' ';
+            const metrics = context.measureText(testLine);
+            if (metrics.width > maxWidth) {
+              lines.push(currentLine);
+              currentLine = word + ' ';
+            } else {
+              currentLine = testLine;
+            }
+          });
+          lines.push(currentLine);
+
+          // Draw the wrapped text
+          const lineHeight = 40;
+          const totalHeight = lines.length * lineHeight;
+          const startY = (canvas.height - totalHeight) / 2 - 20;
+
+          lines.forEach((line, index) => {
+            context.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
+          });
+
+          // Create profile image element
+          const profileImg = document.createElement('img');
+          profileImg.crossOrigin = 'anonymous';
+          profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
+
+          profileImg.onload = () => {
+            // Draw profile section
+            const profileSize = 40;
+            const profileY = canvas.height - 70;
+            const username = `@${userContext?.user?.username || 'user'}`;
+            
+            context.font = '20px Inter, sans-serif';
+            const textMetrics = context.measureText(username);
+            const totalWidth = profileSize + 15 + textMetrics.width;
+            const startX = (canvas.width - totalWidth) / 2;
+            const profileX = startX;
+            const usernameX = startX + profileSize + 15;
+
+            // Draw circular profile image
+            context.save();
+            context.beginPath();
+            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
+            context.closePath();
+            context.clip();
+
+            context.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
+            context.restore();
+
+            // Draw white border around profile image
+            context.strokeStyle = 'white';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
+            context.stroke();
+
+            // Add username
+            context.fillStyle = 'white';
+            context.textAlign = 'left';
+            context.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
+
+            resolve(canvas.toDataURL('image/png'));
+          };
+
+          // Handle profile image load error
+          profileImg.onerror = () => {
+            profileImg.src = "/Profile_Image.jpg";
+          };
+        }
+
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  const uploadImage = async (imageData: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: imageData }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      if (!data.url) {
+        throw new Error('No URL in response');
+      }
+
+      return data.url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
+  const renderBackground = () => {
+    if (bgImage.includes('TheMrSazon') || bgImage.includes('Background_Water')) {
+      return (
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0" style={{ 
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'blur(2px)',
+            transform: 'scale(1.1)'
+          }} />
+        </div>
+      );
+    }
+    
+    // Handle gradient backgrounds
+    if (bgImage.includes('gradient')) {
+      return (
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute inset-0" 
+            style={{ 
+              backgroundImage: bgImage,
+              opacity: 0.9  // Adjust opacity as needed
+            }} 
+          />
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // 10. Main Render
   return (
     <div className="relative min-h-screen">
+      <style>{customScrollbarStyles}</style>
+      <Toaster position="top-center" richColors />
       {/* Fixed Navigation */}
-      <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-10 shadow-lg">
+      <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             {/* Left side - Logo */}
@@ -491,7 +1085,17 @@ export default function Demo({ title = "Fun Quotes" }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   {context?.user && (
-                    <div className="px-2 py-1.5 text-sm">
+                    <div 
+                      className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={() => {
+                        setShowProfile(true);
+                        // Close the dropdown menu
+                        const dropdownTrigger = document.querySelector('[data-state="open"]');
+                        if (dropdownTrigger instanceof HTMLElement) {
+                          dropdownTrigger.click();
+                        }
+                      }}
+                    >
                       <div className="font-medium">{context.user.displayName}</div>
                       <div className="text-xs text-muted-foreground">@{context.user.username}</div>
                     </div>
@@ -515,6 +1119,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <History className="w-4 h-4" />
                     <span>History</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowThemeMenu(true)}
+                  >
+                    <Palette className="w-4 h-4" />
+                    <span>Theme</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowSettings(true)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -523,63 +1141,148 @@ export default function Demo({ title = "Fun Quotes" }) {
       </nav>
 
       {/* Main Content - Centered */}
-      <main className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4 pt-24">
-        {/* Card Component */}
-        <Card className="w-full max-w-sm overflow-hidden shadow-2xl">
-          <CardHeader className="bg-white">
-            <CardTitle className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-              Fun Quote Generator
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="p-4">
-            {/* GIF Display */}
+      <main 
+        className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
+          bgImage?.includes('gradient') ? '' : ''
+        }`}
+        style={bgImage?.includes('gradient') ? {
+          backgroundImage: bgImage === 'gradient-pink' ? 'linear-gradient(to bottom right, rgb(192, 132, 252), rgb(244, 114, 182), rgb(239, 68, 68))' :
+                          bgImage === 'gradient-black' ? 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81), rgb(31, 41, 55))' :
+                          bgImage === 'gradient-yellow' ? 'linear-gradient(to bottom right, rgb(251, 191, 36), rgb(249, 115, 22), rgb(239, 68, 68))' :
+                          bgImage === 'gradient-green' ? 'linear-gradient(to bottom right, rgb(52, 211, 153), rgb(16, 185, 129), rgb(20, 184, 166))' :
+                          bgImage === 'gradient-purple' ? 'linear-gradient(to bottom right, #472A91, rgb(147, 51, 234), rgb(107, 33, 168))' :
+                          'none'
+        } : bgImage !== 'none' && !bgImage?.includes('TheMrSazon') ? {
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        } : {}}
+      >
+        {bgImage.includes('TheMrSazon') && (
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0" style={{ 
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'blur(2px)',
+              transform: 'scale(1.1)'  // Prevent blur edges from showing
+            }} />
+          </div>
+        )}
+        <div className="relative z-10 w-full flex flex-col items-center">
+          <div className="flex flex-col items-center gap-4 mb-8 w-full max-w-[95%] sm:max-w-sm">
             <AnimatePresence mode="wait">
-              {gifUrl && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+              {isInitialState && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
-                  onClick={handleRegenerateGif}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-2xl text-white font-medium text-center"
                 >
-                  <div className="relative w-full h-[200px]">
-                    <Image
-                      src={gifUrl}
-                      alt="Quote-related GIF"
-                      fill
-                      unoptimized
-                      sizes="(max-width: 600px) 100vw, 50vw"
-                      className={`object-cover rounded-lg transition-opacity duration-200 ${
-                        isLoading ? 'opacity-50' : 'opacity-100'
-                      }`}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                      <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        Click to regenerate GIF
-                      </span>
-                    </div>
-                  </div>
+                  Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Quote Display */}
+            {/* Streak Counter */}
             <AnimatePresence mode="wait">
-              <motion.div 
-                key={quote}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                transition={{ duration: 0.5 }}
-                className="rounded-lg p-6 mb-6 shadow-inner min-h-[150px] flex items-center justify-center relative"
-                style={{ backgroundColor: bgColor }}
-              >
-                {quote && (
-                  <motion.button
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-4 right-4"
+              {isInitialState && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-center"
+                >
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                    <span className="text-xl">🔥</span>
+                    <span className="text-white font-medium">{userStreak} Day Streak</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Card Component */}
+          <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+            <CardContent className="p-6 sm:p-4">
+              {/* GIF Display */}
+              <AnimatePresence mode="wait">
+                {gifUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                    onClick={handleRegenerateGif}
+                  >
+                    <div className="relative w-full h-[250px] sm:h-[200px]">
+                      <Image
+                        src={gifUrl}
+                        alt="Quote-related GIF"
+                        fill
+                        unoptimized
+                        sizes="(max-width: 600px) 100vw, 50vw"
+                        className={`object-cover rounded-lg transition-opacity duration-200 ${
+                          isLoading ? 'opacity-50' : 'opacity-100'
+                        }`}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          Click to regenerate GIF
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Quote Display */}
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={quote}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -50 }}
+                  transition={{ duration: 0.5 }}
+                  className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center relative"
+                  onDoubleClick={handleQuoteDoubleTap}
+                  onTouchStart={(e) => {
+                    const now = Date.now();
+                    if (now - lastTapTime < 300) {  // 300ms between taps
+                      handleQuoteDoubleTap();
+                    }
+                    setLastTapTime(now);
+                  }}
+                >
+                  <p className="text-center text-white text-2xl font-medium select-none">
+                    {quote || ""}
+                  </p>
+                  <AnimatePresence>
+                    {showHeartAnimation && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1.5, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      >
+                        <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Action Buttons */}
+              {quote && (
+                <motion.div 
+                  className="mb-4 flex justify-between items-center"
+                >
+                  <Heart 
                     onClick={() => {
                       const quoteItem: QuoteHistoryItem = {
                         text: quote,
@@ -589,111 +1292,79 @@ export default function Demo({ title = "Fun Quotes" }) {
                         bgColor
                       };
                       toggleFavorite(quoteItem);
+                      // Show heart animation
+                      setShowHeartAnimation(true);
+                      setTimeout(() => setShowHeartAnimation(false), 1000);
                     }}
-                  >
-                    <Heart 
-                      className={`w-6 h-6 transition-colors ${
-                        favorites.some(fav => fav.text === quote)
-                          ? 'fill-pink-500 text-pink-500' 
-                          : 'text-white hover:text-pink-200'
-                      }`}
-                    />
-                  </motion.button>
-                )}
-                <p className="text-center text-white text-lg font-medium">
-                  {quote || "Click the magic button to generate an inspiring quote!"}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Input Field */}
-            <div className="mb-6">
-              <Input
-                type="text"
-                placeholder="Enter a topic/word for your quote"
-                value={userPrompt}
-                onChange={(e) => setUserPrompt(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full text-lg"
-              />
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex flex-col gap-4">
-            <motion.div className="w-full"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button 
-                onClick={handleGenerateQuote} 
-                disabled={isLoading}
-                className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-              >
-                {isLoading ? (
-                  <span className="flex items-center">
-                    Generating
-                    <motion.span
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      className="ml-2"
-                    >
-                      ...
-                    </motion.span>
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    Generate Magic Quote <Sparkles className="ml-2" size={20} />
-                  </span>
-                )}
-              </Button>
-            </motion.div>
-
-            {/* Cast Button */}
-            {quote && (
-              <motion.div className="w-full"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  onClick={() => {
-                    setIsCasting(true);
-                    try {
-                      const shareText = `"${quote}" - Created by @kite /thepod`;
-                      const shareUrl = 'https://qg-frames.vercel.app';
-                      const url = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}${gifUrl ? `&embeds[]=${encodeURIComponent(gifUrl)}` : ''}`;
-                      
-                      logAnalyticsEvent('cast_created', {
-                        quote: quote
-                      });
-                      
-                      sdk.actions.openUrl(url);
-                    } finally {
-                      setIsCasting(false);
-                    }
-                  }}
-                  className="w-full text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-                >
-                  {isCasting ? (
-                    <span className="flex items-center">
-                      Casting
+                    className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                      favorites.some(fav => fav.text === quote)
+                        ? 'fill-pink-500 text-pink-500' 
+                        : 'text-white hover:text-pink-200'
+                    }`}
+                  />
+                  <div className="flex gap-4">
+                    {isCasting ? (
                       <motion.span
                         animate={{ opacity: [0, 1, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                        className="ml-2"
+                        className="text-white"
                       >
-                        ...
+                        •••
                       </motion.span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      Cast Away <Share2 className="ml-2" size={20} />
-                    </span>
-                  )}
-                </Button>
-              </motion.div>
-            )}
-          </CardFooter>
-        </Card>
+                    ) : (
+                      <Share2 
+                        onClick={async () => {
+                          setShowPreview(true);
+                          if (!gifEnabled) {
+                            setIsGeneratingPreview(true);
+                            try {
+                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              setPreviewImage(dataUrl);
+                            } catch (error) {
+                              console.error('Error generating preview:', error);
+                            } finally {
+                              setIsGeneratingPreview(false);
+                            }
+                          }
+                        }}
+                        className="h-5 w-5 text-white hover:scale-125 transition-transform cursor-pointer"
+                      />
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Input Field */}
+              <div className="mb-6 relative">
+                <Input
+                  type="text"
+                  placeholder="Enter a topic/word for your quote"
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
+                />
+                <div 
+                  onClick={handleGenerateQuote}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+                >
+                  <Image
+                    src="/Submit_Icon.png"
+                    alt="Submit"
+                    width={20}
+                    height={20}
+                    className="invert brightness-0"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-col gap-4">
+              {/* Remove the Cast Away button section entirely */}
+            </CardFooter>
+          </Card>
+        </div>
       </main>
 
       {/* History Modal */}
@@ -713,12 +1384,12 @@ export default function Demo({ title = "Fun Quotes" }) {
               <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Quote History
               </h2>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {quoteHistory.length > 0 && (
                   <Button
                     onClick={handleClearHistory}
                     disabled={isClearing}
-                    className="text-purple-600 hover:text-red-500 transition-colors text-xs min-w-[32px] h-5 px-1 flex items-center justify-center"
+                    className="text-purple-600 hover:text-red-500 transition-colors text-xs px-2 h-7"
                   >
                     {isClearing ? (
                       <motion.span
@@ -736,7 +1407,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </Button>
                 )}
                 <Button
-                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
+                  className="rounded-full h-7 w-7 p-0"
                   onClick={() => setShowHistory(false)}
                 >
                   <X className="h-4 w-4 text-black" />
@@ -770,102 +1441,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       onClick={() => handleReuseQuote(item)}
                     >
                       <div 
-                        className="p-4 cursor-pointer"
-                        style={{ backgroundColor: item.bgColor }}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="text-white font-medium flex-1">{item.text}</p>
-                          <span className="text-xs text-white/70 ml-2">
-                            {formatTimestamp(item.timestamp)}
-                          </span>
-                        </div>
-                        
-                        {item.gifUrl && (
-                          <div className="relative h-32 mt-3 rounded-md overflow-hidden">
-                            <Image
-                              src={item.gifUrl}
-                              alt="Quote GIF"
-                              fill
-                              className="object-cover transition-transform group-hover:scale-105"
-                              unoptimized
-                            />
-                          </div>
-                        )}
-                        
-                        <div className="mt-3 flex items-center gap-2 text-white/80">
-                          <span className="text-xs">Click to reuse</span>
-                          <motion.div
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            →
-                          </motion.div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Favorites Modal */}
-      {showFavorites && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={() => setShowFavorites(false)}
-        >
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Favorite Quotes
-              </h2>
-              <div className="flex items-center gap-1">
-                <Button
-                  className="rounded-full h-7 w-3 p-0 flex items-center justify-center"
-                  onClick={() => setShowFavorites(false)}
-                >
-                  <X className="h-4 w-4 text-black" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-              {favorites.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center text-gray-500 py-12"
-                >
-                  <div className="mb-4">💖</div>
-                  <p className="font-medium">No favorites yet</p>
-                  <p className="text-sm mt-2 text-gray-400">
-                    Your favorite quotes will appear here
-                  </p>
-                </motion.div>
-              ) : (
-                <AnimatePresence mode="popLayout">
-                  {favorites.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                      onClick={() => handleReuseQuote(item)}
-                    >
-                      <div 
-                        className="p-4 cursor-pointer"
-                        style={{ backgroundColor: item.bgColor }}
+                        className="p-4 cursor-pointer bg-gray-900 hover:bg-gray-800 transition-colors duration-200"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-white font-medium flex-1">{item.text}</p>
@@ -915,6 +1491,623 @@ export default function Demo({ title = "Fun Quotes" }) {
           </motion.div>
         </div>
       )}
+
+      {/* Favorites Modal */}
+      {showFavorites && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowFavorites(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Favorite Quotes
+              </h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => setShowFavorites(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
+              {favorites.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center text-gray-500 py-12"
+                >
+                  <div className="mb-4">💖</div>
+                  <p className="font-medium">No favorites yet</p>
+                  <p className="text-sm mt-2 text-gray-400">
+                    Your favorite quotes will appear here
+                  </p>
+                </motion.div>
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  {favorites.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
+                      className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
+                      onClick={() => handleReuseQuote(item)}
+                    >
+                      <div 
+                        className="p-4 cursor-pointer bg-gray-900 hover:bg-gray-800 transition-colors duration-200"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="text-white font-medium flex-1">{item.text}</p>
+                          <span className="text-xs text-white/70 ml-2">
+                            {formatTimestamp(item.timestamp)}
+                          </span>
+                        </div>
+                        
+                        {item.gifUrl && (
+                          <div className="relative h-32 mt-3 rounded-md overflow-hidden">
+                            <Image
+                              src={item.gifUrl}
+                              alt="Quote GIF"
+                              fill
+                              className="object-cover transition-transform group-hover:scale-105"
+                              unoptimized
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-white/80">
+                            <span className="text-xs">Click to reuse</span>
+                            <motion.div
+                              animate={{ x: [0, 5, 0] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                            >
+                              →
+                            </motion.div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(item);
+                            }}
+                            className="text-white/80 hover:text-pink-500 transition-colors"
+                          >
+                            <Heart className="w-5 h-5 fill-current" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Theme Menu Modal */}
+      {showThemeMenu && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowThemeMenu(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Choose Background
+              </h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => setShowThemeMenu(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="overflow-y-auto max-h-[330px] pr-2 custom-scrollbar">
+              <div className="grid grid-cols-3 gap-4 pb-4">
+                {[
+                  {
+                    id: 'nature1',
+                    name: 'Nature 1',
+                    path: '/Background_Nature_1_pexels-asumaani-16545605.jpg'
+                  },
+                  {
+                    id: 'urban',
+                    name: 'Urban',
+                    path: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg'
+                  },
+                  {
+                    id: 'nature2',
+                    name: 'Nature 2',
+                    path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
+                  },
+                  {
+                    id: 'flower',
+                    name: 'Flower',
+                    path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
+                  },
+                  {
+                    id: 'opensea',
+                    name: 'Open Sea',
+                    path: '/Background_Water_pexels-jeremy-bishop-1260133-2397652.jpg'
+                  },
+                  {
+                    id: 'sazon',
+                    name: 'TheMrSazon',
+                    path: '/Background_TheMrSazon_1.png'
+                  },
+                  {
+                    id: 'gradient-pink',
+                    name: 'Pink Gradient',
+                    path: 'gradient-pink',
+                    isGradient: true,
+                    gradientClass: 'from-purple-400 via-pink-500 to-red-500'
+                  },
+                  {
+                    id: 'gradient-black',
+                    name: 'Black Gradient',
+                    path: 'gradient-black',
+                    isGradient: true,
+                    gradientClass: 'from-gray-900 via-gray-700 to-gray-800'
+                  },
+                  {
+                    id: 'gradient-yellow',
+                    name: 'Yellow Gradient',
+                    path: 'gradient-yellow',
+                    isGradient: true,
+                    gradientClass: 'from-yellow-400 via-orange-500 to-red-500'
+                  },
+                  {
+                    id: 'gradient-green',
+                    name: 'Green Gradient',
+                    path: 'gradient-green',
+                    isGradient: true,
+                    gradientClass: 'from-green-400 via-emerald-500 to-teal-500'
+                  },
+                  {
+                    id: 'gradient-purple',
+                    name: 'Purple Gradient',
+                    path: 'gradient-purple',
+                    isGradient: true,
+                    gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
+                  }
+                ].map((bg) => (
+                  <div
+                    key={bg.id}
+                    onClick={async () => {
+                      const newTheme = bg.isGradient ? bg.path : bg.path;
+                      setBgImage(newTheme);
+                      if (context?.user?.fid) {
+                        try {
+                          await saveThemePreference(context.user.fid, newTheme);
+                          toast.success('Theme preference saved');
+                        } catch (error) {
+                          console.error('Error saving theme preference:', error);
+                        }
+                      }
+                    }}
+                    className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
+                      bgImage === bg.path ? 'ring-4 ring-purple-600 ring-offset-2' : ''
+                    }`}
+                  >
+                    {bg.isGradient ? (
+                      <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
+                    ) : (
+                      <Image
+                        src={bg.path}
+                        alt={bg.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        unoptimized
+                      />
+                    )}
+                    {bgImage === bg.path && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <Check className="w-8 h-8 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center text-sm">
+                      {bg.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowSettings(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Settings
+              </h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => setShowSettings(false)}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              {/* GIF Toggle Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">GIF Generation</h3>
+                <motion.div
+                  animate={{ x: gifEnabled ? 0 : -5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Button
+                    onClick={() => {
+                      handleGifToggle();
+                      toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
+                    }}
+                    className={`${
+                      gifEnabled 
+                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                    } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                  >
+                    {gifEnabled ? 'On' : 'Off'}
+                  </Button>
+                </motion.div>
+              </div>
+
+              <div className="h-px bg-gray-200" />
+
+              {/* Clear History Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Clear History</h3>
+                <Button
+                  onClick={() => {
+                    handleClearHistory();
+                    toast.success('History cleared successfully');
+                  }}
+                  disabled={isClearing}
+                  className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
+                >
+                  Clear
+                </Button>
+              </div>
+
+              {/* Clear Favorites Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Clear Favorites</h3>
+                <Button
+                  onClick={() => {
+                    if (context?.user?.fid) {
+                      setFavorites([]);
+                      toast.success('Favorites cleared successfully');
+                    }
+                  }}
+                  className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
+                >
+                  Clear
+                </Button>
+              </div>
+
+              {/* Music Toggle Option */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Background Music</h3>
+                <motion.div
+                  animate={{ x: isMusicEnabled ? 0 : -5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Button
+                    onClick={() => {
+                      setIsMusicEnabled(!isMusicEnabled);
+                      toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
+                    }}
+                    className={`${
+                      isMusicEnabled 
+                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                    } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                  >
+                    {isMusicEnabled ? 'On' : 'Off'}
+                  </Button>
+                </motion.div>
+              </div>
+
+              {/* Version Info */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Version</h3>
+                <span className="text-sm font-medium text-gray-700 w-20 text-right">2.0.0</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Share Preview Modal */}
+      {showPreview && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => {
+            setShowPreview(false);
+            setPreviewImage(null);
+          }}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Preview Share
+              </h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="rounded-full h-7 w-7 p-0"
+                  onClick={() => {
+                    setShowPreview(false);
+                    setPreviewImage(null);
+                  }}
+                >
+                  <X className="h-4 w-4 text-black" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Preview Area */}
+              <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
+                {isGeneratingPreview ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="text-purple-600 text-sm"
+                    >
+                      Generating preview...
+                    </motion.div>
+                  </div>
+                ) : previewImage ? (
+                  <Image
+                    src={previewImage}
+                    alt="Share Preview"
+                    width={800}
+                    height={400}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                ) : gifEnabled && gifUrl ? (
+                  <Image
+                    src={gifUrl || ''}
+                    alt="GIF Preview"
+                    width={800}
+                    height={400}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                ) : null}
+              </div>
+
+              {/* Share Button */}
+              <div className="flex justify-end">
+                <Button
+                  onClick={async () => {
+                    setIsCasting(true);
+                    try {
+                      const shareText = `"${quote}" - Created by @kite /thepod`;
+                      const shareUrl = 'https://qg-frames.vercel.app';
+                      let mediaUrl = '';
+
+                      if (gifEnabled && gifUrl) {
+                        mediaUrl = gifUrl;
+                      } else if (quote) {
+                        try {
+                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                          const uploadedUrl = await uploadImage(dataUrl);
+                          mediaUrl = encodeURIComponent(uploadedUrl);
+                        } catch (error) {
+                          console.error('Error generating/uploading image:', error);
+                        }
+                      }
+
+                      const params = new URLSearchParams();
+                      params.append('text', shareText);
+                      params.append('embeds[]', shareUrl);
+                      if (mediaUrl) {
+                        params.append('embeds[]', mediaUrl);
+                      }
+                      
+                      const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                      
+                      logAnalyticsEvent('cast_created', {
+                        quote: quote,
+                        hasMedia: !!mediaUrl,
+                        mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
+                      });
+                      
+                      sdk.actions.openUrl(url);
+                      setShowPreview(false);
+                      setPreviewImage(null);
+                    } catch (error) {
+                      console.error('Error sharing:', error);
+                    } finally {
+                      setIsCasting(false);
+                    }
+                  }}
+                  disabled={false}
+                  className="text-purple-600 hover:text-purple-700 bg-transparent px-8"
+                >
+                  {isCasting ? (
+                    <motion.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      •••
+                    </motion.span>
+                  ) : 'Share'}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfile && (
+        <ProfileModal 
+          onClose={() => setShowProfile(false)}
+          context={context}
+          favorites={favorites}
+          quoteHistory={quoteHistory}
+          sessionStartTime={sessionStartTime}
+          userStreak={userStreak}
+        />
+      )}
     </div>
   );
 }
+
+const formatDate = (timestamp: number) => {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+// Update the ProfileModal interface
+interface ProfileModalProps {
+  onClose: () => void;
+  context: FrameContext | undefined;
+  favorites: FavoriteQuote[];
+  quoteHistory: QuoteHistoryItem[];
+  sessionStartTime: number;
+  userStreak: number;
+}
+
+// Update the ProfileModal component
+const ProfileModal: React.FC<ProfileModalProps> = ({ 
+  onClose, 
+  context, 
+  favorites, 
+  quoteHistory, 
+  sessionStartTime,
+  userStreak
+}) => (
+  <div 
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={onClose}
+  >
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Profile
+        </h2>
+        <Button
+          className="rounded-full h-7 w-7 p-0"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4 text-black" />
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        {/* Profile Image and Basic Info */}
+        <div 
+          className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors"
+          onClick={() => {
+            if (context?.user?.username) {
+              sdk.actions.openUrl(`https://warpcast.com/${context.user.username}`);
+            }
+          }}
+        >
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-purple-600">
+            <Image
+              src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+              alt="Profile"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {context?.user?.displayName || "User"}
+              <span className="text-sm text-gray-500">↗</span>
+            </h3>
+            <p className="text-gray-600">@{context?.user?.username}</p>
+          </div>
+        </div>
+
+        {/* User Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Favorites</p>
+            <p className="text-2xl font-semibold text-gray-900">{favorites.length}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Daily Streak</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl font-semibold text-gray-900">{userStreak}</p>
+              <span className="text-sm text-gray-600">days</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Account Info</h4>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              FID: {context?.user?.fid}
+            </p>
+            <p className="text-sm text-gray-600">
+              Joined: {formatDate(sessionStartTime)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);

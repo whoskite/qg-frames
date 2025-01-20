@@ -1,10 +1,21 @@
-import { getFirestore, type Firestore, Timestamp } from 'firebase/firestore';
-import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  setDoc, 
+  deleteDoc,
+  addDoc,
+  type Firestore,
+  Timestamp,
+  serverTimestamp,
+  updateDoc
+} from 'firebase/firestore';
+import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 
 // Helper function to ensure we have a valid Firestore instance
 function getDb(): Firestore {
-  const db = getFirestore();
   if (!db) throw new Error('Firestore not initialized');
   return db;
 }
@@ -145,4 +156,150 @@ export async function clearUserHistory(userId: number) {
     console.error('Error clearing history:', error);
     throw error;
   }
-} 
+}
+
+// Add these new functions for GIF preferences
+export const saveGifPreference = async (fid: number, enabled: boolean) => {
+  try {
+    const database = getDb();
+    const userRef = doc(database, 'users', fid.toString());
+    await setDoc(userRef, { gifEnabled: enabled }, { merge: true });
+  } catch (error) {
+    console.error('Error saving GIF preference:', error);
+    throw error;
+  }
+};
+
+export const getGifPreference = async (fid: number): Promise<boolean> => {
+  try {
+    const database = getDb();
+    const userRef = doc(database, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    
+    if (userDoc.exists()) {
+      return userDoc.data()?.gifEnabled ?? true; // Default to true if not set
+    }
+    
+    return true; // Default to true for new users
+  } catch (error) {
+    console.error('Error getting GIF preference:', error);
+    return true; // Default to true on error
+  }
+};
+
+// Save theme preference
+export const saveThemePreference = async (fid: number, theme: string) => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return false;
+  }
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    await setDoc(userRef, {
+      themePreference: theme,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error saving theme preference:', error);
+    return false;
+  }
+};
+
+// Get theme preference
+export const getThemePreference = async (fid: number): Promise<string | null> => {
+  if (!db) {
+    console.error('Firestore not initialized');
+    return null;
+  }
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data()?.themePreference || null : null;
+  } catch (error) {
+    console.error('Error getting theme preference:', error);
+    return null;
+  }
+};
+
+// Add these interfaces
+export interface UserStreak {
+  current_streak: number;
+  longest_streak: number;
+  last_login_timestamp: { toMillis: () => number } | null;
+  next_eligible_login: Date | null;
+  streak_deadline: Date | null;
+}
+
+export interface StreakUpdate {
+  current_streak: number;
+  last_login_timestamp: Date;
+  next_eligible_login: Date;
+  streak_deadline: Date;
+}
+
+// Update the getUserStreak function
+export const getUserStreak = async (fid: number): Promise<UserStreak> => {
+  if (!db) {
+    throw new Error('Firestore not initialized');
+  }
+
+  try {
+    const userRef = doc(db as Firestore, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      return {
+        current_streak: 0,
+        longest_streak: 0,
+        last_login_timestamp: null,
+        next_eligible_login: null,
+        streak_deadline: null
+      };
+    }
+    
+    const data = userDoc.data();
+    return {
+      current_streak: data.current_streak || 0,
+      longest_streak: data.longest_streak || 0,
+      last_login_timestamp: data.last_login_timestamp || null,
+      next_eligible_login: data.next_eligible_login || null,
+      streak_deadline: data.streak_deadline || null
+    };
+  } catch (error) {
+    console.error('Error getting user streak:', error);
+    throw error;
+  }
+};
+
+// Update the updateUserStreak function
+export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise<void> => {
+  if (!db) {
+    throw new Error('Firestore not initialized');
+  }
+
+  try {
+    const userRef = doc(db as Firestore, 'users', fid.toString());
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      // Create new user document
+      await setDoc(userRef, {
+        ...data,
+        longest_streak: data.current_streak,
+        created_at: serverTimestamp()
+      });
+    } else {
+      // Update existing user document
+      const currentData = userDoc.data();
+      await updateDoc(userRef, {
+        ...data,
+        longest_streak: Math.max(data.current_streak, currentData.longest_streak || 0),
+        updated_at: serverTimestamp()
+      });
+    }
+  } catch (error) {
+    console.error('Error updating user streak:', error);
+    throw error;
+  }
+}; 
