@@ -2169,7 +2169,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                 {/* Reset Onboarding Option */}
                 <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
                   <div>
-                    <h3 className="font-semibold text-gray-800">Reset Onboarding</h3>
+                    <h3 className="font-semibold text-gray-800">Reset Preference</h3>
                     <p className="text-xs text-gray-500">For testing purposes</p>
                   </div>
                   <Button
