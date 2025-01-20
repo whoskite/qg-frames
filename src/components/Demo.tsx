@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -216,6 +216,170 @@ const customScrollbarStyles = `
     }
   }
 `;
+
+// Add after the calculateStreakStatus function and before the Demo component
+
+// Add after generateRandomPrompt function
+const analyzeUserPreferences = (favorites: FavoriteQuote[]) => {
+  if (!favorites.length) return null;
+
+  // Initialize preference tracking
+  const preferences = {
+    averageLength: 0,
+    commonWords: new Map<string, number>(),
+    themes: new Map<string, number>(),
+    emotionalTone: {
+      positive: 0,
+      negative: 0,
+      neutral: 0
+    },
+    complexity: {
+      simple: 0,
+      moderate: 0,
+      complex: 0
+    }
+  };
+
+  // Emotional words for sentiment analysis
+  const emotionalWords = {
+    positive: ['happy', 'joy', 'love', 'hope', 'inspire', 'success', 'beautiful', 'courage', 'dream', 'peace'],
+    negative: ['fear', 'doubt', 'struggle', 'pain', 'difficult', 'challenge', 'dark', 'lost', 'hard', 'fail'],
+    neutral: ['think', 'know', 'understand', 'see', 'find', 'way', 'time', 'life', 'world', 'mind']
+  };
+
+  // Process each favorite quote
+  favorites.forEach(favorite => {
+    const words = favorite.text.toLowerCase().split(/\s+/);
+    
+    // Track length
+    preferences.averageLength += words.length;
+
+    // Analyze words and themes
+    words.forEach(word => {
+      // Track word frequency
+      preferences.commonWords.set(word, (preferences.commonWords.get(word) || 0) + 1);
+
+      // Analyze emotional tone
+      if (emotionalWords.positive.includes(word)) preferences.emotionalTone.positive++;
+      else if (emotionalWords.negative.includes(word)) preferences.emotionalTone.negative++;
+      else preferences.emotionalTone.neutral++;
+
+      // Analyze complexity based on word length
+      if (word.length <= 4) preferences.complexity.simple++;
+      else if (word.length <= 7) preferences.complexity.moderate++;
+      else preferences.complexity.complex++;
+    });
+  });
+
+  // Calculate averages
+  preferences.averageLength /= favorites.length;
+
+  // Sort and get top themes/words
+  const sortedWords = Array.from(preferences.commonWords.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  // Determine dominant preferences
+  const dominantTone = Object.entries(preferences.emotionalTone)
+    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+
+  const dominantComplexity = Object.entries(preferences.complexity)
+    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+
+  return {
+    preferredLength: Math.round(preferences.averageLength),
+    favoriteWords: sortedWords.map(([word]) => word),
+    dominantTone,
+    dominantComplexity
+  };
+};
+
+// Modify the generateRandomPrompt function to use user preferences
+const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
+  const now = new Date();
+  const day = now.getDay();
+  const hour = now.getHours();
+  const month = now.getMonth();
+  
+  // Get user preferences
+  const userPreferences = analyzeUserPreferences(favorites);
+  
+  // Arrays of themes and modifiers
+  const themes = [
+    'life', 'success', 'happiness', 'wisdom', 'courage', 'peace',
+    'growth', 'creativity', 'friendship', 'love', 'adventure', 'mindfulness'
+  ];
+  
+  const toneModifiers = [
+    'inspiring', 'philosophical', 'humorous', 'profound',
+    'thought-provoking', 'uplifting', 'reflective', 'motivational'
+  ];
+  
+  const styleModifiers = [
+    'metaphorical', 'simple yet deep', 'poetic', 'direct',
+    'storytelling', 'paradoxical', 'zen-like', 'analytical'
+  ];
+
+  // Adjust based on user preferences if available
+  if (userPreferences) {
+    // Add user's favorite words to themes
+    themes.push(...userPreferences.favoriteWords.filter(word => word.length > 3));
+    
+    // Adjust tone based on user's preferred emotional tone
+    if (userPreferences.dominantTone === 'positive') {
+      toneModifiers.push('optimistic', 'joyful', 'enthusiastic');
+    } else if (userPreferences.dominantTone === 'negative') {
+      toneModifiers.push('contemplative', 'challenging', 'transformative');
+    }
+    
+    // Adjust style based on complexity preference
+    if (userPreferences.dominantComplexity === 'simple') {
+      styleModifiers.push('clear', 'concise', 'straightforward');
+    } else if (userPreferences.dominantComplexity === 'complex') {
+      styleModifiers.push('elaborate', 'intricate', 'sophisticated');
+    }
+  }
+
+  // Use day to select base theme with preference weighting
+  const themeIndex = Math.floor((day + month + (userPreferences?.favoriteWords.length || 0)) % themes.length);
+  const selectedTheme = themes[themeIndex];
+
+  // Use hour to influence tone with preference weighting
+  const toneIndex = Math.floor((hour + day + (userPreferences?.dominantTone === 'positive' ? 2 : 0)) % toneModifiers.length);
+  const selectedTone = toneModifiers[toneIndex];
+
+  // Use minutes to select style with complexity preference
+  const styleIndex = Math.floor((now.getMinutes() + hour + (userPreferences?.dominantComplexity === 'complex' ? 3 : 0)) % styleModifiers.length);
+  const selectedStyle = styleModifiers[styleIndex];
+
+  // Add time-based context
+  let timeContext = '';
+  if (hour >= 5 && hour < 12) {
+    timeContext = 'morning reflection';
+  } else if (hour >= 12 && hour < 17) {
+    timeContext = 'midday insight';
+  } else if (hour >= 17 && hour < 22) {
+    timeContext = 'evening contemplation';
+  } else {
+    timeContext = 'night wisdom';
+  }
+
+  // Add seasonal influence
+  const seasons = ['winter', 'spring', 'summer', 'fall'];
+  const currentSeason = seasons[Math.floor(month / 3)];
+
+  // Add length preference if available
+  const lengthPreference = userPreferences?.preferredLength 
+    ? `with approximately ${userPreferences.preferredLength} words` 
+    : '';
+
+  // Combine all factors into a unique prompt
+  return `Generate a ${selectedTone} quote about ${selectedTheme} with a ${selectedStyle} style, incorporating elements of ${timeContext} and the essence of ${currentSeason} ${lengthPreference}. ${
+    userPreferences?.favoriteWords.length 
+      ? `Consider incorporating themes like: ${userPreferences.favoriteWords.join(', ')}` 
+      : ''
+  }`;
+};
 
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
@@ -1394,26 +1558,50 @@ export default function Demo({ title = "Fun Quotes" }) {
                 <motion.div 
                   className="mb-4 flex justify-between items-center"
                 >
-                  <Heart 
-                    onClick={() => {
-                      const quoteItem: QuoteHistoryItem = {
-                        text: quote,
-                        style: 'default',
-                        gifUrl,
-                        timestamp: new Date(),
-                        bgColor
-                      };
-                      toggleFavorite(quoteItem);
-                      // Show heart animation
-                      setShowHeartAnimation(true);
-                      setTimeout(() => setShowHeartAnimation(false), 1000);
-                    }}
-                    className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                      favorites.some(fav => fav.text === quote)
-                        ? 'fill-pink-500 text-pink-500' 
-                        : 'text-white hover:text-pink-200'
-                    }`}
-                  />
+                  <div className="flex items-center gap-4">
+                    <Heart 
+                      onClick={() => {
+                        const quoteItem: QuoteHistoryItem = {
+                          text: quote,
+                          style: 'default',
+                          gifUrl,
+                          timestamp: new Date(),
+                          bgColor
+                        };
+                        toggleFavorite(quoteItem);
+                        // Show heart animation
+                        setShowHeartAnimation(true);
+                        setTimeout(() => setShowHeartAnimation(false), 1000);
+                      }}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        favorites.some(fav => fav.text === quote)
+                          ? 'fill-pink-500 text-pink-500' 
+                          : 'text-white hover:text-pink-200'
+                      }`}
+                    />
+                    <Shuffle
+                      onClick={async () => {
+                        setIsLoading(true);
+                        try {
+                          const randomPrompt = generateRandomPrompt(favorites);
+                          setUserPrompt(randomPrompt);
+                          await handleGenerateQuote();
+                          const message = favorites.length > 0 
+                            ? 'Generated a personalized quote based on your preferences!'
+                            : 'Generated a unique quote based on current time and season!';
+                          toast.success(message);
+                        } catch (error) {
+                          console.error('Error generating random quote:', error);
+                          toast.error('Failed to generate quote');
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        isLoading ? 'opacity-50' : 'text-white hover:text-blue-200'
+                      }`}
+                    />
+                  </div>
                   <div className="flex gap-4">
                     {isCasting ? (
                       <motion.span
