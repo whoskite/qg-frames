@@ -1,15 +1,14 @@
 import { 
   collection, 
   doc, 
-  getDocs, 
-  getDoc, 
+  getDocs,
+  getDoc,
   setDoc, 
   deleteDoc,
-  addDoc,
-  type Firestore,
+  updateDoc,
   Timestamp,
   serverTimestamp,
-  updateDoc
+  type Firestore 
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
@@ -22,114 +21,60 @@ function getDb(): Firestore {
 
 // Save quote to user's history
 export async function saveQuoteToHistory(userId: number, quote: QuoteHistoryItem) {
-  try {
-    const db = getDb();
-    const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
-    await addDoc(userHistoryRef, {
-      ...quote,
-      timestamp: new Date(),
-    });
-  } catch (error) {
-    console.error('Error saving quote:', error);
-    throw error;
-  }
+  const db = getDb();
+  const userHistoryRef = doc(db, 'users', userId.toString(), 'history', quote.id);
+  
+  const quoteData = {
+    ...quote,
+    timestamp: Timestamp.fromDate(quote.timestamp)
+  };
+
+  await setDoc(userHistoryRef, quoteData);
 }
 
 // Get user's quote history
-export async function getUserQuoteHistory(userId: number) {
-  try {
-    const db = getDb();
-    const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
-    const querySnapshot = await getDocs(userHistoryRef);
-    return querySnapshot.docs.map(doc => ({
-      ...doc.data(),
-      timestamp: doc.data().timestamp.toDate(),
-    })) as QuoteHistoryItem[];
-  } catch (error) {
-    console.error('Error getting history:', error);
-    throw error;
-  }
+export async function getUserQuoteHistory(userId: number): Promise<QuoteHistoryItem[]> {
+  const db = getDb();
+  const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
+  const historySnapshot = await getDocs(userHistoryRef);
+  
+  return historySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      timestamp: data.timestamp.toDate(),
+      id: doc.id
+    } as QuoteHistoryItem;
+  });
 }
 
 // Save favorite quote
 export async function saveFavoriteQuote(userId: number, quote: FavoriteQuote) {
-  try {
-    console.log('Starting saveFavoriteQuote with:', { userId, quote });
-    const db = getDb();
-    
-    // Ensure all required fields are present
-    if (!quote.id || !quote.text || !quote.timestamp) {
-      throw new Error('Missing required fields for favorite quote');
-    }
-    
-    const quoteData = {
-      id: quote.id,
-      text: quote.text,
-      style: quote.style || 'default',
-      gifUrl: quote.gifUrl,
-      bgColor: quote.bgColor,
-      timestamp: Timestamp.fromDate(quote.timestamp)
-    };
-    
-    const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
-    console.log('About to save favorite with data:', quoteData);
-    console.log('To Firestore path:', `users/${userId}/favorites/${quote.id}`);
-    
-    await setDoc(userFavoritesRef, quoteData);
-    console.log('Successfully saved favorite quote to Firestore');
-    
-    return quote.id;
-  } catch (error) {
-    console.error('Error in saveFavoriteQuote:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-    }
-    throw error;
-  }
+  const db = getDb();
+  const userFavoritesRef = doc(db, 'users', userId.toString(), 'favorites', quote.id);
+  
+  const quoteData = {
+    ...quote,
+    timestamp: Timestamp.fromDate(quote.timestamp)
+  };
+
+  await setDoc(userFavoritesRef, quoteData);
 }
 
 // Get user's favorites
-export async function getUserFavorites(userId: number) {
-  try {
-    console.log('Starting getUserFavorites for userId:', userId);
-    const db = getDb();
-    const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
-    
-    console.log('Fetching documents from:', `users/${userId}/favorites`);
-    const querySnapshot = await getDocs(userFavoritesRef);
-    console.log('Number of documents found:', querySnapshot.size);
-    
-    const favorites = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      console.log('Processing document:', data);
-      
-      return {
-        id: doc.id,
-        text: data.text,
-        style: data.style,
-        gifUrl: data.gifUrl,
-        bgColor: data.bgColor,
-        timestamp: data.timestamp?.toDate() || new Date(),
-      } as FavoriteQuote;
-    });
-    
-    console.log('Processed favorites:', favorites);
-    return favorites;
-  } catch (error) {
-    console.error('Error in getUserFavorites:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-    }
-    throw error;
-  }
+export async function getUserFavorites(userId: number): Promise<FavoriteQuote[]> {
+  const db = getDb();
+  const userFavoritesRef = collection(db, 'users', userId.toString(), 'favorites');
+  const favoritesSnapshot = await getDocs(userFavoritesRef);
+  
+  return favoritesSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      timestamp: data.timestamp.toDate(),
+      id: doc.id
+    } as FavoriteQuote;
+  });
 }
 
 // Remove favorite quote
