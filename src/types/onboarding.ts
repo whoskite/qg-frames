@@ -11,6 +11,7 @@ export interface OnboardingState {
     favoriteAuthors: string[];    // List of preferred quote authors/sources
     dailyReminders: boolean;      // Whether user wants daily quote reminders
     preferredLanguage: string;    // Preferred language style (formal/casual)
+    preferredStyles: string[];    // List of preferred quote styles (e.g., 'Inspirational', 'Philosophical', etc.)
   };
   hasCompletedOnboarding: boolean;
 } 

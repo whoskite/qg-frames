@@ -20,7 +20,8 @@ export function useOnboarding(
       preferredLength: '',
       favoriteAuthors: [],
       dailyReminders: false,
-      preferredLanguage: ''
+      preferredLanguage: '',
+      preferredStyles: []
     },
     hasCompletedOnboarding: false
   });

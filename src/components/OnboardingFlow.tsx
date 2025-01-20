@@ -224,37 +224,42 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6 p-4"
           >
-            <h2 className="text-xl font-bold text-white text-center">Areas of Focus</h2>
-            <p className="text-white/90 text-center text-sm">Select what matters most to you</p>
+            <h2 className="text-xl font-bold text-white text-center">Tone and Style</h2>
+            <p className="text-white/90 text-center text-sm">Choose up to 3 styles for your quotes</p>
             
             <div className="max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
                 {[
-                  { icon: '💼', label: 'Career' },
-                  { icon: '🎯', label: 'Personal Growth' },
-                  { icon: '❤️', label: 'Relationships' },
-                  { icon: '💪', label: 'Health' },
-                  { icon: '💰', label: 'Finance' },
-                  { icon: '🧘', label: 'Mindfulness' },
-                  { icon: '🎨', label: 'Creativity' },
-                  { icon: '👥', label: 'Leadership' },
-                  { icon: '🌱', label: 'Learning' },
-                  { icon: '🎮', label: 'Work-Life Balance' },
-                  { icon: '🌍', label: 'Social Impact' },
-                  { icon: '🚀', label: 'Innovation' }
+                  { icon: '💫', label: 'Inspirational' },
+                  { icon: '🎭', label: 'Philosophical' },
+                  { icon: '💡', label: 'Practical' },
+                  { icon: '✨', label: 'Poetic' },
+                  { icon: '🌟', label: 'Motivational' },
+                  { icon: '🎯', label: 'Direct' },
+                  { icon: '🌈', label: 'Optimistic' },
+                  { icon: '🤔', label: 'Thought-provoking' },
+                  { icon: '💪', label: 'Empowering' },
+                  { icon: '😊', label: 'Light-hearted' },
+                  { icon: '🧠', label: 'Intellectual' },
+                  { icon: '💭', label: 'Reflective' }
                 ].map(({ icon, label }) => (
                   <button
                     key={label}
                     onClick={() => {
-                      const currentAreas = onboarding.personalInfo.areasToImprove;
-                      const newAreas = currentAreas.includes(label)
-                        ? currentAreas.filter(a => a !== label)
-                        : [...currentAreas, label];
-                      updatePersonalInfo('areasToImprove', newAreas);
+                      const currentStyles = onboarding.personalInfo.preferredStyles || [];
+                      const isSelected = currentStyles.includes(label);
+                      if (!isSelected && currentStyles.length >= 3) {
+                        toast.error('Maximum 3 styles can be selected');
+                        return;
+                      }
+                      const newStyles = isSelected
+                        ? currentStyles.filter(s => s !== label)
+                        : [...currentStyles, label];
+                      updatePersonalInfo('preferredStyles', newStyles);
                     }}
                     className={`
                       group relative overflow-hidden rounded-xl p-3 transition-all duration-300
-                      ${onboarding.personalInfo.areasToImprove.includes(label)
+                      ${(onboarding.personalInfo.preferredStyles || []).includes(label)
                         ? 'bg-white text-purple-600 shadow-lg scale-[0.98]'
                         : 'bg-white/10 text-white hover:bg-white/20'
                       }
@@ -264,7 +269,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
                       <span className="text-xl sm:text-2xl">{icon}</span>
                       <span className="text-xs sm:text-sm font-medium">{label}</span>
                     </div>
-                    {onboarding.personalInfo.areasToImprove.includes(label) && (
+                    {(onboarding.personalInfo.preferredStyles || []).includes(label) && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -277,30 +282,13 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
                 ))}
               </div>
             </div>
+            <p className="text-white/70 text-sm text-center">
+              {3 - (onboarding.personalInfo.preferredStyles || []).length} selection{3 - (onboarding.personalInfo.preferredStyles || []).length !== 1 ? 's' : ''} remaining
+            </p>
           </motion.div>
         );
 
       case 7:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6 p-4"
-          >
-            <h2 className="text-xl font-bold text-white text-center">Personal Goals</h2>
-            <p className="text-white/90 text-center text-sm">Share your aspirations to get more relevant quotes</p>
-            
-            <textarea
-              value={onboarding.personalInfo.personalGoals}
-              onChange={(e) => updatePersonalInfo('personalGoals', e.target.value)}
-              placeholder="What do you want to achieve? 🎯"
-              className="w-full h-32 p-4 rounded-xl bg-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none text-sm"
-            />
-          </motion.div>
-        );
-
-      case 8:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -356,17 +344,16 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
         {/* Fixed Footer */}
         <div className="border-t border-white/10 p-4 bg-purple-900/50 backdrop-blur-sm">
           <Button
-            onClick={onboarding.step === 8 ? handleComplete : handleNext}
+            onClick={onboarding.step === 7 ? handleComplete : handleNext}
             disabled={
               (onboarding.step === 2 && !onboarding.personalInfo.gender) ||
               (onboarding.step === 3 && !onboarding.personalInfo.relationshipStatus) ||
               (onboarding.step === 4 && !onboarding.personalInfo.areasToImprove.length) ||
               (onboarding.step === 5 && !onboarding.personalInfo.personalGoals.trim()) ||
-              (onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0) ||
-              (onboarding.step === 7 && !onboarding.personalInfo.personalGoals.trim())
+              (onboarding.step === 6 && !(onboarding.personalInfo.preferredStyles || []).length)
             }
             className={`w-full ${
-              onboarding.step === 8 
+              onboarding.step === 7 
                 ? 'bg-purple-600 hover:bg-purple-700'
                 : !onboarding.personalInfo.gender && onboarding.step === 2
                 ? 'bg-purple-400 cursor-not-allowed'
@@ -376,16 +363,14 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({
                 ? 'bg-purple-400 cursor-not-allowed'
                 : !onboarding.personalInfo.personalGoals.trim() && onboarding.step === 5
                 ? 'bg-purple-400 cursor-not-allowed'
-                : onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length === 0
-                ? 'bg-purple-400 cursor-not-allowed'
-                : onboarding.step === 7 && !onboarding.personalInfo.personalGoals.trim()
+                : onboarding.step === 6 && !(onboarding.personalInfo.preferredStyles || []).length
                 ? 'bg-purple-400 cursor-not-allowed'
                 : 'bg-purple-600 hover:bg-purple-700'
             } text-white py-2 rounded-lg transition-colors`}
           >
-            {onboarding.step === 8 ? 'Get Started' : 'Continue'}
-            {onboarding.step === 6 && onboarding.personalInfo.areasToImprove.length > 0 && 
-              ` (${onboarding.personalInfo.areasToImprove.length} selected)`
+            {onboarding.step === 7 ? 'Get Started' : 'Continue'}
+            {onboarding.step === 6 && (onboarding.personalInfo.preferredStyles || []).length > 0 && 
+              ` (${(onboarding.personalInfo.preferredStyles || []).length} selected)`
             }
           </Button>
         </div>
