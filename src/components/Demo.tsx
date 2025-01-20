@@ -2202,7 +2202,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                             preferredLength: '',
                             favoriteAuthors: [],
                             dailyReminders: false,
-                            preferredLanguage: ''
+                            preferredLanguage: '',
+                            preferredStyles: []
                           },
                           hasCompletedOnboarding: false
                         });
