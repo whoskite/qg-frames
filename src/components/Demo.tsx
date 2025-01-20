@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1925,17 +1925,68 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Share Button */}
               <div className="flex justify-end">
-                <Button
-                  onClick={async () => {
-                    setIsCasting(true);
-                    try {
-                      const shareText = `"${quote}" - Created by @kite /thepod`;
-                      const shareUrl = 'https://qg-frames.vercel.app';
-                      let mediaUrl = '';
+                <div className="flex gap-2 w-full">
+                  <Button
+                    onClick={async () => {
+                      setIsCasting(true);
+                      try {
+                        const shareText = `"${quote}" - Created by @kite /thepod`;
+                        const shareUrl = 'https://qg-frames.vercel.app';
+                        let mediaUrl = '';
+                        
+                        if (gifUrl) {
+                          mediaUrl = gifUrl;
+                        }
 
-                      if (gifEnabled && gifUrl) {
-                        mediaUrl = gifUrl;
-                      } else if (quote) {
+                        const params = new URLSearchParams();
+                        params.append('text', shareText);
+                        params.append('embeds[]', shareUrl);
+                        if (mediaUrl) {
+                          params.append('embeds[]', mediaUrl);
+                        }
+                        
+                        const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                        
+                        logAnalyticsEvent('cast_created', {
+                          quote: quote,
+                          hasMedia: !!mediaUrl,
+                          mediaType: 'gif'
+                        });
+                        
+                        sdk.actions.openUrl(url);
+                        setShowPreview(false);
+                        setPreviewImage(null);
+                      } catch (error) {
+                        console.error('Error sharing:', error);
+                      } finally {
+                        setIsCasting(false);
+                      }
+                    }}
+                    disabled={!gifUrl || isCasting}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isCasting ? (
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        •••
+                      </motion.span>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Share GIF
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      setIsCasting(true);
+                      try {
+                        const shareText = `"${quote}" - Created by @kite /thepod`;
+                        const shareUrl = 'https://qg-frames.vercel.app';
+                        let mediaUrl = '';
+
                         try {
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
                           const uploadedUrl = await uploadImage(dataUrl);
@@ -1943,44 +1994,49 @@ export default function Demo({ title = "Fun Quotes" }) {
                         } catch (error) {
                           console.error('Error generating/uploading image:', error);
                         }
-                      }
 
-                      const params = new URLSearchParams();
-                      params.append('text', shareText);
-                      params.append('embeds[]', shareUrl);
-                      if (mediaUrl) {
-                        params.append('embeds[]', mediaUrl);
+                        const params = new URLSearchParams();
+                        params.append('text', shareText);
+                        params.append('embeds[]', shareUrl);
+                        if (mediaUrl) {
+                          params.append('embeds[]', mediaUrl);
+                        }
+                        
+                        const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                        
+                        logAnalyticsEvent('cast_created', {
+                          quote: quote,
+                          hasMedia: !!mediaUrl,
+                          mediaType: 'canvas'
+                        });
+                        
+                        sdk.actions.openUrl(url);
+                        setShowPreview(false);
+                        setPreviewImage(null);
+                      } catch (error) {
+                        console.error('Error sharing:', error);
+                      } finally {
+                        setIsCasting(false);
                       }
-                      
-                      const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                      
-                      logAnalyticsEvent('cast_created', {
-                        quote: quote,
-                        hasMedia: !!mediaUrl,
-                        mediaType: gifEnabled && gifUrl ? 'gif' : 'canvas'
-                      });
-                      
-                      sdk.actions.openUrl(url);
-                      setShowPreview(false);
-                      setPreviewImage(null);
-                    } catch (error) {
-                      console.error('Error sharing:', error);
-                    } finally {
-                      setIsCasting(false);
-                    }
-                  }}
-                  disabled={false}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 rounded-lg transition-colors"
-                >
-                  {isCasting ? (
-                    <motion.span
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      •••
-                    </motion.span>
-                  ) : 'Share'}
-                </Button>
+                    }}
+                    disabled={isCasting}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isCasting ? (
+                      <motion.span
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        •••
+                      </motion.span>
+                    ) : (
+                      <>
+                        <Frame className="w-4 h-4" />
+                        Share Image
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.div>
