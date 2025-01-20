@@ -1990,7 +1990,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                         try {
                           const dataUrl = await generateQuoteImage(quote, bgImage, context);
                           const uploadedUrl = await uploadImage(dataUrl);
-                          mediaUrl = encodeURIComponent(uploadedUrl);
+                          // Don't encode the full URL, as Warpcast will handle that
+                          mediaUrl = uploadedUrl;
                         } catch (error) {
                           console.error('Error generating/uploading image:', error);
                         }
