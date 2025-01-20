@@ -696,25 +696,62 @@ export default function Demo({ title = "Fun Quotes" }) {
         canvas.width = 800;
         canvas.height = 400;
 
-        // Create and load background image
-        const img = document.createElement('img');
-        img.crossOrigin = 'anonymous';
-
-        // Create profile image element
-        const profileImg = document.createElement('img');
-        profileImg.crossOrigin = 'anonymous';
-        profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
-
-        const handleLoad = () => {
-          if (bgImage === 'none') {
-            // Create gradient background
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#9b5de5');
-            gradient.addColorStop(0.5, '#f15bb5');
-            gradient.addColorStop(1, '#ff6b6b');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-          } else {
+        // Handle gradient backgrounds
+        if (bgImage?.includes('gradient')) {
+          let gradient;
+          switch (bgImage) {
+            case 'gradient-pink':
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(192, 132, 252)');
+              gradient.addColorStop(0.5, 'rgb(244, 114, 182)');
+              gradient.addColorStop(1, 'rgb(239, 68, 68)');
+              break;
+            case 'gradient-black':
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(17, 24, 39)');
+              gradient.addColorStop(0.5, 'rgb(55, 65, 81)');
+              gradient.addColorStop(1, 'rgb(31, 41, 55)');
+              break;
+            case 'gradient-yellow':
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(251, 191, 36)');
+              gradient.addColorStop(0.5, 'rgb(249, 115, 22)');
+              gradient.addColorStop(1, 'rgb(239, 68, 68)');
+              break;
+            case 'gradient-green':
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, 'rgb(52, 211, 153)');
+              gradient.addColorStop(0.5, 'rgb(16, 185, 129)');
+              gradient.addColorStop(1, 'rgb(20, 184, 166)');
+              break;
+            case 'gradient-purple':
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, '#472A91');
+              gradient.addColorStop(0.5, 'rgb(147, 51, 234)');
+              gradient.addColorStop(1, 'rgb(107, 33, 168)');
+              break;
+            default:
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient.addColorStop(0, '#9b5de5');
+              gradient.addColorStop(0.5, '#f15bb5');
+              gradient.addColorStop(1, '#ff6b6b');
+          }
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (bgImage === 'none') {
+          // Create default gradient background
+          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+          gradient.addColorStop(0, '#9b5de5');
+          gradient.addColorStop(0.5, '#f15bb5');
+          gradient.addColorStop(1, '#ff6b6b');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          // Handle image backgrounds
+          const img = document.createElement('img');
+          img.crossOrigin = 'anonymous';
+          img.src = bgImage;
+          img.onload = () => {
             // Calculate dimensions to cover the entire canvas while maintaining aspect ratio
             const imgAspectRatio = img.width / img.height;
             const canvasAspectRatio = canvas.width / canvas.height;
@@ -724,12 +761,10 @@ export default function Demo({ title = "Fun Quotes" }) {
             let offsetY = 0;
 
             if (imgAspectRatio > canvasAspectRatio) {
-              // Image is wider - scale based on height and center horizontally
               drawHeight = canvas.height;
               drawWidth = drawHeight * imgAspectRatio;
               offsetX = (canvas.width - drawWidth) / 2;
             } else {
-              // Image is taller - scale based on width and center vertically
               drawWidth = canvas.width;
               drawHeight = drawWidth / imgAspectRatio;
               offsetY = (canvas.height - drawHeight) / 2;
@@ -745,8 +780,16 @@ export default function Demo({ title = "Fun Quotes" }) {
             // Add semi-transparent overlay
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-          }
+          };
+        }
 
+        // Create profile image element
+        const profileImg = document.createElement('img');
+        profileImg.crossOrigin = 'anonymous';
+        profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
+
+        // Handle profile image load
+        profileImg.onload = () => {
           // Add quote text
           ctx.fillStyle = 'white';
           ctx.textAlign = 'center';
@@ -773,23 +816,20 @@ export default function Demo({ title = "Fun Quotes" }) {
           // Draw the wrapped text
           const lineHeight = 40;
           const totalHeight = lines.length * lineHeight;
-          const startY = (canvas.height - totalHeight) / 2 - 20; // Move quote up to make room for profile
+          const startY = (canvas.height - totalHeight) / 2 - 20;
 
           lines.forEach((line, index) => {
             ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
           });
 
-          // Draw profile image and username
+          // Draw profile section
           const profileSize = 40;
-          const profileY = canvas.height - 70; // Position from bottom
+          const profileY = canvas.height - 70;
           const username = `@${userContext?.user?.username || 'user'}`;
           
-          // Measure text width to calculate total width of profile + username
           ctx.font = '20px Inter, sans-serif';
           const textMetrics = ctx.measureText(username);
-          const totalWidth = profileSize + 15 + textMetrics.width; // profile width + gap + text width
-          
-          // Calculate starting X position to center everything
+          const totalWidth = profileSize + 15 + textMetrics.width;
           const startX = (canvas.width - totalWidth) / 2;
           const profileX = startX;
           const usernameX = startX + profileSize + 15;
@@ -801,7 +841,6 @@ export default function Demo({ title = "Fun Quotes" }) {
           ctx.closePath();
           ctx.clip();
 
-          // Draw the profile image
           ctx.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
           ctx.restore();
 
@@ -812,7 +851,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           ctx.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
           ctx.stroke();
 
-          // Add username next to profile image
+          // Add username
           ctx.fillStyle = 'white';
           ctx.textAlign = 'left';
           ctx.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
@@ -820,24 +859,11 @@ export default function Demo({ title = "Fun Quotes" }) {
           resolve(canvas.toDataURL('image/png'));
         };
 
-        // Load profile image first, then proceed with the rest
-        profileImg.onload = () => {
-          if (bgImage === 'none') {
-            handleLoad();
-          } else {
-            img.onload = handleLoad;
-            img.src = bgImage;
-          }
-        };
-
+        // Handle profile image load error
         profileImg.onerror = () => {
-          // If profile image fails, use default image
           profileImg.src = "/Profile_Image.jpg";
         };
 
-        img.onerror = (_event: string | Event) => {
-          reject(new Error('Failed to load image'));
-        };
       } catch (error) {
         reject(error);
       }
@@ -868,6 +894,40 @@ export default function Demo({ title = "Fun Quotes" }) {
       console.error('Error uploading image:', error);
       throw error;
     }
+  };
+
+  const renderBackground = () => {
+    if (bgImage.includes('TheMrSazon')) {
+      return (
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0" style={{ 
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'blur(2px)',
+            transform: 'scale(1.1)'
+          }} />
+        </div>
+      );
+    }
+    
+    // Handle gradient backgrounds
+    if (bgImage.includes('gradient')) {
+      return (
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute inset-0" 
+            style={{ 
+              backgroundImage: bgImage,
+              opacity: 0.9  // Adjust opacity as needed
+            }} 
+          />
+        </div>
+      );
+    }
+
+    return null;
   };
 
   // 10. Main Render
