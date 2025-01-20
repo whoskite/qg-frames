@@ -439,6 +439,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(true);
+  const [lastStreakNotification, setLastStreakNotification] = useState<number | null>(null);
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
 
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
@@ -825,7 +828,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     }
   };
 
-  // Update the streak effect with proper type handling
+  // Update the streak effect with proper notification timing
   useEffect(() => {
     const updateUserStreakCount = async () => {
       if (context?.user?.fid && isFirebaseInitialized) {
@@ -843,21 +846,36 @@ export default function Demo({ title = "Fun Quotes" }) {
           let newStreak = userDoc?.current_streak || 0;
           const now = Date.now();
 
+          // Only show notification if we haven't shown it today and it's been 24 hours
+          const shouldShowNotification = !lastStreakNotification || 
+            (now - lastStreakNotification > TWENTY_FOUR_HOURS);
+
           if (!lastLoginTimestamp) {
             // First login ever
             newStreak = 1;
+            if (shouldShowNotification) {
+              playStreakSound();
+              toast.info('Streak started! Come back in 24 hours to continue.');
+              setLastStreakNotification(now);
+            }
           } else if (!isValidStreak) {
             // Reset streak if more than 24 hours have passed
             newStreak = 1;
-            // Play sound effect for streak reset
-            playStreakSound();
+            if (shouldShowNotification) {
+              playStreakSound();
+              toast.info('New streak started! Come back tomorrow to continue.');
+              setLastStreakNotification(now);
+            }
           } else if (nextEligibleLogin && now >= nextEligibleLogin) {
             // Increment streak if it's been at least 24 hours
             newStreak += 1;
-            // Play sound effect for streak increment
-            playStreakSound();
+            if (shouldShowNotification) {
+              playStreakSound();
+              toast.success(`🔥 ${newStreak} Day Streak!`);
+              setLastStreakNotification(now);
+            }
           }
-          // If it's too early (< 24 hours), keep current streak
+          // If it's too early (< 24 hours), keep current streak without notification
 
           // Update the streak in Firestore
           const streakUpdate: StreakUpdate = {
@@ -869,22 +887,17 @@ export default function Demo({ title = "Fun Quotes" }) {
           
           await updateUserStreak(context.user.fid, streakUpdate);
 
-          // Only animate if the streak has changed
+          // Update streak count without notification if it has changed
           if (newStreak !== userStreak) {
             setUserStreak(newStreak);
-            // Show toast notification for streak update
-            if (newStreak > 1) {
-              toast.success(`🔥 ${newStreak} Day Streak!`);
-            } else if (newStreak === 1) {
-              toast.info('Streak started! Come back in 24 hours to continue.');
-            }
           }
 
           // Log analytics
           logAnalyticsEvent('streak_updated', {
             new_streak: newStreak,
             hours_since_last_login: hoursSinceLastLogin || 0,
-            streak_maintained: isValidStreak
+            streak_maintained: isValidStreak,
+            notification_shown: shouldShowNotification
           });
 
         } catch (error) {
@@ -895,7 +908,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
 
     updateUserStreakCount();
-  }, [context?.user?.fid, isFirebaseInitialized, userStreak]);
+  }, [context?.user?.fid, isFirebaseInitialized, userStreak, lastStreakNotification]);
 
   // Update the background music effect
   useEffect(() => {
@@ -1309,7 +1322,14 @@ export default function Demo({ title = "Fun Quotes" }) {
           }
         } catch (error) {
           console.error('Error loading onboarding data:', error);
+        } finally {
+          setIsLoadingOnboarding(false);
+          setHasCheckedOnboarding(true);
         }
+      } else if (!context?.user?.fid || !isFirebaseInitialized) {
+        // If no user or Firebase isn't initialized, we can show onboarding
+        setIsLoadingOnboarding(false);
+        setHasCheckedOnboarding(true);
       }
     };
 
@@ -2391,7 +2411,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       )}
 
       {/* Onboarding Modal */}
-      {!onboarding.hasCompletedOnboarding && (
+      {hasCheckedOnboarding && !onboarding.hasCompletedOnboarding && (
         <OnboardingFlow 
           onboarding={onboarding}
           setOnboarding={setOnboarding}
