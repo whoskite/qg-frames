@@ -48,7 +48,6 @@ import { Button } from "../components/ui/Button";
 // Utils and Services
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
-import { generateQuoteImage } from '../app/utils/generateQuoteImage';
 
 // 2. Types and Constants
 interface FarcasterUser {
