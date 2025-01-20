@@ -2349,7 +2349,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           try {
                             const dataUrl = await generateQuoteImage(quote, bgImage, context);
                             const uploadedUrl = await uploadImage(dataUrl);
-                            // Firebase already returns a complete URL, so we can use it directly
+                            // Use the Firebase Storage URL directly
                             mediaUrl = uploadedUrl;
                           } catch (error) {
                             console.error('Error generating/uploading image:', error);
