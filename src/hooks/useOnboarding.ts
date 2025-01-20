@@ -15,7 +15,12 @@ export function useOnboarding(
       relationshipStatus: '',
       selectedTheme: '',
       areasToImprove: [],
-      personalGoals: ''
+      personalGoals: '',
+      preferredQuoteStyle: '',
+      preferredLength: '',
+      favoriteAuthors: [],
+      dailyReminders: false,
+      preferredLanguage: ''
     },
     hasCompletedOnboarding: false
   });
