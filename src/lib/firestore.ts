@@ -215,9 +215,12 @@ export const getUserStreak = async (fid: number): Promise<UserStreak> => {
     const data = userDoc.data();
     console.log('📊 getUserStreak: Raw Firestore data:', data);
 
+    // Use the currentStreak field if it exists (for backward compatibility)
+    const currentStreak = data.currentStreak || data.current_streak || 0;
+
     const streakData = {
-      current_streak: data.current_streak || 0,
-      longest_streak: data.longest_streak || 0,
+      current_streak: currentStreak,
+      longest_streak: data.longest_streak || currentStreak,
       last_login_timestamp: data.last_login_timestamp || null,
       next_eligible_login: data.next_eligible_login ? new Date(data.next_eligible_login.toDate()) : null,
       streak_deadline: data.streak_deadline ? new Date(data.streak_deadline.toDate()) : null,
