@@ -8,7 +8,8 @@ import {
   updateDoc,
   Timestamp,
   serverTimestamp,
-  type Firestore 
+  type Firestore,
+  deleteField
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
@@ -259,7 +260,7 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
       // Create new user document - this is their first streak
       const now = new Date();
       await setDoc(userRef, {
-        ...data,
+        current_streak: data.current_streak,
         timezone,
         initial_streak_start: now,
         longest_streak: data.current_streak,
@@ -270,16 +271,26 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
         }],
         grace_period_used: data.grace_period_used || false,
         created_at: serverTimestamp(),
-        updated_at: serverTimestamp()
+        updated_at: serverTimestamp(),
+        last_login_timestamp: data.last_login_timestamp,
+        next_eligible_login: data.next_eligible_login,
+        streak_deadline: data.streak_deadline
       });
     } else {
       // Update existing user document
       const currentData = userDoc.data();
+      
+      // If the old currentStreak field exists and is higher, use that value
+      const actualCurrentStreak = Math.max(
+        currentData.currentStreak || 0,
+        currentData.current_streak || 0
+      );
+      
       const streakHistory = currentData.streak_history || [];
       const currentStreak = streakHistory[streakHistory.length - 1];
       
       // If current streak is 1 and previous streak was higher, it means streak was reset
-      if (data.current_streak === 1 && currentData.current_streak > 1) {
+      if (data.current_streak === 1 && actualCurrentStreak > 1) {
         // End the previous streak
         if (currentStreak && !currentStreak.end_date) {
           currentStreak.end_date = data.last_login_timestamp;
@@ -291,7 +302,7 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
           length: 1,
           last_update: data.last_login_timestamp
         });
-      } else if (data.current_streak > currentData.current_streak) {
+      } else if (data.current_streak > actualCurrentStreak) {
         // Streak increased, update the length of current streak
         if (currentStreak) {
           currentStreak.length = data.current_streak;
@@ -299,15 +310,20 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
         }
       }
 
+      // Update document with cleaned up fields
       await updateDoc(userRef, {
-        ...data,
+        current_streak: data.current_streak,
+        currentStreak: deleteField(), // Remove the old field
         timezone,
         streak_history: streakHistory,
         longest_streak: Math.max(data.current_streak, currentData.longest_streak || 0),
         initial_streak_start: currentData.initial_streak_start || data.last_login_timestamp,
         grace_period_used: data.grace_period_used || false,
         updated_at: serverTimestamp(),
-        last_update: data.last_login_timestamp // Add this to track the most recent update
+        last_update: data.last_login_timestamp,
+        last_login_timestamp: data.last_login_timestamp,
+        next_eligible_login: data.next_eligible_login,
+        streak_deadline: data.streak_deadline
       });
     }
   } catch (error) {
