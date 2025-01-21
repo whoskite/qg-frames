@@ -326,7 +326,7 @@ const analyzeUserPreferences = (favorites: FavoriteQuote[]) => {
 };
 
 // Modify the generateRandomPrompt function to use user preferences
-const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
+const generateRandomPrompt = (favorites: FavoriteQuote[] = [], userStreak: number = 0) => {
   const now = new Date();
   const day = now.getDay();
   const hour = now.getHours();
@@ -335,81 +335,144 @@ const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
   // Get user preferences
   const userPreferences = analyzeUserPreferences(favorites);
   
-  // Arrays of themes and modifiers
-  const themes = [
-    'life', 'success', 'happiness', 'wisdom', 'courage', 'peace',
-    'growth', 'creativity', 'friendship', 'love', 'adventure', 'mindfulness'
-  ];
+  // Expanded arrays of themes and modifiers
+  const themes = {
+    personal: ['growth', 'confidence', 'resilience', 'authenticity', 'self-discovery', 'purpose'],
+    relationships: ['friendship', 'love', 'empathy', 'trust', 'connection', 'understanding'],
+    career: ['success', 'ambition', 'leadership', 'creativity', 'innovation', 'perseverance'],
+    wellbeing: ['mindfulness', 'balance', 'health', 'peace', 'gratitude', 'happiness'],
+    wisdom: ['philosophy', 'knowledge', 'insight', 'truth', 'understanding', 'awareness'],
+    motivation: ['inspiration', 'determination', 'courage', 'discipline', 'focus', 'drive'],
+    life: ['adventure', 'change', 'destiny', 'journey', 'possibility', 'opportunity']
+  };
   
-  const toneModifiers = [
-    'inspiring', 'philosophical', 'humorous', 'profound',
-    'thought-provoking', 'uplifting', 'reflective', 'motivational'
-  ];
+  const toneModifiers = {
+    inspiring: ['uplifting', 'motivational', 'encouraging', 'empowering', 'hopeful'],
+    reflective: ['thoughtful', 'introspective', 'contemplative', 'philosophical', 'meditative'],
+    practical: ['actionable', 'pragmatic', 'straightforward', 'grounded', 'realistic'],
+    emotional: ['passionate', 'heartfelt', 'sincere', 'genuine', 'authentic'],
+    humorous: ['witty', 'playful', 'lighthearted', 'clever', 'amusing']
+  };
   
-  const styleModifiers = [
-    'metaphorical', 'simple yet deep', 'poetic', 'direct',
-    'storytelling', 'paradoxical', 'zen-like', 'analytical'
-  ];
+  const styleModifiers = {
+    poetic: ['metaphorical', 'lyrical', 'rhythmic', 'flowing', 'artistic'],
+    direct: ['clear', 'concise', 'powerful', 'impactful', 'bold'],
+    narrative: ['storytelling', 'descriptive', 'engaging', 'vivid', 'expressive'],
+    wisdom: ['sage-like', 'timeless', 'profound', 'enlightening', 'insightful']
+  };
+
+  // Time-based context
+  const timeContext = {
+    earlyMorning: hour >= 5 && hour < 9,
+    morning: hour >= 9 && hour < 12,
+    afternoon: hour >= 12 && hour < 17,
+    evening: hour >= 17 && hour < 22,
+    night: hour >= 22 || hour < 5
+  };
+
+  // Day-based context
+  const dayContext = {
+    isWeekend: day === 0 || day === 6,
+    isMonday: day === 1,
+    isFriday: day === 5
+  };
+
+  // Season-based context
+  const seasons = ['winter', 'spring', 'summer', 'fall'];
+  const currentSeason = seasons[Math.floor(month / 3)];
+
+  // Select theme category based on time and preferences
+  let themeCategory = 'personal';
+  if (timeContext.earlyMorning) themeCategory = 'motivation';
+  else if (timeContext.night) themeCategory = 'wisdom';
+  else if (dayContext.isMonday) themeCategory = 'motivation';
+  else if (dayContext.isFriday) themeCategory = 'wellbeing';
+  else if (dayContext.isWeekend) themeCategory = 'life';
 
   // Adjust based on user preferences if available
   if (userPreferences) {
-    // Add user's favorite words to themes
-    themes.push(...userPreferences.favoriteWords.filter(word => word.length > 3));
+    // Add user's favorite words to appropriate theme categories
+    userPreferences.favoriteWords.forEach(word => {
+      Object.values(themes).forEach(category => {
+        if (!category.includes(word) && word.length > 3) {
+          category.push(word);
+        }
+      });
+    });
     
     // Adjust tone based on user's preferred emotional tone
     if (userPreferences.dominantTone === 'positive') {
-      toneModifiers.push('optimistic', 'joyful', 'enthusiastic');
+      toneModifiers.inspiring.push('optimistic', 'joyful', 'enthusiastic');
     } else if (userPreferences.dominantTone === 'negative') {
-      toneModifiers.push('contemplative', 'challenging', 'transformative');
+      toneModifiers.reflective.push('challenging', 'transformative', 'deep');
     }
     
     // Adjust style based on complexity preference
     if (userPreferences.dominantComplexity === 'simple') {
-      styleModifiers.push('clear', 'concise', 'straightforward');
+      Object.values(styleModifiers).forEach(style => {
+        style.push('clear', 'simple', 'direct');
+      });
     } else if (userPreferences.dominantComplexity === 'complex') {
-      styleModifiers.push('elaborate', 'intricate', 'sophisticated');
+      Object.values(styleModifiers).forEach(style => {
+        style.push('sophisticated', 'nuanced', 'layered');
+      });
     }
   }
 
-  // Use day to select base theme with preference weighting
-  const themeIndex = Math.floor((day + month + (userPreferences?.favoriteWords.length || 0)) % themes.length);
-  const selectedTheme = themes[themeIndex];
+  // Select random elements from each category
+  const getRandomElement = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+  const selectedThemeCategory = themes[themeCategory as keyof typeof themes];
+  const selectedTheme = getRandomElement(selectedThemeCategory);
+  
+  // Select tone based on time and theme
+  let toneCategory: keyof typeof toneModifiers = 'inspiring';
+  if (timeContext.night) toneCategory = 'reflective';
+  else if (timeContext.morning) toneCategory = 'practical';
+  else if (selectedTheme.includes('wisdom')) toneCategory = 'reflective';
+  
+  const selectedTone = getRandomElement(toneModifiers[toneCategory]);
+  
+  // Select style based on theme and tone
+  let styleCategory: keyof typeof styleModifiers = 'direct';
+  if (selectedTheme.includes('philosophy')) styleCategory = 'wisdom';
+  else if (selectedTone.includes('contemplative')) styleCategory = 'poetic';
+  
+  const selectedStyle = getRandomElement(styleModifiers[styleCategory]);
 
-  // Use hour to influence tone with preference weighting
-  const toneIndex = Math.floor((hour + day + (userPreferences?.dominantTone === 'positive' ? 2 : 0)) % toneModifiers.length);
-  const selectedTone = toneModifiers[toneIndex];
-
-  // Use minutes to select style with complexity preference
-  const styleIndex = Math.floor((now.getMinutes() + hour + (userPreferences?.dominantComplexity === 'complex' ? 3 : 0)) % styleModifiers.length);
-  const selectedStyle = styleModifiers[styleIndex];
-
-  // Add time-based context
-  let timeContext = '';
-  if (hour >= 5 && hour < 12) {
-    timeContext = 'morning reflection';
-  } else if (hour >= 12 && hour < 17) {
-    timeContext = 'midday insight';
-  } else if (hour >= 17 && hour < 22) {
-    timeContext = 'evening contemplation';
-  } else {
-    timeContext = 'night wisdom';
-  }
+  // Add contextual elements
+  const timePhrase = timeContext.earlyMorning ? 'early morning reflection'
+    : timeContext.morning ? 'morning motivation'
+    : timeContext.afternoon ? 'midday insight'
+    : timeContext.evening ? 'evening contemplation'
+    : 'night wisdom';
 
   // Add seasonal influence
-  const seasons = ['winter', 'spring', 'summer', 'fall'];
-  const currentSeason = seasons[Math.floor(month / 3)];
+  const seasonalContext = {
+    winter: 'inner warmth and perseverance',
+    spring: 'renewal and growth',
+    summer: 'vitality and joy',
+    fall: 'transformation and reflection'
+  }[currentSeason];
 
-  // Add length preference if available
-  const lengthPreference = userPreferences?.preferredLength 
-    ? `with approximately ${userPreferences.preferredLength} words` 
-    : '';
+  // Add streak-based motivation if applicable
+  const streakContext = userStreak > 0 
+    ? `maintaining a ${userStreak}-day journey of growth` 
+    : 'beginning a new journey';
 
   // Combine all factors into a unique prompt
-  return `Generate a ${selectedTone} quote about ${selectedTheme} with a ${selectedStyle} style, incorporating elements of ${timeContext} and the essence of ${currentSeason} ${lengthPreference}. ${
+  const prompt = `Generate a ${selectedTone} quote about ${selectedTheme} with a ${selectedStyle} style, 
+    incorporating elements of ${timePhrase} and ${seasonalContext}. 
+    Consider themes of ${streakContext}${
     userPreferences?.favoriteWords.length 
-      ? `Consider incorporating themes like: ${userPreferences.favoriteWords.join(', ')}` 
+      ? ` and personal resonance with: ${userPreferences.favoriteWords.join(', ')}` 
+      : ''
+  }. ${
+    userPreferences?.preferredLength 
+      ? `Aim for approximately ${userPreferences.preferredLength} words` 
       : ''
   }`;
+
+  return prompt;
 };
 
 // 4. Main Component
@@ -1809,7 +1872,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         } catch (error) {
                           console.error('Error generating random quote:', error);
                           // Fallback to the original randomizer if AI fails
-                          const randomPrompt = generateRandomPrompt(favorites);
+                          const randomPrompt = generateRandomPrompt(favorites, userStreak);
                           setUserPrompt(randomPrompt);
                           await handleGenerateQuote();
                           toast.success('Generated a quote based on your preferences!');
