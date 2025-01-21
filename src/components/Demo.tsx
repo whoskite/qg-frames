@@ -486,11 +486,14 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
-    if (analytics) {
-      logEvent(analytics, eventName, params);
-      console.log('Analytics Event:', { eventName, params });
+    if (analytics && context?.user?.fid) {
+      logEvent(analytics, eventName, {
+        ...params,
+        user_id: context.user.fid.toString(),
+        timestamp: Date.now()
+      });
     }
-  }, []);
+  }, [analytics, context?.user?.fid]);
 
   // 6. Frame SDK Functions
   useEffect(() => {
