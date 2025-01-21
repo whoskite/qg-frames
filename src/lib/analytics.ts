@@ -8,7 +8,10 @@ export const initAnalytics = () => {
   if (typeof window !== 'undefined' && !analytics) {
     try {
       console.log('Initializing Firebase Analytics...');
-      console.log('Firebase app config:', app.options);
+      if (!app) {
+        console.error('❌ Firebase app not initialized');
+        return null;
+      }
       analytics = getAnalytics(app);
       console.log('✅ Firebase Analytics initialized successfully');
       return analytics;
@@ -21,7 +24,7 @@ export const initAnalytics = () => {
 };
 
 // Log a custom event
-export const logAnalyticsEvent = (eventName: string, eventParams?: Record<string, string | number | boolean>) => {
+export const logAnalyticsEvent = (eventName: string, eventParams: Record<string, string | number | boolean>) => {
   try {
     console.log('📊 Attempting to log event:', eventName);
     const analyticsInstance = analytics || initAnalytics();
@@ -43,12 +46,12 @@ export const logPageView = (pagePath: string) => {
 };
 
 // Log user action
-export const logUserAction = (action: string, category: string, label?: string, value?: number) => {
+export const logUserAction = (action: string, category: string, label: string = '', value?: number) => {
   console.log('👤 Logging user action:', { action, category, label, value });
   logAnalyticsEvent('user_action', {
     action,
     category,
     label,
-    value
+    value: value ?? 0
   });
 }; 
