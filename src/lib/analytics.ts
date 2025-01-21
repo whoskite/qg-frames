@@ -1,4 +1,4 @@
-import { getAnalytics, logEvent, Analytics } from 'firebase/analytics';
+import { getAnalytics, logEvent, Analytics, setUserId, setUserProperties } from 'firebase/analytics';
 import { app, initializeFirebase, isInitialized } from './firebase';
 
 let analytics: Analytics | null = null;
@@ -34,6 +34,30 @@ export const initAnalytics = async () => {
     }
   }
   return analytics;
+};
+
+// Set user ID in analytics
+export const setAnalyticsUser = async (userId: string | number, userProperties?: Record<string, string | number | boolean>) => {
+  try {
+    console.log('👤 Setting analytics user ID:', userId);
+    const analyticsInstance = analytics || await initAnalytics();
+    if (analyticsInstance) {
+      setUserId(analyticsInstance, userId.toString());
+      if (userProperties) {
+        setUserProperties(analyticsInstance, userProperties);
+      }
+      console.log('✅ Analytics user ID set successfully');
+      
+      // Log a user_login event
+      logEvent(analyticsInstance, 'user_login', {
+        user_id: userId.toString(),
+        login_method: 'farcaster',
+        timestamp: Date.now()
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error setting analytics user:', error);
+  }
 };
 
 // Log a custom event

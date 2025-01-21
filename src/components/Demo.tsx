@@ -39,7 +39,7 @@ import { OnboardingFlow } from './OnboardingFlow';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
-import { logAnalyticsEvent, logUserAction } from '../lib/analytics';
+import { logAnalyticsEvent, logUserAction, setAnalyticsUser } from '../lib/analytics';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -1505,6 +1505,37 @@ export default function Demo({ title = "Fun Quotes" }) {
         username: context.user.username || 'unknown'
       });
     }
+  }, [context?.user]);
+
+  // Add this effect near the top of your component
+  useEffect(() => {
+    const initializeUser = async () => {
+      if (context?.user?.fid) {
+        // Set analytics user
+        await setAnalyticsUser(context.user.fid, {
+          username: context.user.username || 'unknown',
+          displayName: context.user.displayName || 'unknown',
+          pfpUrl: context.user.pfpUrl || 'none'
+        });
+        
+        // Log app loaded event
+        logAnalyticsEvent('app_loaded', {
+          timestamp: Date.now(),
+          user_logged_in: true,
+          screen_width: window.innerWidth,
+          screen_height: window.innerHeight
+        });
+      } else {
+        logAnalyticsEvent('app_loaded', {
+          timestamp: Date.now(),
+          user_logged_in: false,
+          screen_width: window.innerWidth,
+          screen_height: window.innerHeight
+        });
+      }
+    };
+
+    initializeUser();
   }, [context?.user]);
 
   return (
