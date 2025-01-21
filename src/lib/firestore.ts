@@ -174,6 +174,7 @@ export interface UserStreak {
   last_login_timestamp: { toMillis: () => number } | null;
   next_eligible_login: Date | null;
   streak_deadline: Date | null;
+  grace_period_used?: boolean;
 }
 
 export interface StreakUpdate {

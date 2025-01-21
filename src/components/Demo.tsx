@@ -97,13 +97,17 @@ const formatTimestamp = (date: Date) => {
 
 // Add these helper functions at the top with other helper functions
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const GRACE_PERIOD_HOURS = 12; // 12 hour grace period
+const GRACE_PERIOD_MS = GRACE_PERIOD_HOURS * 60 * 60 * 1000;
 
-const calculateStreakStatus = (lastLoginTimestamp: number | null): {
+const calculateStreakStatus = (lastLoginTimestamp: number | null, graceUsed: boolean = false): {
   isValidStreak: boolean;
   hoursSinceLastLogin: number | null;
   nextEligibleLogin: number | null;
   streakDeadline: number | null;
   isEligibleForIncrement: boolean;
+  isInGracePeriod: boolean;
+  hoursUntilReset: number | null;
 } => {
   if (!lastLoginTimestamp) {
     return {
@@ -111,7 +115,9 @@ const calculateStreakStatus = (lastLoginTimestamp: number | null): {
       hoursSinceLastLogin: null,
       nextEligibleLogin: null,
       streakDeadline: null,
-      isEligibleForIncrement: true
+      isEligibleForIncrement: true,
+      isInGracePeriod: false,
+      hoursUntilReset: null
     };
   }
 
@@ -132,12 +138,23 @@ const calculateStreakStatus = (lastLoginTimestamp: number | null): {
   const nextMidnight = new Date(nowMidnight);
   nextMidnight.setDate(nextMidnight.getDate() + 1);
   
+  // Calculate deadline with grace period
+  const deadline = new Date(nextMidnight);
+  deadline.setHours(deadline.getHours() + GRACE_PERIOD_HOURS);
+  
+  const hoursUntilReset = (deadline.getTime() - now) / (60 * 60 * 1000);
+  const isInGracePeriod = daysSinceLastLogin > 1 && !graceUsed && hoursSinceLastLogin <= (48 + GRACE_PERIOD_HOURS);
+  
   return {
-    isValidStreak: daysSinceLastLogin <= 1, // Valid if login was today or yesterday
+    // Valid if within normal window or grace period
+    isValidStreak: daysSinceLastLogin <= 1 || (isInGracePeriod && !graceUsed),
     hoursSinceLastLogin,
     nextEligibleLogin: nextMidnight.getTime(),
-    streakDeadline: nextMidnight.getTime(),
-    isEligibleForIncrement: daysSinceLastLogin === 1 // Only increment if exactly one day has passed
+    streakDeadline: deadline.getTime(),
+    // Only increment if exactly one day has passed or recovering in grace period
+    isEligibleForIncrement: daysSinceLastLogin === 1 || (isInGracePeriod && !graceUsed),
+    isInGracePeriod,
+    hoursUntilReset: hoursUntilReset > 0 ? hoursUntilReset : null
   };
 };
 
@@ -165,6 +182,7 @@ interface StreakUpdate {
   last_login_timestamp: Date;
   next_eligible_login: Date;
   streak_deadline: Date;
+  grace_period_used?: boolean;
 }
 
 // Add this after the imports
@@ -873,8 +891,10 @@ export default function Demo({ title = "Fun Quotes" }) {
           hoursSinceLastLogin,
           nextEligibleLogin,
           streakDeadline,
-          isEligibleForIncrement
-        } = calculateStreakStatus(lastLoginTimestamp);
+          isEligibleForIncrement,
+          isInGracePeriod,
+          hoursUntilReset
+        } = calculateStreakStatus(lastLoginTimestamp, userDoc?.grace_period_used);
 
         let newStreak = userDoc?.current_streak || 0;
         const now = Date.now();
@@ -892,19 +912,47 @@ export default function Demo({ title = "Fun Quotes" }) {
             setLastStreakNotification(now);
           }
         } else if (!isValidStreak) {
-          // Reset streak if more than one day has passed
+          // Reset streak if beyond grace period
+          const wasLongStreak = newStreak > 3; // Consider it a "long" streak if > 3 days
           newStreak = 1;
           if (shouldShowNotification) {
             playStreakSound();
-            toast.info('New streak started! Come back tomorrow to continue.');
+            if (wasLongStreak) {
+              toast.error(
+                <div>
+                  <div>Streak Reset!</div>
+                  <div className="text-sm opacity-80">
+                    You missed your daily login window. Your {userDoc.current_streak} day streak has been reset.
+                    Remember to log in daily to maintain your streak!
+                  </div>
+                </div>
+              );
+            } else {
+              toast.info('New streak started! Come back tomorrow to continue.');
+            }
+            setLastStreakNotification(now);
+          }
+        } else if (isInGracePeriod) {
+          // In grace period - chance to recover streak
+          newStreak = userDoc.current_streak; // Maintain current streak
+          if (shouldShowNotification) {
+            playStreakSound();
+            toast.warning(
+              <div>
+                <div>Streak Recovery! 🎯</div>
+                <div className="text-sm opacity-80">
+                  You're in the grace period. Your {newStreak} day streak has been preserved.
+                  Next time try to log in within 24 hours to avoid using the grace period!
+                </div>
+              </div>
+            );
             setLastStreakNotification(now);
           }
         } else if (isEligibleForIncrement) {
-          // Increment streak if exactly one day has passed
+          // Normal streak increment
           newStreak += 1;
           if (shouldShowNotification) {
             playStreakSound();
-            // Show additional info about streak history
             const streakStartDate = streakHistory.initial_streak_start?.toDate();
             const daysFromStart = streakStartDate ? 
               Math.floor((now - streakStartDate.getTime()) / (24 * 60 * 60 * 1000)) : 0;
@@ -922,6 +970,17 @@ export default function Demo({ title = "Fun Quotes" }) {
             );
             setLastStreakNotification(now);
           }
+        } else if (hoursUntilReset && hoursUntilReset < 4 && shouldShowNotification) {
+          // Warning when close to reset
+          toast.warning(
+            <div>
+              <div>⚠️ Streak at Risk!</div>
+              <div className="text-sm opacity-80">
+                Log in within {Math.ceil(hoursUntilReset)} hours to maintain your {newStreak} day streak!
+              </div>
+            </div>
+          );
+          setLastStreakNotification(now);
         }
 
         // Update the streak in Firestore
@@ -929,7 +988,8 @@ export default function Demo({ title = "Fun Quotes" }) {
           current_streak: newStreak,
           last_login_timestamp: new Date(),
           next_eligible_login: new Date(nextEligibleLogin || now + TWENTY_FOUR_HOURS),
-          streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS)
+          streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS),
+          grace_period_used: isInGracePeriod ? true : undefined // Only set if grace period was used
         };
         
         await updateUserStreak(context.user.fid, streakUpdate);
@@ -949,6 +1009,8 @@ export default function Demo({ title = "Fun Quotes" }) {
           streak_maintained: isValidStreak,
           notification_shown: shouldShowNotification,
           timezone: userTimezone,
+          in_grace_period: isInGracePeriod,
+          hours_until_reset: hoursUntilReset || 0,
           days_since_initial_start: streakHistory.initial_streak_start ? 
             Math.floor((now - streakHistory.initial_streak_start.toDate().getTime()) / (24 * 60 * 60 * 1000)) : 0
         });
@@ -962,307 +1024,126 @@ export default function Demo({ title = "Fun Quotes" }) {
     updateUserStreakCount();
   }, [context?.user?.fid, isFirebaseInitialized, userStreak, lastStreakNotification]);
 
-  // Update the background music effect
-  useEffect(() => {
-    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
-    audio.loop = true;
-    audio.volume = 0.3;
-    setAudioPlayer(audio);
+  return (
+    <ErrorBoundary>
+      <div className="flex flex-col h-screen">
+        {/* Rest of the component content */}
+      </div>
+    </ErrorBoundary>
+  );
+}
 
-    // Don't try to play immediately, wait for user interaction
-    const handleFirstInteraction = () => {
-      if (isMusicEnabled && audio) {
-        audio.play().catch(error => {
-          console.error('Error playing audio:', error);
-        });
-      }
-      // Remove the event listeners after first interaction
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('touchstart', handleFirstInteraction);
-    };
+const formatDate = (timestamp: number) => {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
-    // Add event listeners for user interaction
-    document.addEventListener('click', handleFirstInteraction);
-    document.addEventListener('touchstart', handleFirstInteraction);
+// Update the ProfileModal interface
+interface ProfileModalProps {
+  onClose: () => void;
+  context: FrameContext | undefined;
+  favorites: FavoriteQuote[];
+  quoteHistory: QuoteHistoryItem[];
+  sessionStartTime: number;
+  userStreak: number;
+}
 
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-      }
-      // Clean up event listeners
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('touchstart', handleFirstInteraction);
-    };
-  }, []); // Only run once on mount
+// Update the ProfileModal component
+const ProfileModal: React.FC<ProfileModalProps> = ({ 
+  onClose, 
+  context, 
+  favorites, 
+  quoteHistory, 
+  sessionStartTime,
+  userStreak
+}) => (
+  <div 
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={onClose}
+  >
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Profile
+        </h2>
+        <Button
+          className="rounded-full h-7 w-7 p-0"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4 text-black" />
+        </Button>
+      </div>
 
-  // Separate effect to handle music toggle
-  useEffect(() => {
-    if (audioPlayer) {
-      if (isMusicEnabled) {
-        const playPromise = audioPlayer.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error('Error playing audio:', error);
-          });
-        }
-      } else {
-        audioPlayer.pause();
-      }
-    }
-  }, [isMusicEnabled, audioPlayer]);
-
-  // Add this effect to load favorites when component mounts
-  useEffect(() => {
-    const loadFavorites = async () => {
-      if (context?.user?.fid && isFirebaseInitialized) {
-        try {
-          console.log('Loading favorites for user:', context.user.fid);
-          const userFavorites = await getUserFavorites(context.user.fid);
-          console.log('Loaded favorites:', userFavorites);
-          setFavorites(userFavorites);
-        } catch (error) {
-          console.error('Error loading favorites:', error);
-        }
-      }
-    };
-
-    loadFavorites();
-  }, [context?.user?.fid, isFirebaseInitialized]);
-
-  // Update the GIF toggle handler
-  const handleGifToggle = async () => {
-    const newState = !gifEnabled;
-    setGifEnabled(newState);
-    if (context?.user?.fid) {
-      try {
-        await saveGifPreference(context.user.fid, newState);
-      } catch (error) {
-        console.error('Error saving GIF preference:', error);
-      }
-    }
-  };
-
-  // Add effect to load GIF preference
-  useEffect(() => {
-    const loadGifPreference = async () => {
-      if (context?.user?.fid && isFirebaseInitialized) {
-        try {
-          const preference = await getGifPreference(context.user.fid);
-          setGifEnabled(preference);
-        } catch (error) {
-          console.error('Error loading GIF preference:', error);
-        }
-      }
-    };
-
-    loadGifPreference();
-  }, [context?.user?.fid, isFirebaseInitialized]);
-
-  // Add effect to load theme preference
-  useEffect(() => {
-    const loadThemePreference = async () => {
-      if (context?.user?.fid && isFirebaseInitialized) {
-        try {
-          const savedTheme = await getThemePreference(context.user.fid);
-          if (savedTheme) {
-            setBgImage(savedTheme);
-          }
-        } catch (error) {
-          console.error('Error loading theme preference:', error);
-        }
-      }
-    };
-
-    loadThemePreference();
-  }, [context?.user?.fid, isFirebaseInitialized]);
-
-  // Add helper function for double tap/click
-  const handleQuoteDoubleTap = () => {
-    const quoteItem: QuoteHistoryItem = {
-      id: crypto.randomUUID(), // Add required id field
-      text: quote,
-      style: 'default',
-      gifUrl,
-      timestamp: new Date(),
-      bgColor
-    };
-    toggleFavorite(quoteItem);
-    setShowHeartAnimation(true);
-    setTimeout(() => setShowHeartAnimation(false), 1000);
-  };
-
-  // Add these functions inside the Demo component
-  const generateQuoteImage = async (quote: string, bgImage: string, userContext?: FrameContext): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      try {
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Could not get canvas context');
-        
-        // Ensure ctx is treated as CanvasRenderingContext2D
-        const context = ctx as CanvasRenderingContext2D;
-
-        // Set canvas size
-        canvas.width = 800;
-        canvas.height = 400;
-
-        // Handle gradient backgrounds
-        if (bgImage?.includes('gradient')) {
-          let gradient;
-          switch (bgImage) {
-            case 'gradient-pink':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-              gradient.addColorStop(0, 'rgb(192, 132, 252)');
-              gradient.addColorStop(0.5, 'rgb(244, 114, 182)');
-              gradient.addColorStop(1, 'rgb(239, 68, 68)');
-              break;
-            case 'gradient-black':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-              gradient.addColorStop(0, 'rgb(17, 24, 39)');
-              gradient.addColorStop(0.5, 'rgb(55, 65, 81)');
-              gradient.addColorStop(1, 'rgb(31, 41, 55)');
-              break;
-            case 'gradient-yellow':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-              gradient.addColorStop(0, 'rgb(251, 191, 36)');
-              gradient.addColorStop(0.5, 'rgb(249, 115, 22)');
-              gradient.addColorStop(1, 'rgb(239, 68, 68)');
-              break;
-            case 'gradient-green':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-              gradient.addColorStop(0, 'rgb(52, 211, 153)');
-              gradient.addColorStop(0.5, 'rgb(16, 185, 129)');
-              gradient.addColorStop(1, 'rgb(20, 184, 166)');
-              break;
-            case 'gradient-purple':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-              gradient.addColorStop(0, '#472A91');
-              gradient.addColorStop(0.5, 'rgb(147, 51, 234)');
-              gradient.addColorStop(1, 'rgb(107, 33, 168)');
-              break;
-            default:
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-              gradient.addColorStop(0, '#9b5de5');
-              gradient.addColorStop(0.5, '#f15bb5');
-              gradient.addColorStop(1, '#ff6b6b');
-          }
-          context.fillStyle = gradient;
-          context.fillRect(0, 0, canvas.width, canvas.height);
-        } else if (bgImage === 'none') {
-          // Create default gradient background
-          const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-          gradient.addColorStop(0, '#9b5de5');
-          gradient.addColorStop(0.5, '#f15bb5');
-          gradient.addColorStop(1, '#ff6b6b');
-          context.fillStyle = gradient;
-          context.fillRect(0, 0, canvas.width, canvas.height);
-        } else {
-          // Handle image backgrounds
-          const img = document.createElement('img');
-          img.crossOrigin = 'anonymous';
-          img.src = bgImage;
-          img.onload = () => {
-            // Calculate dimensions to cover the entire canvas while maintaining aspect ratio
-            const imgAspectRatio = img.width / img.height;
-            const canvasAspectRatio = canvas.width / canvas.height;
-            let drawWidth = canvas.width;
-            let drawHeight = canvas.height;
-            let offsetX = 0;
-            let offsetY = 0;
-
-            if (imgAspectRatio > canvasAspectRatio) {
-              drawHeight = canvas.height;
-              drawWidth = drawHeight * imgAspectRatio;
-              offsetX = (canvas.width - drawWidth) / 2;
-            } else {
-              drawWidth = canvas.width;
-              drawHeight = drawWidth / imgAspectRatio;
-              offsetY = (canvas.height - drawHeight) / 2;
+      <div className="space-y-6">
+        {/* Profile Image and Basic Info */}
+        <div 
+          className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors"
+          onClick={() => {
+            if (context?.user?.username) {
+              sdk.actions.openUrl(`https://warpcast.com/${context.user.username}`);
             }
+          }}
+        >
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-purple-600">
+            <Image
+              src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+              alt="Profile"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {context?.user?.displayName || "User"}
+              <span className="text-sm text-gray-500">↗</span>
+            </h3>
+            <p className="text-gray-600">@{context?.user?.username}</p>
+          </div>
+        </div>
 
-            // Fill background with black
-            context.fillStyle = '#000000';
-            context.fillRect(0, 0, canvas.width, canvas.height);
+        {/* User Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Favorites</p>
+            <p className="text-2xl font-semibold text-gray-900">{favorites.length}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Daily Streak</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl font-semibold text-gray-900">{userStreak}</p>
+              <span className="text-sm text-gray-600">days</span>
+            </div>
+          </div>
+        </div>
 
-            // Draw background image centered
-            context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-            
-            // Add semi-transparent overlay
-            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            context.fillRect(0, 0, canvas.width, canvas.height);
+        {/* Additional Info */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Account Info</h4>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              FID: {context?.user?.fid}
+            </p>
+            <p className="text-sm text-gray-600">
+              Joined: {formatDate(sessionStartTime)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);
 
-            // Continue with text and profile rendering
-            addTextAndProfile();
-          };
-          return; // Return early as we'll resolve in the addTextAndProfile function
-        }
-
-        // If we didn't return early (for image backgrounds), add text and profile immediately
-        addTextAndProfile();
-
-        function addTextAndProfile() {
-          if (!context) {
-            reject(new Error('Could not get canvas context'));
-            return;
-          }
-          
-          // Add quote text
-          context.fillStyle = 'white';
-          context.textAlign = 'center';
-          context.font = 'bold 32px Inter, sans-serif';
-          
-          // Word wrap the text
-          const words = quote.split(' ');
-          const lines = [];
-          let currentLine = '';
-          const maxWidth = canvas.width - 100;
-
-          words.forEach(word => {
-            const testLine = currentLine + word + ' ';
-            const metrics = context.measureText(testLine);
-            if (metrics.width > maxWidth) {
-              lines.push(currentLine);
-              currentLine = word + ' ';
-            } else {
-              currentLine = testLine;
-            }
-          });
-          lines.push(currentLine);
-
-          // Draw the wrapped text
-          const lineHeight = 40;
-          const totalHeight = lines.length * lineHeight;
-          const startY = (canvas.height - totalHeight) / 2 - 20;
-
-          lines.forEach((line, index) => {
-            context.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
-          });
-
-          // Create profile image element
-          const profileImg = document.createElement('img');
-          profileImg.crossOrigin = 'anonymous';
-          profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
-
-          profileImg.onload = () => {
-            // Draw profile section
-            const profileSize = 40;
-            const profileY = canvas.height - 70;
-            const username = `@${userContext?.user?.username || 'user'}`;
-            
-            context.font = '20px Inter, sans-serif';
-            const textMetrics = context.measureText(username);
-            const totalWidth = profileSize + 15 + textMetrics.width;
-            const startX = (canvas.width - totalWidth) / 2;
-            const profileX = startX;
-            const usernameX = startX + profileSize + 15;
-
-            // Draw circular profile image
-            context.save();
-            context.beginPath();
-            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
-            context.closePath();
             context.clip();
 
             context.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
