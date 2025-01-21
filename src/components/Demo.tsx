@@ -1489,6 +1489,24 @@ export default function Demo({ title = "Fun Quotes" }) {
     loadUserStreak();
   }, [context?.user?.fid, isFirebaseInitialized]);
 
+  // Add this effect near the top of your component
+  useEffect(() => {
+    // Test analytics
+    logAnalyticsEvent('app_loaded', {
+      timestamp: Date.now(),
+      user_logged_in: !!context?.user?.fid,
+      screen_width: window.innerWidth,
+      screen_height: window.innerHeight
+    });
+    
+    if (context?.user?.fid) {
+      logAnalyticsEvent('user_identified', {
+        fid: context.user.fid,
+        username: context.user.username || 'unknown'
+      });
+    }
+  }, [context?.user]);
+
   return (
     <ErrorBoundary>
       <div className="relative min-h-screen">
