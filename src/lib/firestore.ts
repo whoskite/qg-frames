@@ -181,6 +181,7 @@ export interface StreakUpdate {
   last_login_timestamp: Date;
   next_eligible_login: Date;
   streak_deadline: Date;
+  timezone?: string;
 }
 
 // Update the getUserStreak function
@@ -227,18 +228,24 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
     const userRef = doc(db as Firestore, 'users', fid.toString());
     const userDoc = await getDoc(userRef);
     
+    // Get user's current timezone
+    const timezone = data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     if (!userDoc.exists()) {
       // Create new user document
       await setDoc(userRef, {
         ...data,
+        timezone,
         longest_streak: data.current_streak,
-        created_at: serverTimestamp()
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp()
       });
     } else {
       // Update existing user document
       const currentData = userDoc.data();
       await updateDoc(userRef, {
         ...data,
+        timezone,
         longest_streak: Math.max(data.current_streak, currentData.longest_streak || 0),
         updated_at: serverTimestamp()
       });

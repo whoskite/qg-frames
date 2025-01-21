@@ -102,26 +102,41 @@ const calculateStreakStatus = (lastLoginTimestamp: number | null): {
   hoursSinceLastLogin: number | null;
   nextEligibleLogin: number | null;
   streakDeadline: number | null;
+  isEligibleForIncrement: boolean;
 } => {
   if (!lastLoginTimestamp) {
     return {
       isValidStreak: true,
       hoursSinceLastLogin: null,
       nextEligibleLogin: null,
-      streakDeadline: null
+      streakDeadline: null,
+      isEligibleForIncrement: true
     };
   }
 
   const now = Date.now();
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const lastLoginDate = new Date(lastLoginTimestamp);
+  const nowDate = new Date(now);
+  
+  // Convert timestamps to user's local midnight
+  const lastLoginMidnight = new Date(lastLoginDate.toLocaleDateString('en-US', { timeZone: userTimezone }));
+  const nowMidnight = new Date(nowDate.toLocaleDateString('en-US', { timeZone: userTimezone }));
+  
+  // Calculate days between midnights
+  const daysSinceLastLogin = Math.floor((nowMidnight.getTime() - lastLoginMidnight.getTime()) / TWENTY_FOUR_HOURS);
   const hoursSinceLastLogin = (now - lastLoginTimestamp) / (60 * 60 * 1000);
-  const nextEligibleLogin = lastLoginTimestamp + TWENTY_FOUR_HOURS;
-  const streakDeadline = lastLoginTimestamp + TWENTY_FOUR_HOURS;
-
+  
+  // Next eligible login is next midnight in user's timezone
+  const nextMidnight = new Date(nowMidnight);
+  nextMidnight.setDate(nextMidnight.getDate() + 1);
+  
   return {
-    isValidStreak: now <= streakDeadline,
+    isValidStreak: daysSinceLastLogin <= 1, // Valid if login was today or yesterday
     hoursSinceLastLogin,
-    nextEligibleLogin,
-    streakDeadline
+    nextEligibleLogin: nextMidnight.getTime(),
+    streakDeadline: nextMidnight.getTime(),
+    isEligibleForIncrement: daysSinceLastLogin === 1 // Only increment if exactly one day has passed
   };
 };
 
@@ -836,79 +851,92 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Update the streak effect with proper notification timing
   useEffect(() => {
     const updateUserStreakCount = async () => {
-      if (context?.user?.fid && isFirebaseInitialized) {
-        try {
-          const userDoc = await getUserStreak(context.user.fid);
-          const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
-          
-          const {
-            isValidStreak,
-            hoursSinceLastLogin,
-            nextEligibleLogin,
-            streakDeadline
-          } = calculateStreakStatus(lastLoginTimestamp);
+      // Only update streak if user is logged in and Firebase is initialized
+      if (!context?.user?.fid || !isFirebaseInitialized) return;
+      
+      // Get the current date in user's timezone
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const today = new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
+      
+      // Check if we've already updated the streak today
+      const lastUpdate = localStorage.getItem('lastStreakUpdate');
+      if (lastUpdate === today) return;
+      
+      try {
+        const userDoc = await getUserStreak(context.user.fid);
+        const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
+        
+        const {
+          isValidStreak,
+          hoursSinceLastLogin,
+          nextEligibleLogin,
+          streakDeadline,
+          isEligibleForIncrement
+        } = calculateStreakStatus(lastLoginTimestamp);
 
-          let newStreak = userDoc?.current_streak || 0;
-          const now = Date.now();
+        let newStreak = userDoc?.current_streak || 0;
+        const now = Date.now();
 
-          // Only show notification if we haven't shown it today and it's been 24 hours
-          const shouldShowNotification = !lastStreakNotification || 
-            (now - lastStreakNotification > TWENTY_FOUR_HOURS);
+        // Only show notification once per day
+        const shouldShowNotification = !lastStreakNotification || 
+          new Date(lastStreakNotification).toLocaleDateString('en-US', { timeZone: userTimezone }) !== today;
 
-          if (!lastLoginTimestamp) {
-            // First login ever
-            newStreak = 1;
-            if (shouldShowNotification) {
-              playStreakSound();
-              toast.info('Streak started! Come back in 24 hours to continue.');
-              setLastStreakNotification(now);
-            }
-          } else if (!isValidStreak) {
-            // Reset streak if more than 24 hours have passed
-            newStreak = 1;
-            if (shouldShowNotification) {
-              playStreakSound();
-              toast.info('New streak started! Come back tomorrow to continue.');
-              setLastStreakNotification(now);
-            }
-          } else if (nextEligibleLogin && now >= nextEligibleLogin) {
-            // Increment streak if it's been at least 24 hours
-            newStreak += 1;
-            if (shouldShowNotification) {
-              playStreakSound();
-              toast.success(`🔥 ${newStreak} Day Streak!`);
-              setLastStreakNotification(now);
-            }
+        if (!lastLoginTimestamp) {
+          // First login ever
+          newStreak = 1;
+          if (shouldShowNotification) {
+            playStreakSound();
+            toast.info('Streak started! Come back tomorrow to continue.');
+            setLastStreakNotification(now);
           }
-          // If it's too early (< 24 hours), keep current streak without notification
-
-          // Update the streak in Firestore
-          const streakUpdate: StreakUpdate = {
-            current_streak: newStreak,
-            last_login_timestamp: new Date(),
-            next_eligible_login: new Date(now + TWENTY_FOUR_HOURS),
-            streak_deadline: new Date(now + TWENTY_FOUR_HOURS)
-          };
-          
-          await updateUserStreak(context.user.fid, streakUpdate);
-
-          // Update streak count without notification if it has changed
-          if (newStreak !== userStreak) {
-            setUserStreak(newStreak);
+        } else if (!isValidStreak) {
+          // Reset streak if more than one day has passed
+          newStreak = 1;
+          if (shouldShowNotification) {
+            playStreakSound();
+            toast.info('New streak started! Come back tomorrow to continue.');
+            setLastStreakNotification(now);
           }
-
-          // Log analytics
-          logAnalyticsEvent('streak_updated', {
-            new_streak: newStreak,
-            hours_since_last_login: hoursSinceLastLogin || 0,
-            streak_maintained: isValidStreak,
-            notification_shown: shouldShowNotification
-          });
-
-        } catch (error) {
-          console.error('Error updating streak:', error);
-          toast.error('Failed to update streak');
+        } else if (isEligibleForIncrement) {
+          // Increment streak if exactly one day has passed
+          newStreak += 1;
+          if (shouldShowNotification) {
+            playStreakSound();
+            toast.success(`🔥 ${newStreak} Day Streak!`);
+            setLastStreakNotification(now);
+          }
         }
+
+        // Update the streak in Firestore
+        const streakUpdate: StreakUpdate = {
+          current_streak: newStreak,
+          last_login_timestamp: new Date(),
+          next_eligible_login: new Date(nextEligibleLogin || now + TWENTY_FOUR_HOURS),
+          streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS)
+        };
+        
+        await updateUserStreak(context.user.fid, streakUpdate);
+        
+        // Store today's date as last update
+        localStorage.setItem('lastStreakUpdate', today);
+
+        // Update streak count without notification if it has changed
+        if (newStreak !== userStreak) {
+          setUserStreak(newStreak);
+        }
+
+        // Log analytics
+        logAnalyticsEvent('streak_updated', {
+          new_streak: newStreak,
+          hours_since_last_login: hoursSinceLastLogin || 0,
+          streak_maintained: isValidStreak,
+          notification_shown: shouldShowNotification,
+          timezone: userTimezone
+        });
+
+      } catch (error) {
+        console.error('Error updating streak:', error);
+        toast.error('Failed to update streak');
       }
     };
 
