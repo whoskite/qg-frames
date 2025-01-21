@@ -405,6 +405,107 @@ const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
   }`;
 };
 
+// Add the ProfileModal component
+interface ProfileModalProps {
+  onClose: () => void;
+  context: FrameContext | undefined;
+  favorites: FavoriteQuote[];
+  quoteHistory: QuoteHistoryItem[];
+  sessionStartTime: number;
+  userStreak: number;
+}
+
+const ProfileModal: React.FC<ProfileModalProps> = ({ 
+  onClose, 
+  context, 
+  favorites, 
+  quoteHistory, 
+  sessionStartTime,
+  userStreak
+}) => (
+  <div 
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={onClose}
+  >
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Profile
+        </h2>
+        <Button
+          className="rounded-full h-7 w-7 p-0"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4 text-black" />
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        {/* Profile Image and Basic Info */}
+        <div 
+          className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors"
+          onClick={() => {
+            if (context?.user?.username) {
+              sdk.actions.openUrl(`https://warpcast.com/${context.user.username}`);
+            }
+          }}
+        >
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-purple-600">
+            <Image
+              src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+              alt="Profile"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {context?.user?.displayName || "User"}
+              <span className="text-sm text-gray-500">↗</span>
+            </h3>
+            <p className="text-gray-600">@{context?.user?.username}</p>
+          </div>
+        </div>
+
+        {/* User Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Favorites</p>
+            <p className="text-2xl font-semibold text-gray-900">{favorites.length}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Daily Streak</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl font-semibold text-gray-900">{userStreak}</p>
+              <span className="text-sm text-gray-600">days</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Account Info</h4>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              FID: {context?.user?.fid}
+            </p>
+            <p className="text-sm text-gray-600">
+              Joined: {formatTimestamp(new Date(sessionStartTime))}
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
@@ -1030,8 +1131,240 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-screen">
-        {/* Rest of the component content */}
+      <div className="flex flex-col min-h-screen bg-white">
+        {/* Fixed Navigation */}
+        <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              {/* Left side - Logo */}
+              <div className="flex-shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={60}
+                  height={60}
+                  priority
+                  className="object-contain"
+                />
+              </div>
+
+              {/* Right side - Profile Image with Dropdown */}
+              <div className="flex-shrink-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="cursor-pointer transition-transform hover:scale-105">
+                      <div className="relative w-[45px] h-[45px] rounded-full border-2 border-white shadow-lg overflow-hidden">
+                        <Image
+                          src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+                          alt={context?.user?.displayName || "Profile"}
+                          width={45}
+                          height={45}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {/* Dropdown menu items */}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main className={`flex-1 w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
+          bgImage ? 'bg-gradient-to-b from-gray-900/50 to-black/50' : 'bg-white'
+        }`}>
+          {bgImage && (
+            <div className="absolute inset-0 z-0">
+              <Image
+                src={bgImage}
+                alt="Background"
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-black/30" />
+            </div>
+          )}
+          
+          <div className="relative z-10 w-full flex flex-col items-center">
+            <div className="flex flex-col items-center gap-4 mb-8 w-full max-w-[95%] sm:max-w-sm">
+              <AnimatePresence mode="wait">
+                {isInitialState && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="text-2xl text-white font-medium text-center"
+                  >
+                    Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Streak Counter */}
+              <AnimatePresence mode="wait">
+                {isInitialState && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="text-center"
+                  >
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                      <span className="text-xl">🔥</span>
+                      <span className="text-white font-medium">{userStreak} Day Streak</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Card Component */}
+            <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+              <CardContent className="p-6 sm:p-4">
+                {/* GIF Display */}
+                <AnimatePresence mode="wait">
+                  {gifUrl && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                      onClick={handleRegenerateGif}
+                    >
+                      <div className="relative w-full h-[250px] sm:h-[200px]">
+                        <Image
+                          src={gifUrl}
+                          alt="Quote-related GIF"
+                          fill
+                          unoptimized
+                          sizes="(max-width: 600px) 100vw, 50vw"
+                          className={`object-cover rounded-lg transition-opacity duration-200 ${
+                            isLoading ? 'opacity-50' : 'opacity-100'
+                          }`}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Quote Display */}
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={quote}
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    transition={{ duration: 0.5 }}
+                    className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center relative"
+                  >
+                    <p className="text-center text-white text-2xl font-medium select-none">
+                      {quote || ""}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Action Buttons */}
+                <motion.div className="mb-4 flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    {quote && (
+                      <Heart 
+                        onClick={() => toggleFavorite({
+                          text: quote,
+                          style: 'default',
+                          gifUrl,
+                          timestamp: new Date(),
+                          bgColor,
+                          id: ''
+                        })}
+                        className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                          favorites.some(fav => fav.text === quote)
+                            ? 'fill-pink-500 text-pink-500' 
+                            : 'text-white hover:text-pink-200'
+                        }`}
+                      />
+                    )}
+                    <Shuffle
+                      onClick={handleGenerateQuote}
+                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                        isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
+                      }`}
+                    />
+                  </div>
+                  {quote && (
+                    <Share2
+                      onClick={() => setShowPreview(true)}
+                      className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
+                    />
+                  )}
+                </motion.div>
+
+                {/* Input Field */}
+                <div className="mb-6 relative">
+                  <Input
+                    type="text"
+                    placeholder="Enter a topic/word for your quote"
+                    value={userPrompt}
+                    onChange={(e) => setUserPrompt(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
+                  />
+                  <div 
+                    onClick={handleGenerateQuote}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+                  >
+                    <Image
+                      src="/Submit_Icon.png"
+                      alt="Submit"
+                      width={20}
+                      height={20}
+                      className="invert brightness-0 object-contain"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+
+        {/* Modals */}
+        {showPreview && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            {/* Preview Modal Content */}
+          </div>
+        )}
+        
+        {showProfile && (
+          <ProfileModal 
+            onClose={() => setShowProfile(false)}
+            context={context}
+            favorites={favorites}
+            quoteHistory={quoteHistory}
+            sessionStartTime={sessionStartTime}
+            userStreak={userStreak}
+          />
+        )}
+
+        {/* Onboarding Modal */}
+        {hasCheckedOnboarding && !onboarding.hasCompletedOnboarding && (
+          <OnboardingFlow 
+            onboarding={onboarding}
+            setOnboarding={setOnboarding}
+            onComplete={() => {
+              setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: true }));
+            }}
+            context={context}
+            setBgImage={setBgImage}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );
