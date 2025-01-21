@@ -175,6 +175,7 @@ export interface UserStreak {
   next_eligible_login: Date | null;
   streak_deadline: Date | null;
   grace_period_used?: boolean;
+  timezone: string;
 }
 
 export interface StreakUpdate {
@@ -206,7 +207,8 @@ export const getUserStreak = async (fid: number): Promise<UserStreak> => {
         last_login_timestamp: null,
         next_eligible_login: null,
         streak_deadline: null,
-        grace_period_used: false
+        grace_period_used: false,
+        timezone: ''
       };
     }
     
@@ -219,7 +221,8 @@ export const getUserStreak = async (fid: number): Promise<UserStreak> => {
       last_login_timestamp: data.last_login_timestamp || null,
       next_eligible_login: data.next_eligible_login ? new Date(data.next_eligible_login.toDate()) : null,
       streak_deadline: data.streak_deadline ? new Date(data.streak_deadline.toDate()) : null,
-      grace_period_used: data.grace_period_used || false
+      grace_period_used: data.grace_period_used || false,
+      timezone: data.timezone || ''
     };
 
     console.log('📊 getUserStreak: Processed streak data:', {
@@ -259,7 +262,8 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
         longest_streak: data.current_streak,
         streak_history: [{
           start_date: now,
-          length: data.current_streak
+          length: data.current_streak,
+          last_update: now
         }],
         grace_period_used: data.grace_period_used || false,
         created_at: serverTimestamp(),
@@ -276,16 +280,19 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
         // End the previous streak
         if (currentStreak && !currentStreak.end_date) {
           currentStreak.end_date = data.last_login_timestamp;
+          currentStreak.last_update = data.last_login_timestamp;
         }
         // Start a new streak
         streakHistory.push({
           start_date: data.last_login_timestamp,
-          length: 1
+          length: 1,
+          last_update: data.last_login_timestamp
         });
       } else if (data.current_streak > currentData.current_streak) {
         // Streak increased, update the length of current streak
         if (currentStreak) {
           currentStreak.length = data.current_streak;
+          currentStreak.last_update = data.last_login_timestamp;
         }
       }
 
@@ -296,7 +303,8 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
         longest_streak: Math.max(data.current_streak, currentData.longest_streak || 0),
         initial_streak_start: currentData.initial_streak_start || data.last_login_timestamp,
         grace_period_used: data.grace_period_used || false,
-        updated_at: serverTimestamp()
+        updated_at: serverTimestamp(),
+        last_update: data.last_login_timestamp // Add this to track the most recent update
       });
     }
   } catch (error) {

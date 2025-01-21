@@ -97,7 +97,7 @@ const formatTimestamp = (date: Date) => {
 // Add these helper functions at the top with other helper functions
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-const calculateStreakStatus = (lastLoginTimestamp: number | null, graceUsed: boolean = false): {
+const calculateStreakStatus = (lastLoginTimestamp: number | null, userTimezone: string, graceUsed: boolean = false): {
   isValidStreak: boolean;
   hoursSinceLastLogin: number | null;
   nextEligibleLogin: number | null;
@@ -118,38 +118,46 @@ const calculateStreakStatus = (lastLoginTimestamp: number | null, graceUsed: boo
     };
   }
 
-  const now = Date.now();
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const lastLoginDate = new Date(lastLoginTimestamp);
-  const nowDate = new Date(now);
+  // Convert current UTC time to user's timezone
+  const now = new Date();
+  const userTime = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
+  const userTimestamp = userTime.getTime();
   
-  // Convert timestamps to user's local midnight
-  const lastLoginMidnight = new Date(lastLoginDate.toLocaleDateString('en-US', { timeZone: userTimezone }));
-  const nowMidnight = new Date(nowDate.toLocaleDateString('en-US', { timeZone: userTimezone }));
-  const tomorrowMidnight = new Date(nowMidnight);
-  tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 1);
+  // Calculate time differences using user's timezone
+  const hoursSinceLastLogin = Math.floor((userTimestamp - lastLoginTimestamp) / (60 * 60 * 1000));
   
-  // Calculate time differences
-  const daysSinceLastLogin = Math.floor((nowMidnight.getTime() - lastLoginMidnight.getTime()) / TWENTY_FOUR_HOURS);
-  const hoursSinceLastLogin = Math.floor((now - lastLoginTimestamp) / (60 * 60 * 1000));
-  const hoursUntilReset = Math.floor((tomorrowMidnight.getTime() - now) / (60 * 60 * 1000));
+  // Calculate next window based on last login time in user's timezone
+  const nextLoginWindow = new Date(lastLoginTimestamp + TWENTY_FOUR_HOURS);
+  const deadlineWindow = new Date(lastLoginTimestamp + TWENTY_FOUR_HOURS + (6 * 60 * 60 * 1000)); // 24h + 6h grace period
   
-  // Grace period: 6 hours after midnight
-  const gracePeriodEnd = new Date(nowMidnight);
-  gracePeriodEnd.setHours(6, 0, 0, 0);
-  const isInGracePeriod = now <= gracePeriodEnd.getTime() && !graceUsed;
+  // Convert windows to user's timezone
+  const userNextLoginWindow = new Date(nextLoginWindow.toLocaleString('en-US', { timeZone: userTimezone }));
+  const userDeadlineWindow = new Date(deadlineWindow.toLocaleString('en-US', { timeZone: userTimezone }));
+  
+  // Determine if in grace period (between 24h and 30h after last login)
+  const isInGracePeriod = !graceUsed && 
+    userTimestamp > userNextLoginWindow.getTime() && 
+    userTimestamp <= userDeadlineWindow.getTime();
 
-  // Determine if the streak is still valid
-  const isValidStreak = daysSinceLastLogin <= 1 || (daysSinceLastLogin === 2 && isInGracePeriod);
+  // Determine if the streak is still valid (within 24h or in grace period)
+  const isValidStreak = hoursSinceLastLogin <= 24 || (isInGracePeriod && hoursSinceLastLogin <= 30);
   
-  // Determine if eligible for increment
-  const isEligibleForIncrement = daysSinceLastLogin === 1 || (daysSinceLastLogin === 2 && isInGracePeriod);
+  // Determine if eligible for increment (after 20h but before deadline)
+  const minimumHoursForIncrement = 20; // Allow increment after 20 hours
+  const isEligibleForIncrement = 
+    (hoursSinceLastLogin >= minimumHoursForIncrement && hoursSinceLastLogin <= 24) || 
+    (isInGracePeriod && !graceUsed);
+
+  // Calculate hours until the streak resets in user's timezone
+  const hoursUntilReset = isInGracePeriod 
+    ? Math.floor((userDeadlineWindow.getTime() - userTimestamp) / (60 * 60 * 1000))
+    : Math.floor((userNextLoginWindow.getTime() - userTimestamp) / (60 * 60 * 1000));
 
   return {
     isValidStreak,
     hoursSinceLastLogin,
-    nextEligibleLogin: tomorrowMidnight.getTime(),
-    streakDeadline: tomorrowMidnight.getTime(),
+    nextEligibleLogin: userNextLoginWindow.getTime(),
+    streakDeadline: userDeadlineWindow.getTime(),
     isEligibleForIncrement,
     isInGracePeriod,
     hoursUntilReset
@@ -871,22 +879,8 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Update the streak effect with proper notification timing
   useEffect(() => {
     const updateUserStreakCount = async () => {
-      // Only update streak if user is logged in and Firebase is initialized
       if (!context?.user?.fid || !isFirebaseInitialized) {
         console.log('🔄 Streak Update: Skipped - User not logged in or Firebase not initialized');
-        return;
-      }
-      
-      // Get the current date in user's timezone
-      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const today = new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
-      console.log('🔄 Streak Update: Current timezone:', userTimezone);
-      console.log('🔄 Streak Update: Today\'s date:', today);
-      
-      // Check if we've already updated the streak today
-      const lastUpdate = localStorage.getItem('lastStreakUpdate');
-      if (lastUpdate === today) {
-        console.log('🔄 Streak Update: Skipped - Already updated today');
         return;
       }
       
@@ -897,6 +891,9 @@ export default function Demo({ title = "Fun Quotes" }) {
         
         const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
         const graceUsed = userDoc?.grace_period_used || false;
+        const userTimezone = userDoc?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        console.log('🔄 Streak Update: Using timezone:', userTimezone);
         console.log('🔄 Streak Update: Last login timestamp:', new Date(lastLoginTimestamp || Date.now()).toLocaleString());
         console.log('🔄 Streak Update: Grace period used:', graceUsed);
         
@@ -908,7 +905,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           isEligibleForIncrement,
           isInGracePeriod: newGracePeriod,
           hoursUntilReset
-        } = calculateStreakStatus(lastLoginTimestamp, graceUsed);
+        } = calculateStreakStatus(lastLoginTimestamp, userTimezone, graceUsed);
 
         console.log('🔄 Streak Status:', {
           isValidStreak,
@@ -929,7 +926,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
         // Only show notification once per day
         const shouldShowNotification = !lastStreakNotification || 
-          new Date(lastStreakNotification).toLocaleDateString('en-US', { timeZone: userTimezone }) !== today;
+          new Date(lastStreakNotification).toLocaleDateString('en-US', { timeZone: userTimezone }) !== new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
 
         if (!lastLoginTimestamp) {
           // First login ever
@@ -982,7 +979,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         console.log('🔄 Streak Update: Successfully saved to Firestore');
         
         // Store today's date as last update
-        localStorage.setItem('lastStreakUpdate', today);
+        localStorage.setItem('lastStreakUpdate', new Date().toLocaleDateString('en-US', { timeZone: userTimezone }));
         console.log('🔄 Streak Update: Updated localStorage with today\'s date');
 
         // Update streak count without notification if it has changed
