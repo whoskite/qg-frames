@@ -486,11 +486,14 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
-    if (analytics) {
-      logEvent(analytics, eventName, params);
-      console.log('Analytics Event:', { eventName, params });
+    if (analytics && context?.user?.fid) {
+      logEvent(analytics, eventName, {
+        ...params,
+        user_id: context.user.fid.toString(),
+        timestamp: Date.now()
+      });
     }
-  }, []);
+  }, [analytics, context?.user?.fid]);
 
   // 6. Frame SDK Functions
   useEffect(() => {
@@ -882,14 +885,12 @@ export default function Demo({ title = "Fun Quotes" }) {
   useEffect(() => {
     const updateUserStreakCount = async () => {
       if (!context?.user?.fid || !isFirebaseInitialized) {
-        console.log('🔄 Streak Update: Skipped - User not logged in or Firebase not initialized');
         return;
       }
 
       try {
-        console.log('🔄 Streak Update: Starting update for user:', context.user.fid);
         const userDoc = await getUserStreak(context.user.fid);
-        console.log('🔄 Streak Update: Current user streak data:', userDoc);
+        const currentTime = Date.now();
         
         const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
         const graceUsed = userDoc?.grace_period_used || false;
@@ -900,14 +901,9 @@ export default function Demo({ title = "Fun Quotes" }) {
         const today = new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
         const lastUpdate = localStorage.getItem('lastStreakUpdate');
         if (lastUpdate === today) {
-          console.log('🔄 Streak Update: Skipped - Already updated today');
           setUserStreak(currentStreak);
           return;
         }
-        
-        console.log('🔄 Streak Update: Using timezone:', userTimezone);
-        console.log('🔄 Streak Update: Last login timestamp:', new Date(lastLoginTimestamp || Date.now()).toLocaleString());
-        console.log('🔄 Streak Update: Grace period used:', graceUsed);
         
         const {
           isValidStreak,
@@ -919,29 +915,10 @@ export default function Demo({ title = "Fun Quotes" }) {
           hoursUntilReset
         } = calculateStreakStatus(lastLoginTimestamp, userTimezone, graceUsed);
 
-        // Add detailed streak window logging
-        const currentTime = Date.now();
-        console.log('🕒 Streak Windows:');
-        console.log('  • Current time:', new Date(currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
-        console.log('  • 24-hour window starts:', new Date(lastLoginTimestamp || currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
-        console.log('  • Next eligible login:', new Date(nextEligibleLogin || currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
-        console.log('  • Streak deadline:', new Date(streakDeadline || currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
-        console.log('  • Hours until reset:', hoursUntilReset);
-        console.log('  • Hours since last login:', hoursSinceLastLogin);
-        console.log('  • Grace period active:', newGracePeriod);
-        console.log('  • Can increment streak:', isEligibleForIncrement);
-
-        // If eligible for increment, show when the next window will start
-        if (isEligibleForIncrement) {
-          const nextWindowStart = currentTime + TWENTY_FOUR_HOURS;
-          console.log('  • Next 24-hour window will start:', new Date(nextWindowStart).toLocaleString('en-US', { timeZone: userTimezone }));
-        }
-
         // Update grace period state
         setIsInGracePeriod(newGracePeriod);
 
         let newStreak = currentStreak;
-        console.log('🔄 Streak Update: Current streak:', newStreak);
 
         // Only show notification once per day
         const shouldShowNotification = !lastStreakNotification || 
@@ -950,7 +927,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         if (!lastLoginTimestamp) {
           // First login ever
           newStreak = 1;
-          console.log('🔄 Streak Update: First login ever - Starting streak');
           if (shouldShowNotification) {
             playStreakSound();
             toast.info('Streak started! Come back tomorrow to continue.');
@@ -959,7 +935,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         } else if (!isValidStreak) {
           // Reset streak if more than allowed time has passed
           newStreak = 1;
-          console.log('🔄 Streak Update: Streak reset - Too much time passed');
           if (shouldShowNotification) {
             playStreakSound();
             toast.info('New streak started! Come back tomorrow to continue.');
@@ -968,7 +943,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         } else if (isEligibleForIncrement && hoursSinceLastLogin !== null && hoursSinceLastLogin >= 20) {
           // Only increment if enough time has passed
           newStreak += 1;
-          console.log('🔄 Streak Update: Streak incremented to:', newStreak);
           if (shouldShowNotification) {
             playStreakSound();
             toast.success(`🔥 ${newStreak} Day Streak!`);
@@ -988,17 +962,13 @@ export default function Demo({ title = "Fun Quotes" }) {
           grace_period_used: newGracePeriod
         };
         
-        console.log('🔄 Streak Update: Saving streak update:', streakUpdate);
         await updateUserStreak(context.user.fid, streakUpdate);
-        console.log('🔄 Streak Update: Successfully saved to Firestore');
         
         // Store today's date as last update
         localStorage.setItem('lastStreakUpdate', today);
-        console.log('🔄 Streak Update: Updated localStorage with today\'s date');
 
         // Update streak count without notification if it has changed
         if (newStreak !== userStreak) {
-          console.log('🔄 Streak Update: Updating UI streak count from', userStreak, 'to', newStreak);
           setUserStreak(newStreak);
         }
 
@@ -1013,7 +983,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         });
 
       } catch (error) {
-        console.error('❌ Error updating streak:', error);
         toast.error('Failed to update streak');
       }
     };
