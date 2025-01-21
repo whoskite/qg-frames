@@ -1,17 +1,30 @@
 import { getAnalytics, logEvent, Analytics } from 'firebase/analytics';
-import { app } from './firebase';
+import { app, initializeFirebase, isInitialized } from './firebase';
 
 let analytics: Analytics | null = null;
 
 // Initialize analytics
-export const initAnalytics = () => {
-  if (typeof window !== 'undefined' && !analytics) {
+export const initAnalytics = async () => {
+  if (typeof window === 'undefined') {
+    console.log('⏭️ Skipping analytics initialization in server context');
+    return null;
+  }
+
+  if (!analytics) {
     try {
-      console.log('Initializing Firebase Analytics...');
+      console.log('🔄 Initializing Firebase Analytics...');
+      
+      // Ensure Firebase is initialized
+      if (!isInitialized) {
+        console.log('⏳ Waiting for Firebase initialization...');
+        await initializeFirebase();
+      }
+
       if (!app) {
         console.error('❌ Firebase app not initialized');
         return null;
       }
+
       analytics = getAnalytics(app);
       console.log('✅ Firebase Analytics initialized successfully');
       return analytics;
@@ -24,10 +37,10 @@ export const initAnalytics = () => {
 };
 
 // Log a custom event
-export const logAnalyticsEvent = (eventName: string, eventParams: Record<string, string | number | boolean>) => {
+export const logAnalyticsEvent = async (eventName: string, eventParams: Record<string, string | number | boolean>) => {
   try {
     console.log('📊 Attempting to log event:', eventName);
-    const analyticsInstance = analytics || initAnalytics();
+    const analyticsInstance = analytics || await initAnalytics();
     if (analyticsInstance) {
       logEvent(analyticsInstance, eventName, eventParams);
       console.log('✅ Analytics Event logged successfully:', { eventName, eventParams });
