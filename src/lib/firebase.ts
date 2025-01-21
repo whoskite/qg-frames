@@ -7,12 +7,18 @@ let app: FirebaseApp | undefined;
 let analytics: Analytics | undefined;
 let db: Firestore | undefined;
 let storage: FirebaseStorage | undefined;
+let isInitialized = false;
 
 async function initializeFirebase() {
+  if (isInitialized) {
+    return { app, analytics, db, storage };
+  }
+
   try {
     // Check if Firebase is already initialized
     if (getApps().length > 0) {
       app = getApps()[0];
+      console.log('✅ Firebase app already initialized');
     } else {
       let firebaseConfig;
       
@@ -28,26 +34,21 @@ async function initializeFirebase() {
           appId: process.env.FIREBASE_APP_ID,
           measurementId: process.env.FIREBASE_MEASUREMENT_ID
         };
-        console.log('Server-side Firebase config:', {
-          hasApiKey: !!firebaseConfig.apiKey,
-          authDomain: firebaseConfig.authDomain,
-          projectId: firebaseConfig.projectId,
-          storageBucket: firebaseConfig.storageBucket,
-          hasMessagingSenderId: !!firebaseConfig.messagingSenderId,
-          hasAppId: !!firebaseConfig.appId
-        });
+        console.log('🔧 Server-side Firebase config loaded');
       } else {
         // Client-side: fetch from API
+        console.log('🔄 Fetching Firebase config...');
         const response = await fetch('/api/firebase-config');
         if (!response.ok) {
           throw new Error('Failed to fetch Firebase configuration');
         }
         firebaseConfig = await response.json();
+        console.log('✅ Firebase config fetched successfully');
       }
       
       // Validate config
       if (!firebaseConfig.projectId || !firebaseConfig.storageBucket) {
-        console.error('Invalid Firebase config:', {
+        console.error('❌ Invalid Firebase config:', {
           hasProjectId: !!firebaseConfig.projectId,
           hasStorageBucket: !!firebaseConfig.storageBucket
         });
@@ -55,24 +56,31 @@ async function initializeFirebase() {
       }
 
       app = initializeApp(firebaseConfig);
+      console.log('✅ Firebase app initialized');
     }
 
     // Initialize Firestore
     db = getFirestore(app);
+    console.log('✅ Firestore initialized');
 
     // Initialize Storage
     storage = getStorage(app);
+    console.log('✅ Storage initialized');
 
     // Initialize Analytics if in browser context
     if (typeof window !== 'undefined' && await isSupported()) {
       analytics = getAnalytics(app);
+      console.log('✅ Analytics initialized');
     }
 
+    isInitialized = true;
+    console.log('🎉 Firebase initialization complete');
     return { app, analytics, db, storage };
   } catch (error) {
-    console.error('Error initializing Firebase:', error);
+    console.error('❌ Error initializing Firebase:', error);
+    isInitialized = false;
     throw error;
   }
 }
 
-export { initializeFirebase, app, analytics, db, storage }; 
+export { initializeFirebase, app, analytics, db, storage, isInitialized }; 
