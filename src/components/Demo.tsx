@@ -97,12 +97,14 @@ const formatTimestamp = (date: Date) => {
 // Add these helper functions at the top with other helper functions
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-const calculateStreakStatus = (lastLoginTimestamp: number | null): {
+const calculateStreakStatus = (lastLoginTimestamp: number | null, graceUsed: boolean = false): {
   isValidStreak: boolean;
   hoursSinceLastLogin: number | null;
   nextEligibleLogin: number | null;
   streakDeadline: number | null;
   isEligibleForIncrement: boolean;
+  isInGracePeriod: boolean;
+  hoursUntilReset: number | null;
 } => {
   if (!lastLoginTimestamp) {
     return {
@@ -110,7 +112,9 @@ const calculateStreakStatus = (lastLoginTimestamp: number | null): {
       hoursSinceLastLogin: null,
       nextEligibleLogin: null,
       streakDeadline: null,
-      isEligibleForIncrement: true
+      isEligibleForIncrement: true,
+      isInGracePeriod: false,
+      hoursUntilReset: null
     };
   }
 
@@ -122,21 +126,33 @@ const calculateStreakStatus = (lastLoginTimestamp: number | null): {
   // Convert timestamps to user's local midnight
   const lastLoginMidnight = new Date(lastLoginDate.toLocaleDateString('en-US', { timeZone: userTimezone }));
   const nowMidnight = new Date(nowDate.toLocaleDateString('en-US', { timeZone: userTimezone }));
+  const tomorrowMidnight = new Date(nowMidnight);
+  tomorrowMidnight.setDate(tomorrowMidnight.getDate() + 1);
   
-  // Calculate days between midnights
+  // Calculate time differences
   const daysSinceLastLogin = Math.floor((nowMidnight.getTime() - lastLoginMidnight.getTime()) / TWENTY_FOUR_HOURS);
-  const hoursSinceLastLogin = (now - lastLoginTimestamp) / (60 * 60 * 1000);
+  const hoursSinceLastLogin = Math.floor((now - lastLoginTimestamp) / (60 * 60 * 1000));
+  const hoursUntilReset = Math.floor((tomorrowMidnight.getTime() - now) / (60 * 60 * 1000));
   
-  // Next eligible login is next midnight in user's timezone
-  const nextMidnight = new Date(nowMidnight);
-  nextMidnight.setDate(nextMidnight.getDate() + 1);
+  // Grace period: 6 hours after midnight
+  const gracePeriodEnd = new Date(nowMidnight);
+  gracePeriodEnd.setHours(6, 0, 0, 0);
+  const isInGracePeriod = now <= gracePeriodEnd.getTime() && !graceUsed;
+
+  // Determine if the streak is still valid
+  const isValidStreak = daysSinceLastLogin <= 1 || (daysSinceLastLogin === 2 && isInGracePeriod);
   
+  // Determine if eligible for increment
+  const isEligibleForIncrement = daysSinceLastLogin === 1 || (daysSinceLastLogin === 2 && isInGracePeriod);
+
   return {
-    isValidStreak: daysSinceLastLogin <= 1, // Valid if login was today or yesterday
+    isValidStreak,
     hoursSinceLastLogin,
-    nextEligibleLogin: nextMidnight.getTime(),
-    streakDeadline: nextMidnight.getTime(),
-    isEligibleForIncrement: daysSinceLastLogin === 1 // Only increment if exactly one day has passed
+    nextEligibleLogin: tomorrowMidnight.getTime(),
+    streakDeadline: tomorrowMidnight.getTime(),
+    isEligibleForIncrement,
+    isInGracePeriod,
+    hoursUntilReset
   };
 };
 
@@ -164,6 +180,7 @@ interface StreakUpdate {
   last_login_timestamp: Date;
   next_eligible_login: Date;
   streak_deadline: Date;
+  grace_period_used?: boolean;
 }
 
 // Add this after the imports
@@ -452,6 +469,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingGif, setIsLoadingGif] = useState(false);
+
+  // Add state for grace period
+  const [isInGracePeriod, setIsInGracePeriod] = useState(false);
 
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
@@ -865,14 +885,20 @@ export default function Demo({ title = "Fun Quotes" }) {
       try {
         const userDoc = await getUserStreak(context.user.fid);
         const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
+        const graceUsed = userDoc?.grace_period_used || false;
         
         const {
           isValidStreak,
           hoursSinceLastLogin,
           nextEligibleLogin,
           streakDeadline,
-          isEligibleForIncrement
-        } = calculateStreakStatus(lastLoginTimestamp);
+          isEligibleForIncrement,
+          isInGracePeriod: newGracePeriod,
+          hoursUntilReset
+        } = calculateStreakStatus(lastLoginTimestamp, graceUsed);
+
+        // Update grace period state
+        setIsInGracePeriod(newGracePeriod);
 
         let newStreak = userDoc?.current_streak || 0;
         const now = Date.now();
@@ -903,7 +929,15 @@ export default function Demo({ title = "Fun Quotes" }) {
           if (shouldShowNotification) {
             playStreakSound();
             toast.success(`🔥 ${newStreak} Day Streak!`);
+            if (newGracePeriod) {
+              toast.info('Grace period used - make sure to log in earlier tomorrow!');
+            }
             setLastStreakNotification(now);
+          }
+        } else if (newGracePeriod) {
+          // In grace period but haven't used it yet
+          if (shouldShowNotification) {
+            toast.info(`${hoursUntilReset} hours left to maintain your streak!`);
           }
         }
 
@@ -912,7 +946,8 @@ export default function Demo({ title = "Fun Quotes" }) {
           current_streak: newStreak,
           last_login_timestamp: new Date(),
           next_eligible_login: new Date(nextEligibleLogin || now + TWENTY_FOUR_HOURS),
-          streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS)
+          streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS),
+          grace_period_used: newGracePeriod
         };
         
         await updateUserStreak(context.user.fid, streakUpdate);
@@ -931,6 +966,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           hours_since_last_login: hoursSinceLastLogin || 0,
           streak_maintained: isValidStreak,
           notification_shown: shouldShowNotification,
+          grace_period_used: newGracePeriod,
           timezone: userTimezone
         });
 

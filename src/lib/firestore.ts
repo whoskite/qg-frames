@@ -174,6 +174,7 @@ export interface UserStreak {
   last_login_timestamp: { toMillis: () => number } | null;
   next_eligible_login: Date | null;
   streak_deadline: Date | null;
+  grace_period_used?: boolean;
 }
 
 export interface StreakUpdate {
@@ -182,6 +183,7 @@ export interface StreakUpdate {
   next_eligible_login: Date;
   streak_deadline: Date;
   timezone?: string;
+  grace_period_used?: boolean;
 }
 
 // Update the getUserStreak function
@@ -232,21 +234,52 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
     const timezone = data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
     
     if (!userDoc.exists()) {
-      // Create new user document
+      // Create new user document - this is their first streak
+      const now = new Date();
       await setDoc(userRef, {
         ...data,
         timezone,
+        initial_streak_start: now,
         longest_streak: data.current_streak,
+        streak_history: [{
+          start_date: now,
+          length: data.current_streak
+        }],
+        grace_period_used: data.grace_period_used || false,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp()
       });
     } else {
       // Update existing user document
       const currentData = userDoc.data();
+      const streakHistory = currentData.streak_history || [];
+      const currentStreak = streakHistory[streakHistory.length - 1];
+      
+      // If current streak is 1 and previous streak was higher, it means streak was reset
+      if (data.current_streak === 1 && currentData.current_streak > 1) {
+        // End the previous streak
+        if (currentStreak && !currentStreak.end_date) {
+          currentStreak.end_date = data.last_login_timestamp;
+        }
+        // Start a new streak
+        streakHistory.push({
+          start_date: data.last_login_timestamp,
+          length: 1
+        });
+      } else if (data.current_streak > currentData.current_streak) {
+        // Streak increased, update the length of current streak
+        if (currentStreak) {
+          currentStreak.length = data.current_streak;
+        }
+      }
+
       await updateDoc(userRef, {
         ...data,
         timezone,
+        streak_history: streakHistory,
         longest_streak: Math.max(data.current_streak, currentData.longest_streak || 0),
+        initial_streak_start: currentData.initial_streak_start || data.last_login_timestamp,
+        grace_period_used: data.grace_period_used || false,
         updated_at: serverTimestamp()
       });
     }
