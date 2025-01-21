@@ -990,10 +990,13 @@ export default function Demo({ title = "Fun Quotes" }) {
           last_login_timestamp: new Date(),
           next_eligible_login: new Date(nextEligibleLogin || now + TWENTY_FOUR_HOURS),
           streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS),
-          grace_period_used: isInGracePeriod ? true : undefined // Only set if grace period was used
+          grace_period_used: isInGracePeriod // Set to true or false instead of undefined
         };
         
-        await updateUserStreak(context.user.fid, streakUpdate);
+        // Remove undefined fields before updating Firestore
+        const cleanedUpdate = streakUpdate;
+        
+        await updateUserStreak(context.user.fid, cleanedUpdate);
         
         // Store today's date as last update
         localStorage.setItem('lastStreakUpdate', today);
