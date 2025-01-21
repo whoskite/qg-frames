@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getSession } from "~/lib/auth";
 import "~/app/globals.css";
 import { Providers } from "~/app/providers";
+import Script from "next/script";
+import { initAnalytics } from "~/lib/analytics";
 
 export const metadata: Metadata = {
   title: "FunQuotes",
@@ -23,6 +25,13 @@ export default async function RootLayout({
       </head>
       <body>
         <Providers session={session}>{children}</Providers>
+        <Script id="firebase-analytics-init">
+          {`
+            if (typeof window !== 'undefined') {
+              (${initAnalytics.toString()})();
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

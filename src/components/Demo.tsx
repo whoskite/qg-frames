@@ -39,6 +39,7 @@ import { OnboardingFlow } from './OnboardingFlow';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
+import { logAnalyticsEvent, logUserAction } from '../lib/analytics';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -864,6 +865,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           throw error; // Re-throw to be caught by outer catch block
         }
       }
+      logUserAction('toggle_favorite', 'quote_interaction', isAlreadyFavorited ? 'remove' : 'add');
     } catch (error) {
       console.error('Error in toggleFavorite:', error);
       if (error instanceof Error) {
@@ -1098,6 +1100,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         console.error('Error saving GIF preference:', error);
       }
     }
+    logUserAction('toggle_gif', 'settings', newState ? 'enabled' : 'disabled');
   };
 
   // Add effect to load GIF preference
@@ -1485,6 +1488,24 @@ export default function Demo({ title = "Fun Quotes" }) {
 
     loadUserStreak();
   }, [context?.user?.fid, isFirebaseInitialized]);
+
+  // Add this effect near the top of your component
+  useEffect(() => {
+    // Test analytics
+    logAnalyticsEvent('app_loaded', {
+      timestamp: Date.now(),
+      user_logged_in: !!context?.user?.fid,
+      screen_width: window.innerWidth,
+      screen_height: window.innerHeight
+    });
+    
+    if (context?.user?.fid) {
+      logAnalyticsEvent('user_identified', {
+        fid: context.user.fid,
+        username: context.user.username || 'unknown'
+      });
+    }
+  }, [context?.user]);
 
   return (
     <ErrorBoundary>
