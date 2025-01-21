@@ -883,7 +883,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         console.log('🔄 Streak Update: Skipped - User not logged in or Firebase not initialized');
         return;
       }
-      
+
       try {
         console.log('🔄 Streak Update: Starting update for user:', context.user.fid);
         const userDoc = await getUserStreak(context.user.fid);
@@ -892,6 +892,16 @@ export default function Demo({ title = "Fun Quotes" }) {
         const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
         const graceUsed = userDoc?.grace_period_used || false;
         const userTimezone = userDoc?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const currentStreak = userDoc?.current_streak || 0;
+        
+        // Check if we've already updated today
+        const today = new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
+        const lastUpdate = localStorage.getItem('lastStreakUpdate');
+        if (lastUpdate === today) {
+          console.log('🔄 Streak Update: Skipped - Already updated today');
+          setUserStreak(currentStreak);
+          return;
+        }
         
         console.log('🔄 Streak Update: Using timezone:', userTimezone);
         console.log('🔄 Streak Update: Last login timestamp:', new Date(lastLoginTimestamp || Date.now()).toLocaleString());
@@ -928,13 +938,12 @@ export default function Demo({ title = "Fun Quotes" }) {
         // Update grace period state
         setIsInGracePeriod(newGracePeriod);
 
-        let newStreak = userDoc?.current_streak || 0;
-        const now = Date.now();
+        let newStreak = currentStreak;
         console.log('🔄 Streak Update: Current streak:', newStreak);
 
         // Only show notification once per day
         const shouldShowNotification = !lastStreakNotification || 
-          new Date(lastStreakNotification).toLocaleDateString('en-US', { timeZone: userTimezone }) !== new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
+          new Date(lastStreakNotification).toLocaleDateString('en-US', { timeZone: userTimezone }) !== today;
 
         if (!lastLoginTimestamp) {
           // First login ever
@@ -943,19 +952,19 @@ export default function Demo({ title = "Fun Quotes" }) {
           if (shouldShowNotification) {
             playStreakSound();
             toast.info('Streak started! Come back tomorrow to continue.');
-            setLastStreakNotification(now);
+            setLastStreakNotification(currentTime);
           }
         } else if (!isValidStreak) {
-          // Reset streak if more than one day has passed
+          // Reset streak if more than allowed time has passed
           newStreak = 1;
           console.log('🔄 Streak Update: Streak reset - Too much time passed');
           if (shouldShowNotification) {
             playStreakSound();
             toast.info('New streak started! Come back tomorrow to continue.');
-            setLastStreakNotification(now);
+            setLastStreakNotification(currentTime);
           }
-        } else if (isEligibleForIncrement) {
-          // Increment streak if exactly one day has passed
+        } else if (isEligibleForIncrement && hoursSinceLastLogin !== null && hoursSinceLastLogin >= 20) {
+          // Only increment if enough time has passed
           newStreak += 1;
           console.log('🔄 Streak Update: Streak incremented to:', newStreak);
           if (shouldShowNotification) {
@@ -964,21 +973,16 @@ export default function Demo({ title = "Fun Quotes" }) {
             if (newGracePeriod) {
               toast.info('Grace period used - make sure to log in earlier tomorrow!');
             }
-            setLastStreakNotification(now);
-          }
-        } else if (newGracePeriod) {
-          console.log('🔄 Streak Update: In grace period - Hours until reset:', hoursUntilReset);
-          if (shouldShowNotification) {
-            toast.info(`${hoursUntilReset} hours left to maintain your streak!`);
+            setLastStreakNotification(currentTime);
           }
         }
 
         // Update the streak in Firestore
         const streakUpdate: StreakUpdate = {
           current_streak: newStreak,
-          last_login_timestamp: new Date(),
-          next_eligible_login: new Date(nextEligibleLogin || now + TWENTY_FOUR_HOURS),
-          streak_deadline: new Date(streakDeadline || now + TWENTY_FOUR_HOURS),
+          last_login_timestamp: new Date(currentTime),
+          next_eligible_login: new Date(nextEligibleLogin || currentTime + TWENTY_FOUR_HOURS),
+          streak_deadline: new Date(streakDeadline || currentTime + TWENTY_FOUR_HOURS + (6 * 60 * 60 * 1000)),
           grace_period_used: newGracePeriod
         };
         
@@ -987,7 +991,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         console.log('🔄 Streak Update: Successfully saved to Firestore');
         
         // Store today's date as last update
-        localStorage.setItem('lastStreakUpdate', new Date().toLocaleDateString('en-US', { timeZone: userTimezone }));
+        localStorage.setItem('lastStreakUpdate', today);
         console.log('🔄 Streak Update: Updated localStorage with today\'s date');
 
         // Update streak count without notification if it has changed
