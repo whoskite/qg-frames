@@ -907,15 +907,23 @@ export default function Demo({ title = "Fun Quotes" }) {
           hoursUntilReset
         } = calculateStreakStatus(lastLoginTimestamp, userTimezone, graceUsed);
 
-        console.log('🔄 Streak Status:', {
-          isValidStreak,
-          hoursSinceLastLogin,
-          nextEligibleLogin: new Date(nextEligibleLogin || Date.now()).toLocaleString(),
-          streakDeadline: new Date(streakDeadline || Date.now()).toLocaleString(),
-          isEligibleForIncrement,
-          isInGracePeriod: newGracePeriod,
-          hoursUntilReset
-        });
+        // Add detailed streak window logging
+        const currentTime = Date.now();
+        console.log('🕒 Streak Windows:');
+        console.log('  • Current time:', new Date(currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
+        console.log('  • 24-hour window starts:', new Date(lastLoginTimestamp || currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
+        console.log('  • Next eligible login:', new Date(nextEligibleLogin || currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
+        console.log('  • Streak deadline:', new Date(streakDeadline || currentTime).toLocaleString('en-US', { timeZone: userTimezone }));
+        console.log('  • Hours until reset:', hoursUntilReset);
+        console.log('  • Hours since last login:', hoursSinceLastLogin);
+        console.log('  • Grace period active:', newGracePeriod);
+        console.log('  • Can increment streak:', isEligibleForIncrement);
+
+        // If eligible for increment, show when the next window will start
+        if (isEligibleForIncrement) {
+          const nextWindowStart = currentTime + TWENTY_FOUR_HOURS;
+          console.log('  • Next 24-hour window will start:', new Date(nextWindowStart).toLocaleString('en-US', { timeZone: userTimezone }));
+        }
 
         // Update grace period state
         setIsInGracePeriod(newGracePeriod);
