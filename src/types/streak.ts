@@ -14,6 +14,12 @@ export interface StreakUpdate {
   next_eligible_login: Date;
   streak_deadline: Date;
   timezone?: string;
+  initial_streak_start?: Date;
+  streak_history?: {
+    start_date: Date;
+    end_date?: Date;
+    length: number;
+  }[];
 }
 
 export interface UserStreak {
@@ -25,4 +31,10 @@ export interface UserStreak {
   timezone?: string;
   created_at?: Timestamp;
   updated_at?: Timestamp;
+  initial_streak_start?: Timestamp;
+  streak_history?: {
+    start_date: Timestamp;
+    end_date?: Timestamp;
+    length: number;
+  }[];
 } 

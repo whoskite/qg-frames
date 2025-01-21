@@ -32,7 +32,8 @@ import {
   updateUserStreak,
   getUserStreak,
   saveOnboardingData,
-  getOnboardingData
+  getOnboardingData,
+  getStreakHistory
 } from '../lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -865,6 +866,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       try {
         const userDoc = await getUserStreak(context.user.fid);
         const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
+        const streakHistory = await getStreakHistory(context.user.fid);
         
         const {
           isValidStreak,
@@ -902,7 +904,22 @@ export default function Demo({ title = "Fun Quotes" }) {
           newStreak += 1;
           if (shouldShowNotification) {
             playStreakSound();
-            toast.success(`🔥 ${newStreak} Day Streak!`);
+            // Show additional info about streak history
+            const streakStartDate = streakHistory.initial_streak_start?.toDate();
+            const daysFromStart = streakStartDate ? 
+              Math.floor((now - streakStartDate.getTime()) / (24 * 60 * 60 * 1000)) : 0;
+            
+            toast.success(
+              <div>
+                <div>🔥 {newStreak} Day Streak!</div>
+                {streakStartDate && (
+                  <div className="text-sm opacity-80">
+                    Started {formatTimestamp(streakStartDate)}
+                    {daysFromStart > 0 && ` (${daysFromStart} days ago)`}
+                  </div>
+                )}
+              </div>
+            );
             setLastStreakNotification(now);
           }
         }
@@ -931,7 +948,9 @@ export default function Demo({ title = "Fun Quotes" }) {
           hours_since_last_login: hoursSinceLastLogin || 0,
           streak_maintained: isValidStreak,
           notification_shown: shouldShowNotification,
-          timezone: userTimezone
+          timezone: userTimezone,
+          days_since_initial_start: streakHistory.initial_streak_start ? 
+            Math.floor((now - streakHistory.initial_streak_start.toDate().getTime()) / (24 * 60 * 60 * 1000)) : 0
         });
 
       } catch (error) {
