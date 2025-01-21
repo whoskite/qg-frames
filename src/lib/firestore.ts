@@ -189,33 +189,49 @@ export interface StreakUpdate {
 // Update the getUserStreak function
 export const getUserStreak = async (fid: number): Promise<UserStreak> => {
   if (!db) {
+    console.log('❌ getUserStreak: Firestore not initialized');
     throw new Error('Firestore not initialized');
   }
 
   try {
+    console.log('📊 getUserStreak: Fetching streak data for user:', fid);
     const userRef = doc(db as Firestore, 'users', fid.toString());
     const userDoc = await getDoc(userRef);
     
     if (!userDoc.exists()) {
+      console.log('📊 getUserStreak: No existing streak data - returning defaults');
       return {
         current_streak: 0,
         longest_streak: 0,
         last_login_timestamp: null,
         next_eligible_login: null,
-        streak_deadline: null
+        streak_deadline: null,
+        grace_period_used: false
       };
     }
     
     const data = userDoc.data();
-    return {
+    console.log('📊 getUserStreak: Raw Firestore data:', data);
+
+    const streakData = {
       current_streak: data.current_streak || 0,
       longest_streak: data.longest_streak || 0,
       last_login_timestamp: data.last_login_timestamp || null,
-      next_eligible_login: data.next_eligible_login || null,
-      streak_deadline: data.streak_deadline || null
+      next_eligible_login: data.next_eligible_login ? new Date(data.next_eligible_login.toDate()) : null,
+      streak_deadline: data.streak_deadline ? new Date(data.streak_deadline.toDate()) : null,
+      grace_period_used: data.grace_period_used || false
     };
+
+    console.log('📊 getUserStreak: Processed streak data:', {
+      ...streakData,
+      last_login_timestamp: streakData.last_login_timestamp ? new Date(streakData.last_login_timestamp.toMillis()).toLocaleString() : null,
+      next_eligible_login: streakData.next_eligible_login?.toLocaleString(),
+      streak_deadline: streakData.streak_deadline?.toLocaleString()
+    });
+
+    return streakData;
   } catch (error) {
-    console.error('Error getting user streak:', error);
+    console.error('❌ getUserStreak Error:', error);
     throw error;
   }
 };
