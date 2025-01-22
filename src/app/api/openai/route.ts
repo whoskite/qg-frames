@@ -50,7 +50,6 @@ interface UserPreferences {
   areasToImprove?: string[];
   personalGoals?: string;
   preferredStyles?: string[];
-  userStreak?: number;
 }
 
 function generatePrompt(preferences: UserPreferences): string {
@@ -58,11 +57,10 @@ function generatePrompt(preferences: UserPreferences): string {
     relationshipStatus,
     areasToImprove,
     personalGoals,
-    preferredStyles,
-    userStreak
+    preferredStyles
   } = preferences;
 
-  let prompt = "Generate a creative and unique quote prompt that:";
+  let prompt = "Generate a creative and unique quote that:";
 
   // Add style preferences
   if (preferredStyles && preferredStyles.length > 0) {
@@ -82,11 +80,6 @@ function generatePrompt(preferences: UserPreferences): string {
   // Add relationship context
   if (relationshipStatus && relationshipStatus !== 'Prefer not to say') {
     prompt += `\n- Considers relationship status: ${relationshipStatus}`;
-  }
-
-  // Add streak motivation
-  if (userStreak && userStreak > 0) {
-    prompt += `\n- Incorporates motivation for maintaining a ${userStreak}-day streak`;
   }
 
   prompt += "\n\nThe prompt should be specific, creative, and avoid generic themes. Focus on creating a unique angle or perspective.";

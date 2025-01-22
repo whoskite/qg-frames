@@ -326,7 +326,7 @@ const analyzeUserPreferences = (favorites: FavoriteQuote[]) => {
 };
 
 // Modify the generateRandomPrompt function to use user preferences
-const generateRandomPrompt = (favorites: FavoriteQuote[] = [], userStreak: number = 0) => {
+const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
   const now = new Date();
   const day = now.getDay();
   const hour = now.getHours();
@@ -454,15 +454,9 @@ const generateRandomPrompt = (favorites: FavoriteQuote[] = [], userStreak: numbe
     fall: 'transformation and reflection'
   }[currentSeason];
 
-  // Add streak-based motivation if applicable
-  const streakContext = userStreak > 0 
-    ? `maintaining a ${userStreak}-day journey of growth` 
-    : 'beginning a new journey';
-
   // Combine all factors into a unique prompt
   const prompt = `Generate a ${selectedTone} quote about ${selectedTheme} with a ${selectedStyle} style, 
-    incorporating elements of ${timePhrase} and ${seasonalContext}. 
-    Consider themes of ${streakContext}${
+    incorporating elements of ${timePhrase} and ${seasonalContext}${
     userPreferences?.favoriteWords.length 
       ? ` and personal resonance with: ${userPreferences.favoriteWords.join(', ')}` 
       : ''
@@ -685,11 +679,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         // Add emotional and style context
         personalizedPrompt += ` with a ${timeBasedMood} tone ${styleContext}`;
 
-        // Add streak-based motivation
-        if (userStreak > 0) {
-          personalizedPrompt += ` to encourage maintaining a ${userStreak}-day streak of personal growth`;
-        }
-
         const quoteResponse = await generateQuote(personalizedPrompt);
         
         if (quoteResponse) {
@@ -735,7 +724,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     } finally {
       setIsGenerating(false);
     }
-  }, [isLoading, userPrompt, onboarding, userStreak, gifEnabled]);
+  }, [isLoading, userPrompt, onboarding, gifEnabled]);
 
   // 8. Effect Hooks
   useEffect(() => {
@@ -1849,8 +1838,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 relationshipStatus: onboarding.personalInfo.relationshipStatus,
                                 areasToImprove: onboarding.personalInfo.areasToImprove,
                                 personalGoals: onboarding.personalInfo.personalGoals,
-                                preferredStyles: onboarding.personalInfo.preferredStyles,
-                                userStreak
+                                preferredStyles: onboarding.personalInfo.preferredStyles
                               }
                             }),
                           });
@@ -1872,7 +1860,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         } catch (error) {
                           console.error('Error generating random quote:', error);
                           // Fallback to the original randomizer if AI fails
-                          const randomPrompt = generateRandomPrompt(favorites, userStreak);
+                          const randomPrompt = generateRandomPrompt(favorites);
                           setUserPrompt(randomPrompt);
                           await handleGenerateQuote();
                           toast.success('Generated a quote based on your preferences!');
