@@ -1,11 +1,16 @@
 import { Sparkles, Heart, History } from 'lucide-react';
 
 interface BottomNavProps {
-  onNavigate: (section: string) => void;
   activeSection: string;
+  onNavigate: (section: string) => void;
+  className?: string;
 }
 
-export function BottomNav({ onNavigate, activeSection }: BottomNavProps) {
+export const BottomNav: React.FC<BottomNavProps> = ({ 
+  activeSection, 
+  onNavigate,
+  className = ''
+}) => {
   const navItems = [
     { name: 'Generate', id: 'generate', icon: Sparkles },
     { name: 'Favorites', id: 'favorites', icon: Heart },
@@ -13,7 +18,7 @@ export function BottomNav({ onNavigate, activeSection }: BottomNavProps) {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md border-t border-gray-800 z-50">
+    <nav className={`fixed bottom-0 left-0 right-0 border-t border-white/10 z-50 ${className}`}>
       <div className="max-w-md mx-auto px-4">
         <ul className="flex justify-around items-center h-16">
           {navItems.map((item) => (

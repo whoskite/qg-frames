@@ -857,9 +857,9 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Update the background music effect
   useEffect(() => {
-    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
+    const audio = new Audio('/Forest_Music.mp3');
     audio.loop = true;
-    audio.volume = 0.3;
+    audio.volume = 0.2;
     setAudioPlayer(audio);
 
     // Don't try to play immediately, wait for user interaction
@@ -1499,7 +1499,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
             )}
             <div className="relative z-10 w-full flex flex-col items-center">
-              <div className="flex flex-col items-center gap-4 mb-8 w-full max-w-[95%] sm:max-w-sm">
+              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm">
                 <AnimatePresence mode="wait">
                   {isInitialState && (
                     <motion.div 
@@ -1592,34 +1592,54 @@ export default function Demo({ title = "Fun Quotes" }) {
                   >
                     <div className="flex items-center gap-4">
                       {quote && (
-                        <Heart 
-                          onClick={() => {
-                            const quoteItem: QuoteHistoryItem = {
-                              text: quote,
-                              style: 'default',
-                              gifUrl,
-                              timestamp: new Date(),
-                              bgColor,
-                              id: ''
-                            };
-                            toggleFavorite(quoteItem);
-                            setShowHeartAnimation(true);
-                            setTimeout(() => setShowHeartAnimation(false), 1000);
+                        <motion.div
+                          initial={false}
+                          animate={{ 
+                            scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
                           }}
-                          className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                            favorites.some(fav => fav.text === quote)
-                              ? 'fill-pink-500 text-pink-500' 
-                              : 'text-white hover:text-pink-200'
-                          }`}
-                        />
+                          transition={{ duration: 0.3 }}
+                          className="relative"
+                        >
+                          <Heart 
+                            onClick={() => {
+                              const quoteItem: QuoteHistoryItem = {
+                                text: quote,
+                                style: 'default',
+                                gifUrl,
+                                timestamp: new Date(),
+                                bgColor,
+                                id: ''
+                              };
+                              toggleFavorite(quoteItem);
+                              setShowHeartAnimation(true);
+                              setTimeout(() => setShowHeartAnimation(false), 1000);
+                            }}
+                            className={`w-5 h-5 cursor-pointer hover:scale-125 transition-all duration-300 ${
+                              favorites.some(fav => fav.text === quote)
+                                ? 'fill-pink-500 text-pink-500' 
+                                : 'text-white hover:text-pink-200'
+                            }`}
+                          />
+                        </motion.div>
                       )}
                       <motion.div
                         whileTap={{ rotate: 360, scale: 0.8 }}
-                        transition={{ 
-                          type: "spring",
-                          duration: 0.5,
-                          bounce: 0.5
-                        }}
+                        animate={isGenerating ? {
+                          rotate: [0, 360],
+                          scale: [1, 0.8, 1],
+                          transition: {
+                            rotate: {
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: [0.4, 0, 0.2, 1]
+                            },
+                            scale: {
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }
+                          }
+                        } : undefined}
                       >
                         <Dice3
                           onClick={async () => {
@@ -1664,9 +1684,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                               setIsGenerating(false);
                             }
                           }}
-                          className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                            isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
-                          }`}
+                          className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white"
                         />
                       </motion.div>
                     </div>
@@ -1725,7 +1743,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* History Page */}
           {showHistory && (
-            <div className="fixed inset-0 bg-black z-40">
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center p-4 border-b border-white/10">
@@ -1747,7 +1765,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     ) : (
                       quoteHistory.map((item, index) => (
                         <motion.div
-                          key={index}
+                          key={item.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -1788,7 +1806,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Favorites Page */}
           {showFavorites && (
-            <div className="fixed inset-0 bg-black z-40">
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center p-4 border-b border-white/10">
@@ -1860,13 +1878,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Theme Page */}
           {showThemeMenu && (
-            <motion.div 
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 120 }}
-              className="fixed inset-0 bg-black z-50"
-            >
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -1951,9 +1963,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                     ].map((bg) => (
                       <motion.div
                         key={bg.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.05 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
                         onClick={async () => {
                           const newTheme = bg.isGradient ? bg.path : bg.path;
                           setBgImage(newTheme);
@@ -1973,17 +1985,22 @@ export default function Demo({ title = "Fun Quotes" }) {
                         {bg.isGradient ? (
                           <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
                         ) : (
-                          <Image
-                            src={bg.path}
-                            alt={bg.name}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 50vw, 33vw"
-                            unoptimized
-                          />
+                          <>
+                            <Image
+                              src={bg.path}
+                              alt={bg.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 150px, 200px"
+                              priority={true}
+                              loading="eager"
+                              unoptimized
+                            />
+                            <div className="absolute inset-0 bg-black/20" />
+                          </>
                         )}
                         {bgImage === bg.path && (
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                          <div className="absolute inset-0 flex items-center justify-center">
                             <Check className="w-6 h-6 text-white" />
                           </div>
                         )}
@@ -1995,18 +2012,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Settings Page */}
           {showSettings && (
-            <motion.div 
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 120 }}
-              className="fixed inset-0 bg-black z-50"
-            >
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -2143,7 +2154,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Share Preview Modal */}
@@ -2358,7 +2369,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* User Preferences Page */}
           {showPreferences && (
-            <div className="fixed inset-0 bg-black z-40">
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -2430,7 +2441,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Quote Style Page */}
           {showQuoteStylePage && (
-            <div className="fixed inset-0 bg-black z-50">
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
@@ -2524,7 +2535,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Areas to Improve Page */}
           {showAreasPage && (
-            <div className="fixed inset-0 bg-black z-50">
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
@@ -2627,7 +2638,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Personal Goals Page */}
           {showGoalsPage && (
-            <div className="fixed inset-0 bg-black z-50">
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
@@ -2708,6 +2719,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         <BottomNav 
           activeSection={activeSection} 
           onNavigate={handleNavigation} 
+          className="bg-black shadow-lg"
         />
       </div>
     </ErrorBoundary>
