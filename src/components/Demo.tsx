@@ -1425,6 +1425,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                       )}
                       <DropdownMenuItem 
                         className="flex items-center gap-2"
+                        onClick={() => {
+                          setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: false }));
+                          // Close the dropdown menu
+                          const dropdownTrigger = document.querySelector('[data-state="open"]');
+                          if (dropdownTrigger instanceof HTMLElement) {
+                            dropdownTrigger.click();
+                          }
+                        }}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>User Preferences</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
                         onClick={() => setShowThemeMenu(true)}
                       >
                         <Palette className="w-4 h-4" />
