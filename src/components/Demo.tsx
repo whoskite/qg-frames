@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,6 +40,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 import { logAnalyticsEvent, logUserAction, setAnalyticsUser } from '../lib/analytics';
+import { BottomNav } from './BottomNav';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -427,6 +428,40 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [isLoadingGif, setIsLoadingGif] = useState(false);
 
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
+
+  // Add this state for navigation
+  const [activeSection, setActiveSection] = useState('generate');
+
+  // Add new state for preferences page
+  const [showPreferences, setShowPreferences] = useState(false);
+
+  // Add new states for quote style, areas to improve, and personal goals pages
+  const [showQuoteStylePage, setShowQuoteStylePage] = useState(false);
+  const [showAreasPage, setShowAreasPage] = useState(false);
+  const [showGoalsPage, setShowGoalsPage] = useState(false);
+
+  const handleNavigation = (section: string) => {
+    // Close all profile menu pages
+    setShowPreferences(false);
+    setShowThemeMenu(false);
+    setShowSettings(false);
+    setShowQuoteStylePage(false);
+    setShowAreasPage(false);
+    setShowGoalsPage(false);
+
+    // Close all pages and set new section immediately
+    setShowFavorites(false);
+    setShowHistory(false);
+
+    if (section === 'generate') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (section === 'favorites') {
+      setShowFavorites(true);
+    } else if (section === 'history') {
+      setShowHistory(true);
+    }
+    setActiveSection(section);
+  };
 
   // 5. Analytics Functions
   const logAnalyticsEvent = useCallback((eventName: string, params: AnalyticsParams) => {
@@ -822,9 +857,9 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Update the background music effect
   useEffect(() => {
-    const audio = new Audio('/ES_Calm_Cadence_ChillCole.mp3');
+    const audio = new Audio('/Forest_Music.mp3');
     audio.loop = true;
-    audio.volume = 0.3;
+    audio.volume = 0.2;
     setAudioPlayer(audio);
 
     // Don't try to play immediately, wait for user interaction
@@ -1319,1089 +1354,1373 @@ export default function Demo({ title = "Fun Quotes" }) {
     initializeUser();
   }, [context?.user]);
 
+  // Add this effect near your other useEffect hooks
+  useEffect(() => {
+    const handleShowFavorites = () => {
+      setShowFavorites(true);
+      setShowHistory(false); // Ensure history is closed
+    };
+    const handleShowHistory = () => {
+      setShowHistory(true);
+      setShowFavorites(false); // Ensure favorites is closed
+    };
+    const handleCloseAllPages = () => {
+      setShowFavorites(false);
+      setShowHistory(false);
+    };
+
+    document.addEventListener('showFavorites', handleShowFavorites);
+    document.addEventListener('showHistory', handleShowHistory);
+    document.addEventListener('closeAllPages', handleCloseAllPages);
+
+    return () => {
+      document.removeEventListener('showFavorites', handleShowFavorites);
+      document.removeEventListener('showHistory', handleShowHistory);
+      document.removeEventListener('closeAllPages', handleCloseAllPages);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <div className="relative min-h-screen">
-        {/* Fixed Navigation */}
-        <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <div className="flex justify-between items-center">
-              {/* Left side - Logo */}
-              <div className="flex-shrink-0">
-                <Image
-                  src="/logo.png"
-                  alt="Logo"
-                  width={40}  // Changed from 60 to 40
-                  height={40} // Changed from 60 to 40
-                  priority
-                  className="object-contain"
-                />
-              </div>
+        <main className="pb-16">
+          {/* Fixed Navigation */}
+          <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-30 shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+              <div className="flex justify-between items-center">
+                {/* Left side - Logo */}
+                <div className="flex-shrink-0">
+                  <Image
+                    src="/logo.png"
+                    alt="Logo"
+                    width={40}  // Changed from 60 to 40
+                    height={40} // Changed from 60 to 40
+                    priority
+                    className="object-contain"
+                  />
+                </div>
 
-              {/* Right side - Profile Image with Dropdown */}
-              <div className="flex-shrink-0">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className="cursor-pointer transition-transform hover:scale-105">
-                      <div className="relative w-[35px] h-[35px] rounded-full border-2 border-white shadow-lg overflow-hidden">  {/* Changed from 45px to 35px */}
-                        <Image
-                          src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
-                          alt={context?.user?.displayName || "Profile"}
-                          width={35}  // Changed from 45 to 35
-                          height={35} // Changed from 45 to 35
-                          className="w-full h-full object-cover"
-                          unoptimized
-                          onError={(e) => {
-                            console.error('Failed to load profile image:', context?.user?.pfpUrl);
-                            const target = e.target as HTMLImageElement;
-                            target.src = "/Profile_Image.jpg";
+                {/* Right side - Profile Image with Dropdown */}
+                <div className="flex-shrink-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className="cursor-pointer transition-transform hover:scale-105">
+                        <div className="relative w-[35px] h-[35px] rounded-full border-2 border-white shadow-lg overflow-hidden">  {/* Changed from 45px to 35px */}
+                          <Image
+                            src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+                            alt={context?.user?.displayName || "Profile"}
+                            width={35}  // Changed from 45 to 35
+                            height={35} // Changed from 45 to 35
+                            className="w-full h-full object-cover"
+                            unoptimized
+                            onError={(e) => {
+                              console.error('Failed to load profile image:', context?.user?.pfpUrl);
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/Profile_Image.jpg";
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {context?.user && (
+                        <div 
+                          className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
+                          onClick={() => {
+                            setShowProfile(true);
+                            // Close the dropdown menu
+                            const dropdownTrigger = document.querySelector('[data-state="open"]');
+                            if (dropdownTrigger instanceof HTMLElement) {
+                              dropdownTrigger.click();
+                            }
                           }}
-                        />
-                      </div>
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {context?.user && (
-                      <div 
-                        className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
-                        onClick={() => {
-                          setShowProfile(true);
-                          // Close the dropdown menu
-                          const dropdownTrigger = document.querySelector('[data-state="open"]');
-                          if (dropdownTrigger instanceof HTMLElement) {
-                            dropdownTrigger.click();
-                          }
-                        }}
+                        >
+                          <div className="font-medium">{context.user.displayName}</div>
+                          <div className="text-xs text-muted-foreground">@{context.user.username}</div>
+                        </div>
+                      )}
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => setShowPreferences(true)}
                       >
-                        <div className="font-medium">{context.user.displayName}</div>
-                        <div className="text-xs text-muted-foreground">@{context.user.username}</div>
-                      </div>
-                    )}
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2"
-                      onClick={() => setShowFavorites(true)}
-                    >
-                      <Heart className="w-4 h-4 text-pink-500" />
-                      <div className="flex flex-col">
-                        <span>Favorites</span>
-                        <span className="text-[10px] text-gray-400">
-                          {favorites.length} saved
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2"
-                      onClick={() => setShowHistory(true)}
-                    >
-                      <History className="w-4 h-4" />
-                      <span>History</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2"
-                      onClick={() => setShowThemeMenu(true)}
-                    >
-                      <Palette className="w-4 h-4" />
-                      <span>Theme</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2"
-                      onClick={() => setShowSettings(true)}
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Settings</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                        <Sparkles className="w-4 h-4" />
+                        <span>User Preferences</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => setShowThemeMenu(true)}
+                      >
+                        <Palette className="w-4 h-4" />
+                        <span>Theme</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => setShowSettings(true)}
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
-        </nav>
+          </nav>
 
-        {/* Main Content - Centered */}
-        <main 
-          className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
-            bgImage?.includes('gradient') ? '' : ''
-          }`}
-          style={bgImage?.includes('gradient') ? {
-            backgroundImage: bgImage === 'gradient-pink' ? 'linear-gradient(to bottom right, rgb(192, 132, 252), rgb(244, 114, 182), rgb(239, 68, 68))' :
-                            bgImage === 'gradient-black' ? 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81), rgb(31, 41, 55))' :
-                            bgImage === 'gradient-yellow' ? 'linear-gradient(to bottom right, rgb(251, 191, 36), rgb(249, 115, 22), rgb(239, 68, 68))' :
-                            bgImage === 'gradient-green' ? 'linear-gradient(to bottom right, rgb(52, 211, 153), rgb(16, 185, 129), rgb(20, 184, 166))' :
-                            bgImage === 'gradient-purple' ? 'linear-gradient(to bottom right, #472A91, rgb(147, 51, 234), rgb(107, 33, 168))' :
-                            'none'
-          } : bgImage !== 'none' && !bgImage?.includes('TheMrSazon') ? {
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          } : {}}
-        >
-          {bgImage.includes('TheMrSazon') && (
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute inset-0" style={{ 
-                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                filter: 'blur(2px)',
-                transform: 'scale(1.1)'  // Prevent blur edges from showing
-              }} />
-            </div>
-          )}
-          <div className="relative z-10 w-full flex flex-col items-center">
-            <div className="flex flex-col items-center gap-4 mb-8 w-full max-w-[95%] sm:max-w-sm">
-              <AnimatePresence mode="wait">
-                {isInitialState && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="text-2xl text-white font-medium text-center"
-                  >
-                    Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Card Component */}
-            <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
-              <CardContent className="p-6 sm:p-4">
-                {/* GIF Display */}
+          {/* Main Content - Centered */}
+          <main 
+            className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
+              bgImage?.includes('gradient') ? '' : ''
+            }`}
+            style={bgImage?.includes('gradient') ? {
+              backgroundImage: bgImage === 'gradient-pink' ? 'linear-gradient(to bottom right, rgb(192, 132, 252), rgb(244, 114, 182), rgb(239, 68, 68))' :
+                              bgImage === 'gradient-black' ? 'linear-gradient(to bottom right, rgb(17, 24, 39), rgb(55, 65, 81), rgb(31, 41, 55))' :
+                              bgImage === 'gradient-yellow' ? 'linear-gradient(to bottom right, rgb(251, 191, 36), rgb(249, 115, 22), rgb(239, 68, 68))' :
+                              bgImage === 'gradient-green' ? 'linear-gradient(to bottom right, rgb(52, 211, 153), rgb(16, 185, 129), rgb(20, 184, 166))' :
+                              bgImage === 'gradient-purple' ? 'linear-gradient(to bottom right, #472A91, rgb(147, 51, 234), rgb(107, 33, 168))' :
+                              'none'
+            } : bgImage !== 'none' && !bgImage?.includes('TheMrSazon') ? {
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'}), rgba(0, 0, 0, ${bgImage?.includes('Flower') ? '0.7' : '0.3'})), url(${bgImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            } : {}}
+          >
+            {bgImage.includes('TheMrSazon') && (
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0" style={{ 
+                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  filter: 'blur(2px)',
+                  transform: 'scale(1.1)'  // Prevent blur edges from showing
+                }} />
+              </div>
+            )}
+            <div className="relative z-10 w-full flex flex-col items-center">
+              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm">
                 <AnimatePresence mode="wait">
-                  {gifUrl && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
+                  {isInitialState && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
-                      onClick={handleRegenerateGif}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className="text-2xl text-white font-medium text-center"
                     >
-                      <div className="relative w-full h-[250px] sm:h-[200px]">
-                        <Image
-                          src={gifUrl}
-                          alt="Quote-related GIF"
-                          fill
-                          unoptimized
-                          sizes="(max-width: 600px) 100vw, 50vw"
-                          className={`object-cover rounded-lg transition-opacity duration-200 ${
-                            isLoading ? 'opacity-50' : 'opacity-100'
-                          }`}
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                          <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            Click to regenerate GIF
-                          </span>
-                        </div>
-                      </div>
+                      Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
 
-                {/* Quote Display */}
-                <AnimatePresence mode="wait">
+              {/* Card Component */}
+              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+                <CardContent className="p-6 sm:p-4">
+                  {/* GIF Display */}
+                  <AnimatePresence mode="wait">
+                    {gifUrl && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                        onClick={handleRegenerateGif}
+                      >
+                        <div className="relative w-full h-[250px] sm:h-[200px]">
+                          <Image
+                            src={gifUrl}
+                            alt="Quote-related GIF"
+                            fill
+                            unoptimized
+                            sizes="(max-width: 600px) 100vw, 50vw"
+                            className={`object-cover rounded-lg transition-opacity duration-200 ${
+                              isLoading ? 'opacity-50' : 'opacity-100'
+                            }`}
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              Click to regenerate GIF
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Quote Display */}
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={quote}
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -50 }}
+                      transition={{ duration: 0.5 }}
+                      className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center relative"
+                      onDoubleClick={handleQuoteDoubleTap}
+                      onTouchStart={(e) => {
+                        const now = Date.now();
+                        if (now - lastTapTime < 300) {  // 300ms between taps
+                          handleQuoteDoubleTap();
+                        }
+                        setLastTapTime(now);
+                      }}
+                    >
+                      <p className="text-center text-white text-2xl font-medium select-none">
+                        {quote || ""}
+                      </p>
+                      <AnimatePresence>
+                        {showHeartAnimation && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1.5, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                          >
+                            <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Action Buttons */}
                   <motion.div 
-                    key={quote}
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -50 }}
-                    transition={{ duration: 0.5 }}
-                    className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center relative"
-                    onDoubleClick={handleQuoteDoubleTap}
-                    onTouchStart={(e) => {
-                      const now = Date.now();
-                      if (now - lastTapTime < 300) {  // 300ms between taps
-                        handleQuoteDoubleTap();
-                      }
-                      setLastTapTime(now);
-                    }}
+                    className="mb-4 flex justify-between items-center"
                   >
-                    <p className="text-center text-white text-2xl font-medium select-none">
-                      {quote || ""}
-                    </p>
-                    <AnimatePresence>
-                      {showHeartAnimation && (
+                    <div className="flex items-center gap-4">
+                      {quote && (
                         <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1.5, opacity: 1 }}
-                          exit={{ scale: 0.5, opacity: 0 }}
-                          transition={{ duration: 0.5, ease: "easeOut" }}
-                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                          initial={false}
+                          animate={{ 
+                            scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
+                          }}
+                          transition={{ duration: 0.3 }}
+                          className="relative"
                         >
-                          <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                          <Heart 
+                            onClick={() => {
+                              const quoteItem: QuoteHistoryItem = {
+                                text: quote,
+                                style: 'default',
+                                gifUrl,
+                                timestamp: new Date(),
+                                bgColor,
+                                id: ''
+                              };
+                              toggleFavorite(quoteItem);
+                              setShowHeartAnimation(true);
+                              setTimeout(() => setShowHeartAnimation(false), 1000);
+                            }}
+                            className={`w-5 h-5 cursor-pointer hover:scale-125 transition-all duration-300 ${
+                              favorites.some(fav => fav.text === quote)
+                                ? 'fill-pink-500 text-pink-500' 
+                                : 'text-white hover:text-pink-200'
+                            }`}
+                          />
                         </motion.div>
                       )}
-                    </AnimatePresence>
-                  </motion.div>
-                </AnimatePresence>
+                      <motion.div
+                        whileTap={{ rotate: 360, scale: 0.8 }}
+                        animate={isGenerating ? {
+                          rotate: [0, 360],
+                          scale: [1, 0.8, 1],
+                          transition: {
+                            rotate: {
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: [0.4, 0, 0.2, 1]
+                            },
+                            scale: {
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }
+                          }
+                        } : undefined}
+                      >
+                        <Dice3
+                          onClick={async () => {
+                            setIsGenerating(true);
+                            try {
+                              const response = await fetch('/api/openai', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  userPreferences: {
+                                    gender: onboarding.personalInfo.gender,
+                                    relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                                    areasToImprove: onboarding.personalInfo.areasToImprove,
+                                    personalGoals: onboarding.personalInfo.personalGoals,
+                                    preferredStyles: onboarding.personalInfo.preferredStyles
+                                  }
+                                }),
+                              });
 
-                {/* Action Buttons */}
-                <motion.div 
-                  className="mb-4 flex justify-between items-center"
-                >
-                  <div className="flex items-center gap-4">
+                              if (!response.ok) {
+                                throw new Error('Failed to get AI suggestion');
+                              }
+
+                              const data = await response.json();
+                              if (!data.result) {
+                                throw new Error('No suggestion received');
+                              }
+
+                              setUserPrompt(data.result);
+                              await handleGenerateQuote();
+                              
+                              toast.success('Generated a personalized quote based on AI suggestions!');
+                            } catch (error) {
+                              console.error('Error generating random quote:', error);
+                              const randomPrompt = generateRandomPrompt(favorites);
+                              setUserPrompt(randomPrompt);
+                              await handleGenerateQuote();
+                              toast.success('Generated a quote based on your preferences!');
+                            } finally {
+                              setIsGenerating(false);
+                            }
+                          }}
+                          className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white"
+                        />
+                      </motion.div>
+                    </div>
                     {quote && (
-                      <Heart 
-                        onClick={() => {
-                          const quoteItem: QuoteHistoryItem = {
-                            text: quote,
-                            style: 'default',
-                            gifUrl,
-                            timestamp: new Date(),
-                            bgColor,
-                            id: ''
-                          };
-                          toggleFavorite(quoteItem);
-                          // Show heart animation
-                          setShowHeartAnimation(true);
-                          setTimeout(() => setShowHeartAnimation(false), 1000);
+                      <Upload
+                        onClick={async () => {
+                          try {
+                            setIsGeneratingPreview(true);
+                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                            setPreviewImage(dataUrl);
+                            setShowPreview(true);
+                          } catch (error) {
+                            console.error('Error generating preview:', error);
+                            toast.error('Failed to generate preview');
+                          } finally {
+                            setIsGeneratingPreview(false);
+                          }
                         }}
-                        className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                          favorites.some(fav => fav.text === quote)
-                            ? 'fill-pink-500 text-pink-500' 
-                            : 'text-white hover:text-pink-200'
-                        }`}
+                        className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
                       />
                     )}
-                    <Shuffle
-                      onClick={async () => {
-                        setIsGenerating(true);
-                        try {
-                          // Get personalized prompt from OpenAI
-                          const response = await fetch('/api/openai', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              userPreferences: {
-                                gender: onboarding.personalInfo.gender,
-                                relationshipStatus: onboarding.personalInfo.relationshipStatus,
-                                areasToImprove: onboarding.personalInfo.areasToImprove,
-                                personalGoals: onboarding.personalInfo.personalGoals,
-                                preferredStyles: onboarding.personalInfo.preferredStyles
-                              }
-                            }),
-                          });
+                  </motion.div>
 
-                          if (!response.ok) {
-                            throw new Error('Failed to get AI suggestion');
-                          }
-
-                          const data = await response.json();
-                          if (!data.result) {
-                            throw new Error('No suggestion received');
-                          }
-
-                          // Use the AI-generated prompt
-                          setUserPrompt(data.result);
-                          await handleGenerateQuote();
-                          
-                          toast.success('Generated a personalized quote based on AI suggestions!');
-                        } catch (error) {
-                          console.error('Error generating random quote:', error);
-                          // Fallback to the original randomizer if AI fails
-                          const randomPrompt = generateRandomPrompt(favorites);
-                          setUserPrompt(randomPrompt);
-                          await handleGenerateQuote();
-                          toast.success('Generated a quote based on your preferences!');
-                        } finally {
-                          setIsGenerating(false);
-                        }
-                      }}
-                      className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                        isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
-                      }`}
+                  {/* Input Field */}
+                  <div className="mb-6 relative">
+                    <Input
+                      type="text"
+                      placeholder="Enter a topic/word for your quote"
+                      value={userPrompt}
+                      onChange={(e) => setUserPrompt(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
                     />
-                  </div>
-                  {quote && (
-                    <Share2
-                      onClick={async () => {
-                        try {
-                          setIsGeneratingPreview(true);
-                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          setPreviewImage(dataUrl);
-                          setShowPreview(true);
-                        } catch (error) {
-                          console.error('Error generating preview:', error);
-                          toast.error('Failed to generate preview');
-                        } finally {
-                          setIsGeneratingPreview(false);
-                        }
-                      }}
-                      className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
-                    />
-                  )}
-                </motion.div>
-
-                {/* Input Field */}
-                <div className="mb-6 relative">
-                  <Input
-                    type="text"
-                    placeholder="Enter a topic/word for your quote"
-                    value={userPrompt}
-                    onChange={(e) => setUserPrompt(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
-                  />
-                  <div 
-                    onClick={handleGenerateQuote}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
-                  >
-                    <Image
-                      src="/Submit_Icon.png"
-                      alt="Submit"
-                      width={20}
-                      height={20}
-                      className="invert brightness-0 object-contain"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex flex-col gap-4">
-                {/* Remove the Cast Away button section entirely */}
-              </CardFooter>
-            </Card>
-          </div>
-        </main>
-
-        {/* History Modal */}
-        {showHistory && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowHistory(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Quote History
-                </h2>
-                <div className="flex items-center gap-2">
-                  {quoteHistory.length > 0 && (
-                    <Button
-                      onClick={handleClearHistory}
-                      disabled={isClearing}
-                      className="text-purple-600 hover:text-red-500 transition-colors text-xs px-2 h-7"
+                    <div 
+                      onClick={handleGenerateQuote}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
                     >
-                      {isClearing ? (
-                        <motion.span
-                          animate={{ opacity: [1, 0.5, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                          className="text-xs text-purple-600"
-                        >
-                          •••
-                        </motion.span>
-                      ) : (
-                        <span className="text-purple-600">
-                          Clear
-                        </span>
-                      )}
-                    </Button>
-                  )}
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowHistory(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
+                      <Image
+                        src="/Submit_Icon.png"
+                        alt="Submit"
+                        width={20}
+                        height={20}
+                        className="invert brightness-0 object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-col gap-4">
+                  {/* Remove the Cast Away button section entirely */}
+                </CardFooter>
+              </Card>
+            </div>
+          </main>
+
+          {/* History Page */}
+          {showHistory && (
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">History</h2>
                 </div>
-              </div>
-              
-              <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-                {quoteHistory.length === 0 ? (
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gray-500 py-12"
+                    transition={{ duration: 0.3 }}
+                    className="grid gap-4"
                   >
-                    <div className="mb-4">✨</div>
-                    <p className="font-medium">No quotes generated yet</p>
-                    <p className="text-sm mt-2 text-gray-400">
-                      Your generated quotes will appear here
-                    </p>
-                  </motion.div>
-                ) : (
-                  <AnimatePresence mode="popLayout">
-                    {quoteHistory.map((item, index) => (
-                      <motion.div
-                        key={item.timestamp.toString()}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
-                        className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                        onClick={() => handleReuseQuote(item)}
-                      >
-                        <div 
-                          className="p-4 cursor-pointer bg-gray-900 hover:bg-gray-800 transition-colors duration-200"
+                    {quoteHistory.length === 0 ? (
+                      <div className="text-center text-gray-400 py-8">
+                        No history yet
+                      </div>
+                    ) : (
+                      quoteHistory.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors"
+                          onClick={() => {
+                            setQuote(item.text);
+                            setGifUrl(item.gifUrl);
+                            setShowHistory(false);
+                          }}
                         >
-                          <div className="flex justify-between items-start mb-2">
-                            <p className="text-white font-medium flex-1">{item.text}</p>
-                            <span className="text-xs text-white/70 ml-2">
-                              {formatTimestamp(item.timestamp)}
-                            </span>
-                          </div>
-                          
-                          {item.gifUrl && (
-                            <div className="relative h-32 mt-3 rounded-md overflow-hidden">
-                              <Image
-                                src={item.gifUrl}
-                                alt="Quote GIF"
-                                fill
-                                className="object-cover transition-transform group-hover:scale-105"
-                                unoptimized
-                              />
+                          {item.gifUrl ? (
+                            <div className="flex gap-4">
+                              <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-black/50 overflow-hidden relative">
+                                <Image
+                                  src={item.gifUrl}
+                                  alt="Quote GIF"
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                              </div>
+                              <div className="flex-1 flex items-center">
+                                <p className="text-white text-sm">{item.text}</p>
+                              </div>
                             </div>
+                          ) : (
+                            <p className="text-white text-sm">{item.text}</p>
                           )}
-                          
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-white/80">
-                              <span className="text-xs">Click to reuse</span>
-                              <motion.div
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                →
-                              </motion.div>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(item);
-                              }}
-                              className="text-white/80 hover:text-pink-500 transition-colors"
-                            >
-                              <Heart className="w-5 h-5 fill-current" />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Favorites Modal */}
-        {showFavorites && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowFavorites(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Favorite Quotes
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowFavorites(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
+                        </motion.div>
+                      ))
+                    )}
+                  </motion.div>
                 </div>
               </div>
-              
-              <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-                {favorites.length === 0 ? (
+            </div>
+          )}
+
+          {/* Favorites Page */}
+          {showFavorites && (
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Favorites</h2>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gray-500 py-12"
+                    transition={{ duration: 0.3 }}
+                    className="grid gap-4"
                   >
-                    <div className="mb-4">💖</div>
-                    <p className="font-medium">No favorites yet</p>
-                    <p className="text-sm mt-2 text-gray-400">
-                      Your favorite quotes will appear here
-                    </p>
-                  </motion.div>
-                ) : (
-                  <AnimatePresence mode="popLayout">
-                    {favorites.map((item) => (
-                      <motion.div
-                        key={item.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
-                        className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                        onClick={() => handleReuseQuote(item)}
-                      >
-                        <div 
-                          className="p-4 cursor-pointer bg-gray-900 hover:bg-gray-800 transition-colors duration-200"
+                    {favorites.length === 0 ? (
+                      <div className="text-center text-gray-400 py-8">
+                        No favorites yet
+                      </div>
+                    ) : (
+                      favorites.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors relative group"
+                          onClick={() => {
+                            setQuote(item.text);
+                            setGifUrl(item.gifUrl);
+                            setShowFavorites(false);
+                          }}
                         >
-                          <div className="flex justify-between items-start mb-2">
-                            <p className="text-white font-medium flex-1">{item.text}</p>
-                            <span className="text-xs text-white/70 ml-2">
-                              {formatTimestamp(item.timestamp)}
-                            </span>
-                          </div>
-                          
-                          {item.gifUrl && (
-                            <div className="relative h-32 mt-3 rounded-md overflow-hidden">
-                              <Image
-                                src={item.gifUrl}
-                                alt="Quote GIF"
-                                fill
-                                className="object-cover transition-transform group-hover:scale-105"
-                                unoptimized
-                              />
+                          {item.gifUrl ? (
+                            <div className="flex gap-4">
+                              <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-black/50 overflow-hidden relative">
+                                <Image
+                                  src={item.gifUrl}
+                                  alt="Quote GIF"
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                              </div>
+                              <div className="flex-1 flex items-center">
+                                <p className="text-white text-sm">{item.text}</p>
+                              </div>
                             </div>
+                          ) : (
+                            <p className="text-white text-sm">{item.text}</p>
                           )}
-                          
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-white/80">
-                              <span className="text-xs">Click to reuse</span>
-                              <motion.div
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                →
-                              </motion.div>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(item);
-                              }}
-                              className="text-white/80 hover:text-pink-500 transition-colors"
-                            >
-                              <Heart className="w-5 h-5 fill-current" />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(item);
+                            }}
+                            className="absolute top-2 right-2 text-gray-400 hover:text-pink-500 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Heart className="w-5 h-5 fill-current" />
+                          </button>
+                        </motion.div>
+                      ))
+                    )}
+                  </motion.div>
+                </div>
               </div>
-            </motion.div>
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Theme Menu Modal */}
-        {showThemeMenu && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowThemeMenu(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Choose Background
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
+          {/* Theme Page */}
+          {showThemeMenu && (
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Theme</h2>
+                  <button 
                     onClick={() => setShowThemeMenu(false)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
                   >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
+                    <X className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {[
+                      {
+                        id: 'nature1',
+                        name: 'Nature 1',
+                        path: '/Background_Nature_1_pexels-asumaani-16545605.jpg'
+                      },
+                      {
+                        id: 'urban',
+                        name: 'Urban',
+                        path: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg'
+                      },
+                      {
+                        id: 'nature2',
+                        name: 'Nature 2',
+                        path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
+                      },
+                      {
+                        id: 'flower',
+                        name: 'Flower',
+                        path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
+                      },
+                      {
+                        id: 'opensea',
+                        name: 'Open Sea',
+                        path: '/Background_Water_pexels-jeremy-bishop-1260133-2397652.jpg'
+                      },
+                      {
+                        id: 'sazon',
+                        name: 'TheMrSazon',
+                        path: '/Background_TheMrSazon_1.png'
+                      },
+                      {
+                        id: 'gradient-pink',
+                        name: 'Pink Gradient',
+                        path: 'gradient-pink',
+                        isGradient: true,
+                        gradientClass: 'from-purple-400 via-pink-500 to-red-500'
+                      },
+                      {
+                        id: 'gradient-black',
+                        name: 'Black Gradient',
+                        path: 'gradient-black',
+                        isGradient: true,
+                        gradientClass: 'from-gray-900 via-gray-700 to-gray-800'
+                      },
+                      {
+                        id: 'gradient-yellow',
+                        name: 'Yellow Gradient',
+                        path: 'gradient-yellow',
+                        isGradient: true,
+                        gradientClass: 'from-yellow-400 via-orange-500 to-red-500'
+                      },
+                      {
+                        id: 'gradient-green',
+                        name: 'Green Gradient',
+                        path: 'gradient-green',
+                        isGradient: true,
+                        gradientClass: 'from-green-400 via-emerald-500 to-teal-500'
+                      },
+                      {
+                        id: 'gradient-purple',
+                        name: 'Purple Gradient',
+                        path: 'gradient-purple',
+                        isGradient: true,
+                        gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
+                      }
+                    ].map((bg) => (
+                      <motion.div
+                        key={bg.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={async () => {
+                          const newTheme = bg.isGradient ? bg.path : bg.path;
+                          setBgImage(newTheme);
+                          if (context?.user?.fid) {
+                            try {
+                              await saveThemePreference(context.user.fid, newTheme);
+                              toast.success('Theme updated');
+                            } catch (error) {
+                              console.error('Error saving theme preference:', error);
+                            }
+                          }
+                        }}
+                        className={`aspect-square rounded-lg overflow-hidden cursor-pointer relative ${
+                          bgImage === bg.path ? 'ring-2 ring-white' : ''
+                        }`}
+                      >
+                        {bg.isGradient ? (
+                          <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
+                        ) : (
+                          <>
+                            <Image
+                              src={bg.path}
+                              alt={bg.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 150px, 200px"
+                              priority={true}
+                              loading="eager"
+                              unoptimized
+                            />
+                            <div className="absolute inset-0 bg-black/20" />
+                          </>
+                        )}
+                        {bgImage === bg.path && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Check className="w-6 h-6 text-white" />
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
+                          <p className="text-white text-xs text-center">{bg.name}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              
-              <div className="overflow-y-auto max-h-[330px] pr-2 custom-scrollbar">
-                <div className="grid grid-cols-3 gap-4 pb-4">
-                  {[
-                    {
-                      id: 'nature1',
-                      name: 'Nature 1',
-                      path: '/Background_Nature_1_pexels-asumaani-16545605.jpg'
-                    },
-                    {
-                      id: 'urban',
-                      name: 'Urban',
-                      path: '/Background_Urban_1_pexels-kyle-miller-169884138-18893527.jpg'
-                    },
-                    {
-                      id: 'nature2',
-                      name: 'Nature 2',
-                      path: '/Background_Nature_2pexels-manishjangid-30195420.jpg'
-                    },
-                    {
-                      id: 'flower',
-                      name: 'Flower',
-                      path: '/Background_Flower_1_pexels-pixabay-262713.jpg'
-                    },
-                    {
-                      id: 'opensea',
-                      name: 'Open Sea',
-                      path: '/Background_Water_pexels-jeremy-bishop-1260133-2397652.jpg'
-                    },
-                    {
-                      id: 'sazon',
-                      name: 'TheMrSazon',
-                      path: '/Background_TheMrSazon_1.png'
-                    },
-                    {
-                      id: 'gradient-pink',
-                      name: 'Pink Gradient',
-                      path: 'gradient-pink',
-                      isGradient: true,
-                      gradientClass: 'from-purple-400 via-pink-500 to-red-500'
-                    },
-                    {
-                      id: 'gradient-black',
-                      name: 'Black Gradient',
-                      path: 'gradient-black',
-                      isGradient: true,
-                      gradientClass: 'from-gray-900 via-gray-700 to-gray-800'
-                    },
-                    {
-                      id: 'gradient-yellow',
-                      name: 'Yellow Gradient',
-                      path: 'gradient-yellow',
-                      isGradient: true,
-                      gradientClass: 'from-yellow-400 via-orange-500 to-red-500'
-                    },
-                    {
-                      id: 'gradient-green',
-                      name: 'Green Gradient',
-                      path: 'gradient-green',
-                      isGradient: true,
-                      gradientClass: 'from-green-400 via-emerald-500 to-teal-500'
-                    },
-                    {
-                      id: 'gradient-purple',
-                      name: 'Purple Gradient',
-                      path: 'gradient-purple',
-                      isGradient: true,
-                      gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
-                    }
-                  ].map((bg) => (
-                    <div
-                      key={bg.id}
-                      onClick={async () => {
-                        const newTheme = bg.isGradient ? bg.path : bg.path;
-                        setBgImage(newTheme);
-                        if (context?.user?.fid) {
-                          try {
-                            await saveThemePreference(context.user.fid, newTheme);
-                            toast.success('Theme preference saved');
-                          } catch (error) {
-                            console.error('Error saving theme preference:', error);
-                          }
-                        }
-                      }}
-                      className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
-                        bgImage === bg.path ? 'ring-4 ring-purple-600 ring-offset-2' : ''
-                      }`}
-                    >
-                      {bg.isGradient ? (
-                        <div className={`w-full h-full bg-gradient-to-br ${bg.gradientClass}`} />
-                      ) : (
-                        <Image
-                          src={bg.path}
-                          alt={bg.name}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          unoptimized
-                        />
-                      )}
-                      {bgImage === bg.path && (
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <Check className="w-8 h-8 text-white" />
+            </div>
+          )}
+
+          {/* Settings Page */}
+          {showSettings && (
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Settings</h2>
+                  <button 
+                    onClick={() => setShowSettings(false)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="space-y-4">
+                    {/* GIF Toggle */}
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-white font-medium">GIF Generation</h3>
+                          <p className="text-white/60 text-sm">Enable or disable GIF generation for quotes</p>
                         </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center text-sm">
-                        {bg.name}
+                        <button
+                          onClick={() => {
+                            handleGifToggle();
+                            toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
+                          }}
+                          className="toggle-container relative w-[60px] h-[32px] rounded-full cursor-pointer"
+                          style={{
+                            backgroundColor: gifEnabled ? 'rgb(59, 130, 246)' : 'rgb(107, 114, 128)',
+                          }}
+                        >
+                          <motion.div
+                            className="absolute top-[2px] left-[2px] w-[28px] h-[28px] bg-white rounded-full shadow-lg"
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 35,
+                              mass: 1
+                            }}
+                            animate={{
+                              x: gifEnabled ? 28 : 0,
+                              scale: gifEnabled ? 1.1 : 1
+                            }}
+                          />
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
 
-        {/* Settings Modal */}
-        {showSettings && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowSettings(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Settings
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowSettings(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="overflow-y-auto custom-scrollbar pr-2">
-                <div className="space-y-6 pb-4">
-                  {/* GIF Toggle Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">GIF Generation</h3>
-                    <motion.div
-                      animate={{ x: gifEnabled ? 0 : -5 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    >
-                      <Button
-                        onClick={() => {
-                          handleGifToggle();
-                          toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
-                        }}
-                        className={`${
-                          gifEnabled 
-                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                            : 'bg-gray-600 text-white hover:bg-gray-700'
-                        } w-20 text-sm flex items-center justify-center transition-all duration-200`}
-                      >
-                        {gifEnabled ? 'On' : 'Off'}
-                      </Button>
-                    </motion.div>
+                    {/* Music Toggle */}
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-white font-medium">Background Music</h3>
+                          <p className="text-white/60 text-sm">Enable or disable background music</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setIsMusicEnabled(!isMusicEnabled);
+                            toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
+                          }}
+                          className="toggle-container relative w-[60px] h-[32px] rounded-full cursor-pointer"
+                          style={{
+                            backgroundColor: isMusicEnabled ? 'rgb(59, 130, 246)' : 'rgb(107, 114, 128)',
+                          }}
+                        >
+                          <motion.div
+                            className="absolute top-[2px] left-[2px] w-[28px] h-[28px] bg-white rounded-full shadow-lg"
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 35,
+                              mass: 1
+                            }}
+                            animate={{
+                              x: isMusicEnabled ? 28 : 0,
+                              scale: isMusicEnabled ? 1.1 : 1
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Clear History */}
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-white font-medium">Clear History</h3>
+                          <p className="text-white/60 text-sm">Remove all quote history</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            handleClearHistory();
+                            toast.success('History cleared');
+                          }}
+                          disabled={isClearing}
+                          className="px-4 py-2 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition-colors"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Clear Favorites */}
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-white font-medium">Clear Favorites</h3>
+                          <p className="text-white/60 text-sm">Remove all favorite quotes</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (context?.user?.fid) {
+                              setFavorites([]);
+                              toast.success('Favorites cleared');
+                            }
+                          }}
+                          className="px-4 py-2 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition-colors"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Version Info */}
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-white font-medium">Version</h3>
+                        <span className="text-white/60">1.1.1</span>
+                      </div>
+                    </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-                  <div className="h-px bg-gray-200" />
-
-                  {/* Clear History Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Clear History</h3>
+          {/* Share Preview Modal */}
+          {showPreview && (
+            <div 
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+              onClick={() => {
+                setShowPreview(false);
+                setPreviewImage(null);
+              }}
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Preview Share
+                  </h2>
+                  <div className="flex items-center gap-2">
                     <Button
+                      className="rounded-full h-7 w-7 p-0"
                       onClick={() => {
-                        handleClearHistory();
-                        toast.success('History cleared successfully');
+                        setShowPreview(false);
+                        setPreviewImage(null);
                       }}
-                      disabled={isClearing}
-                      className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
                     >
-                      Clear
+                      <X className="h-4 w-4 text-black" />
                     </Button>
                   </div>
+                </div>
 
-                  {/* Clear Favorites Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Clear Favorites</h3>
-                    <Button
+                <div className="space-y-4">
+                  {/* Preview Area */}
+                  <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
+                    {isGeneratingPreview ? (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.div
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="text-purple-600 text-sm"
+                        >
+                          Generating preview...
+                        </motion.div>
+                      </div>
+                    ) : previewImage ? (
+                      <Image
+                        src={previewImage}
+                        alt="Share Preview"
+                        width={800}
+                        height={400}
+                        className="w-full h-full object-contain"
+                        unoptimized
+                      />
+                    ) : gifEnabled && gifUrl ? (
+                      <Image
+                        src={gifUrl || ''}
+                        alt="GIF Preview"
+                        width={800}
+                        height={400}
+                        className="w-full h-full object-contain"
+                        unoptimized
+                      />
+                    ) : null}
+                  </div>
+
+                  {/* Share Button */}
+                  <div className="flex justify-end">
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        onClick={async () => {
+                          setIsCasting(true);
+                          try {
+                            const shareText = `"${quote}" - Created by @kite /thepod`;
+                            const shareUrl = 'https://qg-frames.vercel.app';
+                            let mediaUrl = '';
+                            
+                            if (gifUrl) {
+                              mediaUrl = gifUrl;
+                            }
+
+                            const params = new URLSearchParams();
+                            params.append('text', shareText);
+                            params.append('embeds[]', shareUrl);
+                            if (mediaUrl) {
+                              params.append('embeds[]', mediaUrl);
+                            }
+                            
+                            const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                            
+                            logAnalyticsEvent('cast_created', {
+                              quote: quote,
+                              hasMedia: !!mediaUrl,
+                              mediaType: 'gif'
+                            });
+                            
+                            sdk.actions.openUrl(url);
+                            setShowPreview(false);
+                            setPreviewImage(null);
+                          } catch (error) {
+                            console.error('Error sharing:', error);
+                          } finally {
+                            setIsCasting(false);
+                          }
+                        }}
+                        disabled={!gifUrl || isCasting}
+                        className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
+                      >
+                        {isCasting ? (
+                          <motion.span
+                            animate={{ opacity: [0, 1, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            •••
+                          </motion.span>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            Share GIF
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            setIsGeneratingPreview(true);
+                            // Generate the image first
+                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                            // Show the preview immediately
+                            setPreviewImage(dataUrl);
+                            
+                            // Then start the upload process
+                            setIsCasting(true);
+                            const uploadedUrl = await uploadImage(dataUrl);
+                            const shareText = `"${quote}" - Created by @kite /thepod`;
+                            const shareUrl = 'https://qg-frames.vercel.app';
+                            
+                            const params = new URLSearchParams();
+                            params.append('text', shareText);
+                            params.append('embeds[]', shareUrl);
+                            params.append('embeds[]', uploadedUrl);
+                            
+                            const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                            
+                            logAnalyticsEvent('cast_created', {
+                              quote: quote,
+                              hasMedia: true,
+                              mediaType: 'canvas'
+                            });
+                            
+                            sdk.actions.openUrl(url);
+                            setShowPreview(false);
+                            setPreviewImage(null);
+                          } catch (error) {
+                            console.error('Error sharing:', error);
+                            toast.error('Failed to share quote. Please try again.');
+                          } finally {
+                            setIsGeneratingPreview(false);
+                            setIsCasting(false);
+                          }
+                        }}
+                        disabled={isCasting}
+                        className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
+                      >
+                        {isCasting ? (
+                          <motion.span
+                            animate={{ opacity: [0, 1, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            •••
+                          </motion.span>
+                        ) : (
+                          <>
+                            <Frame className="w-4 h-4" />
+                            Share Image
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Profile Modal */}
+          {showProfile && (
+            <ProfileModal 
+              onClose={() => setShowProfile(false)}
+              context={context}
+              favorites={favorites}
+              quoteHistory={quoteHistory}
+              sessionStartTime={sessionStartTime}
+            />
+          )}
+
+          {/* Onboarding Modal */}
+          {hasCheckedOnboarding && !onboarding.hasCompletedOnboarding && (
+            <OnboardingFlow 
+              onboarding={onboarding}
+              setOnboarding={setOnboarding}
+              onComplete={() => {
+                setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: true }));
+              }}
+              context={context}
+              setBgImage={setBgImage}
+            />
+          )}
+
+          {/* User Preferences Page */}
+          {showPreferences && (
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">User Preferences</h2>
+                  <button 
+                    onClick={() => setShowPreferences(false)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 pb-24 custom-scrollbar">
+                  <div className="space-y-4">
+                    {/* Quote Style */}
+                    <button
+                      onClick={() => setShowQuoteStylePage(true)}
+                      className="w-full bg-white/10 rounded-lg p-4 text-left hover:bg-white/20 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="text-white font-medium">Quote Style</h3>
+                        <p className="text-white/60 text-sm">
+                          {onboarding.personalInfo.preferredQuoteStyle ? 
+                            `Current: ${onboarding.personalInfo.preferredQuoteStyle}` : 
+                            'Choose your preferred quote style'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/60" />
+                    </button>
+
+                    {/* Areas to Improve */}
+                    <button
+                      onClick={() => setShowAreasPage(true)}
+                      className="w-full bg-white/10 rounded-lg p-4 text-left hover:bg-white/20 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="text-white font-medium">Areas to Improve</h3>
+                        <p className="text-white/60 text-sm">
+                          {onboarding.personalInfo.areasToImprove?.length ? 
+                            `${onboarding.personalInfo.areasToImprove.length} areas selected` : 
+                            'Select areas you want to focus on'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/60" />
+                    </button>
+
+                    {/* Personal Goals */}
+                    <button
+                      onClick={() => setShowGoalsPage(true)}
+                      className="w-full bg-white/10 rounded-lg p-4 text-left hover:bg-white/20 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="text-white font-medium">Personal Goals</h3>
+                        <p className="text-white/60 text-sm">
+                          {onboarding.personalInfo.personalGoals ? 
+                            'Goals set' : 
+                            'Set your personal goals'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/60" />
+                    </button>
+                  </div>
+                </div>
+                {/* Remove the Fixed Save Button from User Preferences */}
+              </div>
+            </div>
+          )}
+
+          {/* Quote Style Page */}
+          {showQuoteStylePage && (
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <button 
                       onClick={() => {
                         if (context?.user?.fid) {
-                          setFavorites([]);
-                          toast.success('Favorites cleared successfully');
+                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
                         }
+                        setShowQuoteStylePage(false);
                       }}
-                      className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
                     >
-                      Clear
-                    </Button>
-                  </div>
-
-                  {/* Music Toggle Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Background Music</h3>
-                    <motion.div
-                      animate={{ x: isMusicEnabled ? 0 : -5 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <motion.h2 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl font-semibold text-white"
                     >
-                      <Button
-                        onClick={() => {
-                          setIsMusicEnabled(!isMusicEnabled);
-                          toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
-                        }}
-                        className={`${
-                          isMusicEnabled 
-                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                            : 'bg-gray-600 text-white hover:bg-gray-700'
-                        } w-20 text-sm flex items-center justify-center transition-all duration-200`}
-                      >
-                        {isMusicEnabled ? 'On' : 'Off'}
-                      </Button>
-                    </motion.div>
-                  </div>
-
-                  {/* Reset Onboarding Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <div>
-                      <h3 className="font-semibold text-gray-800">Start Onboarding</h3>
-                      <p className="text-xs text-gray-500">Customize your quote preferences</p>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        setOnboarding({
-                          step: 1,
-                          personalInfo: {
-                            gender: '',
-                            relationshipStatus: '',
-                            selectedTheme: '',
-                            areasToImprove: [],
-                            personalGoals: '',
-                            preferredQuoteStyle: '',
-                            preferredLength: '',
-                            favoriteAuthors: [],
-                            dailyReminders: false,
-                            preferredLanguage: '',
-                            preferredStyles: []
-                          },
-                          hasCompletedOnboarding: false
-                        });
-                        setShowSettings(false);
-                        setHasCheckedOnboarding(true);
-                        toast.success('Starting onboarding flow...');
-                      }}
-                      className="bg-purple-600 text-white hover:bg-purple-700 w-20 text-sm font-semibold transition-colors duration-200"
-                    >
-                      Start
-                    </Button>
-                  </div>
-
-                  {/* Version Info */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Version</h3>
-                    <span className="text-sm font-medium text-gray-700 w-20 text-right">2.0.0</span>
+                      Quote Style
+                    </motion.h2>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Share Preview Modal */}
-        {showPreview && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => {
-              setShowPreview(false);
-              setPreviewImage(null);
-            }}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Preview Share
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => {
-                      setShowPreview(false);
-                      setPreviewImage(null);
-                    }}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
                   >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
+                    <div className="space-y-4 mb-4">
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-white/70 text-sm"
+                      >
+                        Choose your preferred style for quotes.<br/><br/>
+                        This helps us generate quotes that matches your taste and personality.
+                      </motion.p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style, index) => (
+                        <motion.button
+                          key={style}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                          onClick={() => {
+                            setOnboarding(prev => ({
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                preferredQuoteStyle: style
+                              }
+                            }));
+                            toast.success('Quote style updated');
+                          }}
+                          className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                            onboarding.personalInfo.preferredQuoteStyle === style
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          <span>{style}</span>
+                          {onboarding.personalInfo.preferredQuoteStyle === style && (
+                            <Check className="w-5 h-5" />
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Style saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Style
+                  </button>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="space-y-4">
-                {/* Preview Area */}
-                <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
-                  {isGeneratingPreview ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <motion.div
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="text-purple-600 text-sm"
-                      >
-                        Generating preview...
-                      </motion.div>
-                    </div>
-                  ) : previewImage ? (
-                    <Image
-                      src={previewImage}
-                      alt="Share Preview"
-                      width={800}
-                      height={400}
-                      className="w-full h-full object-contain"
-                      unoptimized
-                    />
-                  ) : gifEnabled && gifUrl ? (
-                    <Image
-                      src={gifUrl || ''}
-                      alt="GIF Preview"
-                      width={800}
-                      height={400}
-                      className="w-full h-full object-contain"
-                      unoptimized
-                    />
-                  ) : null}
-                </div>
-
-                {/* Share Button */}
-                <div className="flex justify-end">
-                  <div className="flex gap-2 w-full">
-                    <Button
-                      onClick={async () => {
-                        setIsCasting(true);
-                        try {
-                          const shareText = `"${quote}" - Created by @kite /thepod`;
-                          const shareUrl = 'https://qg-frames.vercel.app';
-                          let mediaUrl = '';
-                          
-                          if (gifUrl) {
-                            mediaUrl = gifUrl;
-                          }
-
-                          const params = new URLSearchParams();
-                          params.append('text', shareText);
-                          params.append('embeds[]', shareUrl);
-                          if (mediaUrl) {
-                            params.append('embeds[]', mediaUrl);
-                          }
-                          
-                          const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                          
-                          logAnalyticsEvent('cast_created', {
-                            quote: quote,
-                            hasMedia: !!mediaUrl,
-                            mediaType: 'gif'
-                          });
-                          
-                          sdk.actions.openUrl(url);
-                          setShowPreview(false);
-                          setPreviewImage(null);
-                        } catch (error) {
-                          console.error('Error sharing:', error);
-                        } finally {
-                          setIsCasting(false);
+          {/* Areas to Improve Page */}
+          {showAreasPage && (
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        if (context?.user?.fid) {
+                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
                         }
+                        setShowAreasPage(false);
                       }}
-                      disabled={!gifUrl || isCasting}
-                      className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
                     >
-                      {isCasting ? (
-                        <motion.span
-                          animate={{ opacity: [0, 1, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          •••
-                        </motion.span>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          Share GIF
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        try {
-                          setIsGeneratingPreview(true);
-                          // Generate the image first
-                          const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                          // Show the preview immediately
-                          setPreviewImage(dataUrl);
-                          
-                          // Then start the upload process
-                          setIsCasting(true);
-                          const uploadedUrl = await uploadImage(dataUrl);
-                          const shareText = `"${quote}" - Created by @kite /thepod`;
-                          const shareUrl = 'https://qg-frames.vercel.app';
-                          
-                          const params = new URLSearchParams();
-                          params.append('text', shareText);
-                          params.append('embeds[]', shareUrl);
-                          params.append('embeds[]', uploadedUrl);
-                          
-                          const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                          
-                          logAnalyticsEvent('cast_created', {
-                            quote: quote,
-                            hasMedia: true,
-                            mediaType: 'canvas'
-                          });
-                          
-                          sdk.actions.openUrl(url);
-                          setShowPreview(false);
-                          setPreviewImage(null);
-                        } catch (error) {
-                          console.error('Error sharing:', error);
-                          toast.error('Failed to share quote. Please try again.');
-                        } finally {
-                          setIsGeneratingPreview(false);
-                          setIsCasting(false);
-                        }
-                      }}
-                      disabled={isCasting}
-                      className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <motion.h2 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl font-semibold text-white"
                     >
-                      {isCasting ? (
-                        <motion.span
-                          animate={{ opacity: [0, 1, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          •••
-                        </motion.span>
-                      ) : (
-                        <>
-                          <Frame className="w-4 h-4" />
-                          Share Image
-                        </>
-                      )}
-                    </Button>
+                      Areas to Improve
+                    </motion.h2>
                   </div>
                 </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="space-y-4 mb-4">
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-white/70 text-sm"
+                      >
+                        Select the areas in your life you&apos;d like to focus on.<br/><br/>
+                        We&apos;ll generate quotes that inspire and motivate you in these specific areas.
+                      </motion.p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {[
+                        'confidence', 'motivation', 'relationships', 'career',
+                        'health', 'creativity', 'leadership', 'mindfulness'
+                      ].map((area, index) => (
+                        <motion.button
+                          key={area}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                          onClick={() => {
+                            setOnboarding(prev => {
+                              const areas = prev.personalInfo.areasToImprove || [];
+                              const newAreas = areas.includes(area)
+                                ? areas.filter(a => a !== area)
+                                : [...areas, area];
+                              return {
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  areasToImprove: newAreas
+                                }
+                              };
+                            });
+                            toast.success('Areas updated');
+                          }}
+                          className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                            onboarding.personalInfo.areasToImprove?.includes(area)
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          <span>{area}</span>
+                          {onboarding.personalInfo.areasToImprove?.includes(area) && (
+                            <Check className="w-5 h-5" />
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Areas saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Areas
+                  </button>
+                </div>
               </div>
-            </motion.div>
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Profile Modal */}
-        {showProfile && (
-          <ProfileModal 
-            onClose={() => setShowProfile(false)}
-            context={context}
-            favorites={favorites}
-            quoteHistory={quoteHistory}
-            sessionStartTime={sessionStartTime}
-          />
-        )}
-
-        {/* Onboarding Modal */}
-        {hasCheckedOnboarding && !onboarding.hasCompletedOnboarding && (
-          <OnboardingFlow 
-            onboarding={onboarding}
-            setOnboarding={setOnboarding}
-            onComplete={() => {
-              setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: true }));
-            }}
-            context={context}
-            setBgImage={setBgImage}
-          />
-        )}
+          {/* Personal Goals Page */}
+          {showGoalsPage && (
+            <div className="fixed inset-0 bottom-16 bg-black z-50">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        if (context?.user?.fid) {
+                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        }
+                        setShowGoalsPage(false);
+                      }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <motion.h2 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl font-semibold text-white"
+                    >
+                      Personal Goals
+                    </motion.h2>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="space-y-4">
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-white/70 text-sm mb-4"
+                      >
+                        Write down your personal goals and dreams.
+                      </motion.p>
+                      <motion.textarea
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        value={onboarding.personalInfo.personalGoals || ''}
+                        onChange={(e) => {
+                          setOnboarding(prev => ({
+                            ...prev,
+                            personalInfo: {
+                              ...prev.personalInfo,
+                              personalGoals: e.target.value
+                            }
+                          }));
+                        }}
+                        placeholder="Enter your personal goals..."
+                        className="w-full h-48 bg-white/10 text-white rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </motion.div>
+                </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Goals saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Goals
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+        <BottomNav 
+          activeSection={activeSection} 
+          onNavigate={handleNavigation} 
+          className="bg-black shadow-lg"
+        />
       </div>
     </ErrorBoundary>
   );
