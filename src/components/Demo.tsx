@@ -1675,15 +1675,15 @@ export default function Demo({ title = "Fun Quotes" }) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: "spring", damping: 25, stiffness: 120 }}
-            className="fixed inset-0 bg-gray-950 z-50"
+            className="fixed inset-0 bg-black z-50"
           >
             <div className="h-full flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <h2 className="text-xl font-semibold text-white">History</h2>
                 <button 
                   onClick={() => setShowHistory(false)}
-                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
                 >
                   <X className="w-6 h-6 text-white" />
                 </button>
@@ -1703,7 +1703,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors"
+                        className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors"
                         onClick={() => {
                           setQuote(item.text);
                           setGifUrl(item.gifUrl);
@@ -1712,7 +1712,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       >
                         {item.gifUrl ? (
                           <div className="flex gap-4">
-                            <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-gray-700 overflow-hidden relative">
+                            <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-black/50 overflow-hidden relative">
                               <Image
                                 src={item.gifUrl}
                                 alt="Quote GIF"
@@ -1745,15 +1745,15 @@ export default function Demo({ title = "Fun Quotes" }) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: "spring", damping: 25, stiffness: 120 }}
-            className="fixed inset-0 bg-gray-950 z-50"
+            className="fixed inset-0 bg-black z-50"
           >
             <div className="h-full flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <h2 className="text-xl font-semibold text-white">Favorites</h2>
                 <button 
                   onClick={() => setShowFavorites(false)}
-                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
                 >
                   <X className="w-6 h-6 text-white" />
                 </button>
@@ -1773,7 +1773,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors relative group"
+                        className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors relative group"
                         onClick={() => {
                           setQuote(item.text);
                           setGifUrl(item.gifUrl);
@@ -1782,7 +1782,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       >
                         {item.gifUrl ? (
                           <div className="flex gap-4">
-                            <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-gray-700 overflow-hidden relative">
+                            <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-black/50 overflow-hidden relative">
                               <Image
                                 src={item.gifUrl}
                                 alt="Quote GIF"
