@@ -441,6 +441,14 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [showGoalsPage, setShowGoalsPage] = useState(false);
 
   const handleNavigation = (section: string) => {
+    // Close all profile menu pages
+    setShowPreferences(false);
+    setShowThemeMenu(false);
+    setShowSettings(false);
+    setShowQuoteStylePage(false);
+    setShowAreasPage(false);
+    setShowGoalsPage(false);
+
     // Close all pages and set new section immediately
     setShowFavorites(false);
     setShowHistory(false);
@@ -1595,7 +1603,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                               id: ''
                             };
                             toggleFavorite(quoteItem);
-                            // Show heart animation
                             setShowHeartAnimation(true);
                             setTimeout(() => setShowHeartAnimation(false), 1000);
                           }}
@@ -1606,56 +1613,62 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }`}
                         />
                       )}
-                      <Dice3
-                        onClick={async () => {
-                          setIsGenerating(true);
-                          try {
-                            // Get personalized prompt from OpenAI
-                            const response = await fetch('/api/openai', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                userPreferences: {
-                                  gender: onboarding.personalInfo.gender,
-                                  relationshipStatus: onboarding.personalInfo.relationshipStatus,
-                                  areasToImprove: onboarding.personalInfo.areasToImprove,
-                                  personalGoals: onboarding.personalInfo.personalGoals,
-                                  preferredStyles: onboarding.personalInfo.preferredStyles
-                                }
-                              }),
-                            });
-
-                            if (!response.ok) {
-                              throw new Error('Failed to get AI suggestion');
-                            }
-
-                            const data = await response.json();
-                            if (!data.result) {
-                              throw new Error('No suggestion received');
-                            }
-
-                            // Use the AI-generated prompt
-                            setUserPrompt(data.result);
-                            await handleGenerateQuote();
-                            
-                            toast.success('Generated a personalized quote based on AI suggestions!');
-                          } catch (error) {
-                            console.error('Error generating random quote:', error);
-                            // Fallback to the original randomizer if AI fails
-                            const randomPrompt = generateRandomPrompt(favorites);
-                            setUserPrompt(randomPrompt);
-                            await handleGenerateQuote();
-                            toast.success('Generated a quote based on your preferences!');
-                          } finally {
-                            setIsGenerating(false);
-                          }
+                      <motion.div
+                        whileTap={{ rotate: 360, scale: 0.8 }}
+                        transition={{ 
+                          type: "spring",
+                          duration: 0.5,
+                          bounce: 0.5
                         }}
-                        className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
-                          isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
-                        }`}
-                      />
+                      >
+                        <Dice3
+                          onClick={async () => {
+                            setIsGenerating(true);
+                            try {
+                              const response = await fetch('/api/openai', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  userPreferences: {
+                                    gender: onboarding.personalInfo.gender,
+                                    relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                                    areasToImprove: onboarding.personalInfo.areasToImprove,
+                                    personalGoals: onboarding.personalInfo.personalGoals,
+                                    preferredStyles: onboarding.personalInfo.preferredStyles
+                                  }
+                                }),
+                              });
+
+                              if (!response.ok) {
+                                throw new Error('Failed to get AI suggestion');
+                              }
+
+                              const data = await response.json();
+                              if (!data.result) {
+                                throw new Error('No suggestion received');
+                              }
+
+                              setUserPrompt(data.result);
+                              await handleGenerateQuote();
+                              
+                              toast.success('Generated a personalized quote based on AI suggestions!');
+                            } catch (error) {
+                              console.error('Error generating random quote:', error);
+                              const randomPrompt = generateRandomPrompt(favorites);
+                              setUserPrompt(randomPrompt);
+                              await handleGenerateQuote();
+                              toast.success('Generated a quote based on your preferences!');
+                            } finally {
+                              setIsGenerating(false);
+                            }
+                          }}
+                          className={`w-5 h-5 cursor-pointer hover:scale-125 transition-transform ${
+                            isGenerating ? 'opacity-50' : 'text-white hover:text-blue-200'
+                          }`}
+                        />
+                      </motion.div>
                     </div>
                     {quote && (
                       <Upload
