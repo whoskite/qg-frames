@@ -1721,15 +1721,23 @@ export default function Demo({ title = "Fun Quotes" }) {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <div className="grid gap-4">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid gap-4"
+                  >
                     {quoteHistory.length === 0 ? (
                       <div className="text-center text-gray-400 py-8">
                         No history yet
                       </div>
                     ) : (
                       quoteHistory.map((item, index) => (
-                        <div
+                        <motion.div
                           key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
                           className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors"
                           onClick={() => {
                             setQuote(item.text);
@@ -1756,10 +1764,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                           ) : (
                             <p className="text-white text-sm">{item.text}</p>
                           )}
-                        </div>
+                        </motion.div>
                       ))
                     )}
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
@@ -1776,15 +1784,23 @@ export default function Demo({ title = "Fun Quotes" }) {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <div className="grid gap-4">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid gap-4"
+                  >
                     {favorites.length === 0 ? (
                       <div className="text-center text-gray-400 py-8">
                         No favorites yet
                       </div>
                     ) : (
-                      favorites.map((item) => (
-                        <div
+                      favorites.map((item, index) => (
+                        <motion.div
                           key={item.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
                           className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors relative group"
                           onClick={() => {
                             setQuote(item.text);
@@ -1820,10 +1836,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                           >
                             <Heart className="w-5 h-5 fill-current" />
                           </button>
-                        </div>
+                        </motion.div>
                       ))
                     )}
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
@@ -2005,13 +2021,25 @@ export default function Demo({ title = "Fun Quotes" }) {
                             handleGifToggle();
                             toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
                           }}
-                          className={`px-4 py-2 rounded-lg transition-colors ${
-                            gifEnabled 
-                              ? 'bg-purple-600 text-white' 
-                              : 'bg-white/20 text-white/60'
-                          }`}
+                          className="toggle-container relative w-[60px] h-[32px] rounded-full cursor-pointer"
+                          style={{
+                            backgroundColor: gifEnabled ? 'rgb(59, 130, 246)' : 'rgb(107, 114, 128)',
+                          }}
                         >
-                          {gifEnabled ? 'On' : 'Off'}
+                          <motion.div
+                            className="absolute top-[2px] left-[2px] w-[28px] h-[28px] bg-white rounded-full shadow-lg"
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 35,
+                              mass: 1
+                            }}
+                            animate={{
+                              x: gifEnabled ? 28 : 0,
+                              scale: gifEnabled ? 1.1 : 1
+                            }}
+                          />
                         </button>
                       </div>
                     </div>
@@ -2028,13 +2056,25 @@ export default function Demo({ title = "Fun Quotes" }) {
                             setIsMusicEnabled(!isMusicEnabled);
                             toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
                           }}
-                          className={`px-4 py-2 rounded-lg transition-colors ${
-                            isMusicEnabled 
-                              ? 'bg-purple-600 text-white' 
-                              : 'bg-white/20 text-white/60'
-                          }`}
+                          className="toggle-container relative w-[60px] h-[32px] rounded-full cursor-pointer"
+                          style={{
+                            backgroundColor: isMusicEnabled ? 'rgb(59, 130, 246)' : 'rgb(107, 114, 128)',
+                          }}
                         >
-                          {isMusicEnabled ? 'On' : 'Off'}
+                          <motion.div
+                            className="absolute top-[2px] left-[2px] w-[28px] h-[28px] bg-white rounded-full shadow-lg"
+                            layout
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 35,
+                              mass: 1
+                            }}
+                            animate={{
+                              x: isMusicEnabled ? 28 : 0,
+                              scale: isMusicEnabled ? 1.1 : 1
+                            }}
+                          />
                         </button>
                       </div>
                     </div>
@@ -2392,43 +2432,64 @@ export default function Demo({ title = "Fun Quotes" }) {
                     >
                       <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
-                    <h2 className="text-xl font-semibold text-white">Quote Style</h2>
+                    <motion.h2 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl font-semibold text-white"
+                    >
+                      Quote Style
+                    </motion.h2>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <div className="space-y-4 mb-4">
-                    <p className="text-white/70 text-sm">
-                      Choose your preferred style for quotes.<br/><br/>
-                      This helps us generate quotes that matches your taste and personality.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style) => (
-                      <button
-                        key={style}
-                        onClick={() => {
-                          setOnboarding(prev => ({
-                            ...prev,
-                            personalInfo: {
-                              ...prev.personalInfo,
-                              preferredQuoteStyle: style
-                            }
-                          }));
-                          toast.success('Quote style updated');
-                        }}
-                        className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
-                          onboarding.personalInfo.preferredQuoteStyle === style
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-white/10 text-white hover:bg-white/20'
-                        }`}
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="space-y-4 mb-4">
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-white/70 text-sm"
                       >
-                        <span>{style}</span>
-                        {onboarding.personalInfo.preferredQuoteStyle === style && (
-                          <Check className="w-5 h-5" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                        Choose your preferred style for quotes.<br/><br/>
+                        This helps us generate quotes that matches your taste and personality.
+                      </motion.p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style, index) => (
+                        <motion.button
+                          key={style}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                          onClick={() => {
+                            setOnboarding(prev => ({
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                preferredQuoteStyle: style
+                              }
+                            }));
+                            toast.success('Quote style updated');
+                          }}
+                          className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                            onboarding.personalInfo.preferredQuoteStyle === style
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          <span>{style}</span>
+                          {onboarding.personalInfo.preferredQuoteStyle === style && (
+                            <Check className="w-5 h-5" />
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
                 </div>
                 {/* Fixed Save Button */}
                 <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
@@ -2465,52 +2526,73 @@ export default function Demo({ title = "Fun Quotes" }) {
                     >
                       <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
-                    <h2 className="text-xl font-semibold text-white">Areas to Improve</h2>
+                    <motion.h2 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl font-semibold text-white"
+                    >
+                      Areas to Improve
+                    </motion.h2>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <div className="space-y-4 mb-4">
-                    <p className="text-white/70 text-sm">
-                      Select the areas in your life you'd like to focus on.<br/><br/>
-                      We'll generate quotes that inspire and motivate you in these specific areas.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {[
-                      'confidence', 'motivation', 'relationships', 'career',
-                      'health', 'creativity', 'leadership', 'mindfulness'
-                    ].map((area) => (
-                      <button
-                        key={area}
-                        onClick={() => {
-                          setOnboarding(prev => {
-                            const areas = prev.personalInfo.areasToImprove || [];
-                            const newAreas = areas.includes(area)
-                              ? areas.filter(a => a !== area)
-                              : [...areas, area];
-                            return {
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                areasToImprove: newAreas
-                              }
-                            };
-                          });
-                          toast.success('Areas updated');
-                        }}
-                        className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
-                          onboarding.personalInfo.areasToImprove?.includes(area)
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-white/10 text-white hover:bg-white/20'
-                        }`}
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="space-y-4 mb-4">
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-white/70 text-sm"
                       >
-                        <span>{area}</span>
-                        {onboarding.personalInfo.areasToImprove?.includes(area) && (
-                          <Check className="w-5 h-5" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                        Select the areas in your life you'd like to focus on.<br/><br/>
+                        We'll generate quotes that inspire and motivate you in these specific areas.
+                      </motion.p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {[
+                        'confidence', 'motivation', 'relationships', 'career',
+                        'health', 'creativity', 'leadership', 'mindfulness'
+                      ].map((area, index) => (
+                        <motion.button
+                          key={area}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                          onClick={() => {
+                            setOnboarding(prev => {
+                              const areas = prev.personalInfo.areasToImprove || [];
+                              const newAreas = areas.includes(area)
+                                ? areas.filter(a => a !== area)
+                                : [...areas, area];
+                              return {
+                                ...prev,
+                                personalInfo: {
+                                  ...prev.personalInfo,
+                                  areasToImprove: newAreas
+                                }
+                              };
+                            });
+                            toast.success('Areas updated');
+                          }}
+                          className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                            onboarding.personalInfo.areasToImprove?.includes(area)
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          <span>{area}</span>
+                          {onboarding.personalInfo.areasToImprove?.includes(area) && (
+                            <Check className="w-5 h-5" />
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
                 </div>
                 {/* Fixed Save Button */}
                 <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
@@ -2547,29 +2629,50 @@ export default function Demo({ title = "Fun Quotes" }) {
                     >
                       <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
-                    <h2 className="text-xl font-semibold text-white">Personal Goals</h2>
+                    <motion.h2 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl font-semibold text-white"
+                    >
+                      Personal Goals
+                    </motion.h2>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <div className="space-y-4">
-                    <p className="text-white/70 text-sm mb-4">
-                      Write down your personal goals and dreams.
-                    </p>
-                    <textarea
-                      value={onboarding.personalInfo.personalGoals || ''}
-                      onChange={(e) => {
-                        setOnboarding(prev => ({
-                          ...prev,
-                          personalInfo: {
-                            ...prev.personalInfo,
-                            personalGoals: e.target.value
-                          }
-                        }));
-                      }}
-                      placeholder="Enter your personal goals..."
-                      className="w-full h-48 bg-white/10 text-white rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="space-y-4">
+                      <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-white/70 text-sm mb-4"
+                      >
+                        Write down your personal goals and dreams.
+                      </motion.p>
+                      <motion.textarea
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        value={onboarding.personalInfo.personalGoals || ''}
+                        onChange={(e) => {
+                          setOnboarding(prev => ({
+                            ...prev,
+                            personalInfo: {
+                              ...prev.personalInfo,
+                              personalGoals: e.target.value
+                            }
+                          }));
+                        }}
+                        placeholder="Enter your personal goals..."
+                        className="w-full h-48 bg-white/10 text-white rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </motion.div>
                 </div>
                 {/* Fixed Save Button */}
                 <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
