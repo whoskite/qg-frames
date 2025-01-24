@@ -95,112 +95,6 @@ const formatTimestamp = (date: Date) => {
   return date.toLocaleDateString();
 };
 
-// Add these helper functions at the top with other helper functions
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-const calculateStreakStatus = (lastLoginTimestamp: number | null, userTimezone: string, graceUsed: boolean = false): {
-  isValidStreak: boolean;
-  hoursSinceLastLogin: number | null;
-  nextEligibleLogin: number | null;
-  streakDeadline: number | null;
-  isEligibleForIncrement: boolean;
-  isInGracePeriod: boolean;
-  hoursUntilReset: number | null;
-} => {
-  if (!lastLoginTimestamp) {
-    return {
-      isValidStreak: true,
-      hoursSinceLastLogin: null,
-      nextEligibleLogin: null,
-      streakDeadline: null,
-      isEligibleForIncrement: true,
-      isInGracePeriod: false,
-      hoursUntilReset: null
-    };
-  }
-
-  // Convert current UTC time to user's timezone
-  const now = new Date();
-  const userTime = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
-  const userTimestamp = userTime.getTime();
-  
-  // Calculate time differences using user's timezone
-  const hoursSinceLastLogin = Math.floor((userTimestamp - lastLoginTimestamp) / (60 * 60 * 1000));
-  
-  // Calculate next window based on last login time in user's timezone
-  const nextLoginWindow = new Date(lastLoginTimestamp + TWENTY_FOUR_HOURS);
-  const deadlineWindow = new Date(lastLoginTimestamp + TWENTY_FOUR_HOURS + (6 * 60 * 60 * 1000)); // 24h + 6h grace period
-  
-  // Convert windows to user's timezone
-  const userNextLoginWindow = new Date(nextLoginWindow.toLocaleString('en-US', { timeZone: userTimezone }));
-  const userDeadlineWindow = new Date(deadlineWindow.toLocaleString('en-US', { timeZone: userTimezone }));
-  
-  // Determine if in grace period (between 24h and 30h after last login)
-  const isInGracePeriod = !graceUsed && 
-    userTimestamp > userNextLoginWindow.getTime() && 
-    userTimestamp <= userDeadlineWindow.getTime();
-
-  // Determine if the streak is still valid (within 24h or in grace period)
-  const isValidStreak = hoursSinceLastLogin <= 24 || (isInGracePeriod && hoursSinceLastLogin <= 30);
-  
-  // Determine if eligible for increment (after 20h but before deadline)
-  const minimumHoursForIncrement = 20; // Allow increment after 20 hours
-  const isEligibleForIncrement = 
-    (hoursSinceLastLogin >= minimumHoursForIncrement && hoursSinceLastLogin <= 24) || 
-    (isInGracePeriod && !graceUsed);
-
-  // Calculate hours until the streak resets in user's timezone
-  const hoursUntilReset = isInGracePeriod 
-    ? Math.floor((userDeadlineWindow.getTime() - userTimestamp) / (60 * 60 * 1000))
-    : Math.floor((userNextLoginWindow.getTime() - userTimestamp) / (60 * 60 * 1000));
-
-  return {
-    isValidStreak,
-    hoursSinceLastLogin,
-    nextEligibleLogin: userNextLoginWindow.getTime(),
-    streakDeadline: userDeadlineWindow.getTime(),
-    isEligibleForIncrement,
-    isInGracePeriod,
-    hoursUntilReset
-  };
-};
-
-// Add these helper functions at the top with other helper functions
-const getStorageKey = (fid: number) => `funquotes_history_${fid}`;
-const getFavoritesKey = (fid: number) => `funquotes_favorites_${fid}`;
-
-// Add these interfaces at the top with other interfaces
-interface StoredQuoteHistoryItem extends Omit<QuoteHistoryItem, 'timestamp'> {
-  timestamp: string;
-}
-
-interface StoredFavoriteQuote extends Omit<FavoriteQuote, 'timestamp'> {
-  timestamp: string;
-}
-
-// Add these interfaces near the top with other interfaces
-interface UserStreak {
-  current_streak: number;
-  last_login_timestamp: { toMillis: () => number } | null;
-}
-
-interface StreakUpdate {
-  current_streak: number;
-  last_login_timestamp: Date;
-  next_eligible_login: Date;
-  streak_deadline: Date;
-  grace_period_used?: boolean;
-}
-
-// Add this after the imports
-const playStreakSound = () => {
-  const audio = new Audio('/streak-sound.wav');
-  audio.volume = 0.5;
-  return audio.play().catch(error => {
-    console.error('Error playing sound:', error);
-  });
-};
-
 // Add this helper function
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -521,23 +415,16 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add to state declarations
   const [showProfile, setShowProfile] = useState(false);
 
-  // Add to state declarations
-  const [userStreak, setUserStreak] = useState(0);
-
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(false);
-  const [lastStreakNotification, setLastStreakNotification] = useState<number | null>(null);
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
 
   // Add loading states
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingGif, setIsLoadingGif] = useState(false);
-
-  // Add state for grace period
-  const [isInGracePeriod, setIsInGracePeriod] = useState(false);
 
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
@@ -932,115 +819,6 @@ export default function Demo({ title = "Fun Quotes" }) {
       }
     }
   };
-
-  // Update the streak effect with proper notification timing
-  useEffect(() => {
-    const updateUserStreakCount = async () => {
-      if (!context?.user?.fid || !isFirebaseInitialized) {
-        return;
-      }
-
-      try {
-        const userDoc = await getUserStreak(context.user.fid);
-        const currentTime = Date.now();
-        
-        const lastLoginTimestamp = userDoc?.last_login_timestamp?.toMillis() || null;
-        const graceUsed = userDoc?.grace_period_used || false;
-        const userTimezone = userDoc?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const currentStreak = userDoc?.current_streak || 0;
-        
-        // Check if we've already updated today
-        const today = new Date().toLocaleDateString('en-US', { timeZone: userTimezone });
-        const lastUpdate = localStorage.getItem('lastStreakUpdate');
-        if (lastUpdate === today) {
-          setUserStreak(currentStreak);
-          return;
-        }
-        
-        const {
-          isValidStreak,
-          hoursSinceLastLogin,
-          nextEligibleLogin,
-          streakDeadline,
-          isEligibleForIncrement,
-          isInGracePeriod: newGracePeriod,
-          hoursUntilReset
-        } = calculateStreakStatus(lastLoginTimestamp, userTimezone, graceUsed);
-
-        // Update grace period state
-        setIsInGracePeriod(newGracePeriod);
-
-        let newStreak = currentStreak;
-
-        // Only show notification once per day
-        const shouldShowNotification = !lastStreakNotification || 
-          new Date(lastStreakNotification).toLocaleDateString('en-US', { timeZone: userTimezone }) !== today;
-
-        if (!lastLoginTimestamp) {
-          // First login ever
-          newStreak = 1;
-          if (shouldShowNotification) {
-            playStreakSound();
-            toast.info('Streak started! Come back tomorrow to continue.');
-            setLastStreakNotification(currentTime);
-          }
-        } else if (!isValidStreak) {
-          // Reset streak if more than allowed time has passed
-          newStreak = 1;
-          if (shouldShowNotification) {
-            playStreakSound();
-            toast.info('New streak started! Come back tomorrow to continue.');
-            setLastStreakNotification(currentTime);
-          }
-        } else if (isEligibleForIncrement && hoursSinceLastLogin !== null && hoursSinceLastLogin >= 20) {
-          // Only increment if enough time has passed
-          newStreak += 1;
-          if (shouldShowNotification) {
-            playStreakSound();
-            toast.success(`🔥 ${newStreak} Day Streak!`);
-            if (newGracePeriod) {
-              toast.info('Grace period used - make sure to log in earlier tomorrow!');
-            }
-            setLastStreakNotification(currentTime);
-          }
-        }
-
-        // Update the streak in Firestore
-        const streakUpdate: StreakUpdate = {
-          current_streak: newStreak,
-          last_login_timestamp: new Date(currentTime),
-          next_eligible_login: new Date(nextEligibleLogin || currentTime + TWENTY_FOUR_HOURS),
-          streak_deadline: new Date(streakDeadline || currentTime + TWENTY_FOUR_HOURS + (6 * 60 * 60 * 1000)),
-          grace_period_used: newGracePeriod
-        };
-        
-        await updateUserStreak(context.user.fid, streakUpdate);
-        
-        // Store today's date as last update
-        localStorage.setItem('lastStreakUpdate', today);
-
-        // Update streak count without notification if it has changed
-        if (newStreak !== userStreak) {
-          setUserStreak(newStreak);
-        }
-
-        // Log analytics
-        logAnalyticsEvent('streak_updated', {
-          new_streak: newStreak,
-          hours_since_last_login: hoursSinceLastLogin || 0,
-          streak_maintained: isValidStreak,
-          notification_shown: shouldShowNotification,
-          grace_period_used: newGracePeriod,
-          timezone: userTimezone
-        });
-
-      } catch (error) {
-        toast.error('Failed to update streak');
-      }
-    };
-
-    updateUserStreakCount();
-  }, [context?.user?.fid, isFirebaseInitialized, userStreak, lastStreakNotification]);
 
   // Update the background music effect
   useEffect(() => {
@@ -1481,7 +1259,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           style: onboarding.personalInfo.preferredQuoteStyle || 'casual',
           gifUrl: gifUrl,
           timestamp: new Date(),
-          bgColor: bgColor,
+          bgColor,
           id: Date.now().toString()
         };
         toggleFavorite(currentQuote);
@@ -1491,24 +1269,6 @@ export default function Demo({ title = "Fun Quotes" }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleGenerateQuote, handleRegenerateGif, gifEnabled, quote, toggleFavorite, onboarding.personalInfo.preferredQuoteStyle, gifUrl, bgColor, isGenerating, isLoadingGif, isSaving]);
-
-  // Add effect to load user streak on mount
-  useEffect(() => {
-    const loadUserStreak = async () => {
-      if (context?.user?.fid && isFirebaseInitialized) {
-        try {
-          const userDoc = await getUserStreak(context.user.fid);
-          if (userDoc) {
-            setUserStreak(userDoc.current_streak || 0);
-          }
-        } catch (error) {
-          console.error('Error loading user streak:', error);
-        }
-      }
-    };
-
-    loadUserStreak();
-  }, [context?.user?.fid, isFirebaseInitialized]);
 
   // Add this effect near the top of your component
   useEffect(() => {
@@ -1700,24 +1460,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                     className="text-2xl text-white font-medium text-center"
                   >
                     Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Streak Counter */}
-              <AnimatePresence mode="wait">
-                {isInitialState && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="text-center"
-                  >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
-                      <span className="text-xl">🔥</span>
-                      <span className="text-white font-medium">{userStreak} Day Streak</span>
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -2645,7 +2387,6 @@ export default function Demo({ title = "Fun Quotes" }) {
             favorites={favorites}
             quoteHistory={quoteHistory}
             sessionStartTime={sessionStartTime}
-            userStreak={userStreak}
           />
         )}
 
@@ -2682,7 +2423,6 @@ interface ProfileModalProps {
   favorites: FavoriteQuote[];
   quoteHistory: QuoteHistoryItem[];
   sessionStartTime: number;
-  userStreak: number;
 }
 
 // Update the ProfileModal component
@@ -2691,8 +2431,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
   context, 
   favorites, 
   quoteHistory, 
-  sessionStartTime,
-  userStreak
+  sessionStartTime
 }) => (
   <div 
     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -2746,17 +2485,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         </div>
 
         {/* User Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600">Favorites</p>
             <p className="text-2xl font-semibold text-gray-900">{favorites.length}</p>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Daily Streak</p>
-            <div className="flex items-baseline gap-1">
-              <p className="text-2xl font-semibold text-gray-900">{userStreak}</p>
-              <span className="text-sm text-gray-600">days</span>
-            </div>
           </div>
         </div>
 
