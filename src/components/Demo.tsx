@@ -2370,20 +2370,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     </button>
                   </div>
                 </div>
-                {/* Fixed Save Button */}
-                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
-                  <button
-                    onClick={() => {
-                      if (context?.user?.fid) {
-                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
-                        toast.success('Goals saved successfully');
-                      }
-                    }}
-                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Save Goals
-                  </button>
-                </div>
+                {/* Remove the Fixed Save Button from User Preferences */}
               </div>
             </div>
           )}
@@ -2409,6 +2396,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="space-y-4 mb-4">
+                    <p className="text-white/70 text-sm">
+                      Choose your preferred style for quotes.<br/><br/>
+                      This helps us generate quotes that matches your taste and personality.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 gap-2">
                     {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style) => (
                       <button
@@ -2437,6 +2430,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                     ))}
                   </div>
                 </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Style saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Style
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -2462,6 +2469,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="space-y-4 mb-4">
+                    <p className="text-white/70 text-sm">
+                      Select the areas in your life you'd like to focus on.<br/><br/>
+                      We'll generate quotes that inspire and motivate you in these specific areas.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 gap-2">
                     {[
                       'confidence', 'motivation', 'relationships', 'career',
@@ -2499,6 +2512,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                     ))}
                   </div>
                 </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Areas saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Areas
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -2525,6 +2552,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                   <div className="space-y-4">
+                    <p className="text-white/70 text-sm mb-4">
+                      Write down your personal goals and dreams.
+                    </p>
                     <textarea
                       value={onboarding.personalInfo.personalGoals || ''}
                       onChange={(e) => {
