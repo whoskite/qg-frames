@@ -24,7 +24,9 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
       </head>
       <body>
-        <Providers session={session}>{children}</Providers>
+        <Providers session={session}>
+          {children}
+        </Providers>
         <Script id="firebase-analytics-init">
           {`
             if (typeof window !== 'undefined') {
