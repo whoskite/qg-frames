@@ -1564,16 +1564,16 @@ export default function Demo({ title = "Fun Quotes" }) {
       <div className="relative min-h-screen">
         {/* Fixed Navigation */}
         <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-50 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex justify-between items-center">
               {/* Left side - Logo */}
               <div className="flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Logo"
-                  width={60}
-                  height={60}
-                  priority  // Add this to optimize LCP
+                  width={40}  // Changed from 60 to 40
+                  height={40} // Changed from 60 to 40
+                  priority
                   className="object-contain"
                 />
               </div>
@@ -1583,12 +1583,12 @@ export default function Demo({ title = "Fun Quotes" }) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="cursor-pointer transition-transform hover:scale-105">
-                      <div className="relative w-[45px] h-[45px] rounded-full border-2 border-white shadow-lg overflow-hidden">
+                      <div className="relative w-[35px] h-[35px] rounded-full border-2 border-white shadow-lg overflow-hidden">  {/* Changed from 45px to 35px */}
                         <Image
                           src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
                           alt={context?.user?.displayName || "Profile"}
-                          width={45}
-                          height={45}
+                          width={35}  // Changed from 45 to 35
+                          height={35} // Changed from 45 to 35
                           className="w-full h-full object-cover"
                           unoptimized
                           onError={(e) => {
