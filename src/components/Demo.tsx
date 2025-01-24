@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3 } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -431,6 +431,14 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Add this state for navigation
   const [activeSection, setActiveSection] = useState('generate');
+
+  // Add new state for preferences page
+  const [showPreferences, setShowPreferences] = useState(false);
+
+  // Add new states for quote style, areas to improve, and personal goals pages
+  const [showQuoteStylePage, setShowQuoteStylePage] = useState(false);
+  const [showAreasPage, setShowAreasPage] = useState(false);
+  const [showGoalsPage, setShowGoalsPage] = useState(false);
 
   const handleNavigation = (section: string) => {
     // Close all pages and set new section immediately
@@ -1425,14 +1433,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       )}
                       <DropdownMenuItem 
                         className="flex items-center gap-2"
-                        onClick={() => {
-                          setOnboarding(prev => ({ ...prev, hasCompletedOnboarding: false }));
-                          // Close the dropdown menu
-                          const dropdownTrigger = document.querySelector('[data-state="open"]');
-                          if (dropdownTrigger instanceof HTMLElement) {
-                            dropdownTrigger.click();
-                          }
-                        }}
+                        onClick={() => setShowPreferences(true)}
                       >
                         <Sparkles className="w-4 h-4" />
                         <span>User Preferences</span>
@@ -2300,6 +2301,262 @@ export default function Demo({ title = "Fun Quotes" }) {
               context={context}
               setBgImage={setBgImage}
             />
+          )}
+
+          {/* User Preferences Page */}
+          {showPreferences && (
+            <div className="fixed inset-0 bg-black z-40">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">User Preferences</h2>
+                  <button 
+                    onClick={() => setShowPreferences(false)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 pb-24 custom-scrollbar">
+                  <div className="space-y-4">
+                    {/* Quote Style */}
+                    <button
+                      onClick={() => setShowQuoteStylePage(true)}
+                      className="w-full bg-white/10 rounded-lg p-4 text-left hover:bg-white/20 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="text-white font-medium">Quote Style</h3>
+                        <p className="text-white/60 text-sm">
+                          {onboarding.personalInfo.preferredQuoteStyle ? 
+                            `Current: ${onboarding.personalInfo.preferredQuoteStyle}` : 
+                            'Choose your preferred quote style'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/60" />
+                    </button>
+
+                    {/* Areas to Improve */}
+                    <button
+                      onClick={() => setShowAreasPage(true)}
+                      className="w-full bg-white/10 rounded-lg p-4 text-left hover:bg-white/20 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="text-white font-medium">Areas to Improve</h3>
+                        <p className="text-white/60 text-sm">
+                          {onboarding.personalInfo.areasToImprove?.length ? 
+                            `${onboarding.personalInfo.areasToImprove.length} areas selected` : 
+                            'Select areas you want to focus on'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/60" />
+                    </button>
+
+                    {/* Personal Goals */}
+                    <button
+                      onClick={() => setShowGoalsPage(true)}
+                      className="w-full bg-white/10 rounded-lg p-4 text-left hover:bg-white/20 transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="text-white font-medium">Personal Goals</h3>
+                        <p className="text-white/60 text-sm">
+                          {onboarding.personalInfo.personalGoals ? 
+                            'Goals set' : 
+                            'Set your personal goals'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/60" />
+                    </button>
+                  </div>
+                </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Goals saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Goals
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quote Style Page */}
+          {showQuoteStylePage && (
+            <div className="fixed inset-0 bg-black z-50">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        if (context?.user?.fid) {
+                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        }
+                        setShowQuoteStylePage(false);
+                      }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <h2 className="text-xl font-semibold text-white">Quote Style</h2>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="grid grid-cols-1 gap-2">
+                    {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style) => (
+                      <button
+                        key={style}
+                        onClick={() => {
+                          setOnboarding(prev => ({
+                            ...prev,
+                            personalInfo: {
+                              ...prev.personalInfo,
+                              preferredQuoteStyle: style
+                            }
+                          }));
+                          toast.success('Quote style updated');
+                        }}
+                        className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                          onboarding.personalInfo.preferredQuoteStyle === style
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white/10 text-white hover:bg-white/20'
+                        }`}
+                      >
+                        <span>{style}</span>
+                        {onboarding.personalInfo.preferredQuoteStyle === style && (
+                          <Check className="w-5 h-5" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Areas to Improve Page */}
+          {showAreasPage && (
+            <div className="fixed inset-0 bg-black z-50">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        if (context?.user?.fid) {
+                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        }
+                        setShowAreasPage(false);
+                      }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <h2 className="text-xl font-semibold text-white">Areas to Improve</h2>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      'confidence', 'motivation', 'relationships', 'career',
+                      'health', 'creativity', 'leadership', 'mindfulness'
+                    ].map((area) => (
+                      <button
+                        key={area}
+                        onClick={() => {
+                          setOnboarding(prev => {
+                            const areas = prev.personalInfo.areasToImprove || [];
+                            const newAreas = areas.includes(area)
+                              ? areas.filter(a => a !== area)
+                              : [...areas, area];
+                            return {
+                              ...prev,
+                              personalInfo: {
+                                ...prev.personalInfo,
+                                areasToImprove: newAreas
+                              }
+                            };
+                          });
+                          toast.success('Areas updated');
+                        }}
+                        className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                          onboarding.personalInfo.areasToImprove?.includes(area)
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white/10 text-white hover:bg-white/20'
+                        }`}
+                      >
+                        <span>{area}</span>
+                        {onboarding.personalInfo.areasToImprove?.includes(area) && (
+                          <Check className="w-5 h-5" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Personal Goals Page */}
+          {showGoalsPage && (
+            <div className="fixed inset-0 bg-black z-50">
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        if (context?.user?.fid) {
+                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        }
+                        setShowGoalsPage(false);
+                      }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <h2 className="text-xl font-semibold text-white">Personal Goals</h2>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <div className="space-y-4">
+                    <textarea
+                      value={onboarding.personalInfo.personalGoals || ''}
+                      onChange={(e) => {
+                        setOnboarding(prev => ({
+                          ...prev,
+                          personalInfo: {
+                            ...prev.personalInfo,
+                            personalGoals: e.target.value
+                          }
+                        }));
+                      }}
+                      placeholder="Enter your personal goals..."
+                      className="w-full h-48 bg-white/10 text-white rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                {/* Fixed Save Button */}
+                <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
+                  <button
+                    onClick={() => {
+                      if (context?.user?.fid) {
+                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        toast.success('Goals saved successfully');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Goals
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </main>
         <BottomNav 
