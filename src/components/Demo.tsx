@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3 } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1591,7 +1591,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }`}
                         />
                       )}
-                      <Shuffle
+                      <Dice3
                         onClick={async () => {
                           setIsGenerating(true);
                           try {
@@ -1643,7 +1643,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       />
                     </div>
                     {quote && (
-                      <Share2
+                      <Upload
                         onClick={async () => {
                           try {
                             setIsGeneratingPreview(true);
