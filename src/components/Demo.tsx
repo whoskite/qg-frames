@@ -2562,8 +2562,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="text-white/70 text-sm"
                       >
-                        Select the areas in your life you'd like to focus on.<br/><br/>
-                        We'll generate quotes that inspire and motivate you in these specific areas.
+                        Select the areas in your life you&apos;d like to focus on.<br/><br/>
+                        We&apos;ll generate quotes that inspire and motivate you in these specific areas.
                       </motion.p>
                     </div>
                     <div className="grid grid-cols-1 gap-2">
