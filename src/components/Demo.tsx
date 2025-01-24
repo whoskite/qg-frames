@@ -1668,264 +1668,179 @@ export default function Demo({ title = "Fun Quotes" }) {
           </div>
         </main>
 
-        {/* History Modal */}
+        {/* History Page */}
         {showHistory && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowHistory(false)}
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 120 }}
+            className="fixed inset-0 bg-gray-950 z-50"
           >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Quote History
-                </h2>
-                <div className="flex items-center gap-2">
-                  {quoteHistory.length > 0 && (
-                    <Button
-                      onClick={handleClearHistory}
-                      disabled={isClearing}
-                      className="text-purple-600 hover:text-red-500 transition-colors text-xs px-2 h-7"
-                    >
-                      {isClearing ? (
-                        <motion.span
-                          animate={{ opacity: [1, 0.5, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                          className="text-xs text-purple-600"
-                        >
-                          •••
-                        </motion.span>
-                      ) : (
-                        <span className="text-purple-600">
-                          Clear
-                        </span>
-                      )}
-                    </Button>
-                  )}
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowHistory(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
-                </div>
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                <h2 className="text-xl font-semibold text-white">History</h2>
+                <button 
+                  onClick={() => setShowHistory(false)}
+                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
               </div>
-              
-              <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-                {quoteHistory.length === 0 ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gray-500 py-12"
-                  >
-                    <div className="mb-4">✨</div>
-                    <p className="font-medium">No quotes generated yet</p>
-                    <p className="text-sm mt-2 text-gray-400">
-                      Your generated quotes will appear here
-                    </p>
-                  </motion.div>
-                ) : (
-                  <AnimatePresence mode="popLayout">
-                    {quoteHistory.map((item, index) => (
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div className="grid gap-4">
+                  {quoteHistory.length === 0 ? (
+                    <div className="text-center text-gray-400 py-8">
+                      No history yet
+                    </div>
+                  ) : (
+                    quoteHistory.map((item, index) => (
                       <motion.div
-                        key={item.timestamp.toString()}
-                        layout
+                        key={index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
-                        className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                        onClick={() => handleReuseQuote(item)}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setQuote(item.text);
+                          setGifUrl(item.gifUrl);
+                          setShowHistory(false);
+                        }}
                       >
-                        <div 
-                          className="p-4 cursor-pointer bg-gray-900 hover:bg-gray-800 transition-colors duration-200"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <p className="text-white font-medium flex-1">{item.text}</p>
-                            <span className="text-xs text-white/70 ml-2">
-                              {formatTimestamp(item.timestamp)}
-                            </span>
-                          </div>
-                          
-                          {item.gifUrl && (
-                            <div className="relative h-32 mt-3 rounded-md overflow-hidden">
+                        {item.gifUrl ? (
+                          <div className="flex gap-4">
+                            <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-gray-700 overflow-hidden relative">
                               <Image
                                 src={item.gifUrl}
                                 alt="Quote GIF"
                                 fill
-                                className="object-cover transition-transform group-hover:scale-105"
+                                className="object-cover"
                                 unoptimized
                               />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                             </div>
-                          )}
-                          
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-white/80">
-                              <span className="text-xs">Click to reuse</span>
-                              <motion.div
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                →
-                              </motion.div>
+                            <div className="flex-1 flex items-center">
+                              <p className="text-white text-sm">{item.text}</p>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(item);
-                              }}
-                              className="text-white/80 hover:text-pink-500 transition-colors"
-                            >
-                              <Heart className="w-5 h-5 fill-current" />
-                            </button>
                           </div>
-                        </div>
+                        ) : (
+                          <p className="text-white text-sm">{item.text}</p>
+                        )}
                       </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Favorites Modal */}
-        {showFavorites && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowFavorites(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Favorite Quotes
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowFavorites(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
+                    ))
+                  )}
                 </div>
               </div>
-              
-              <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-                {favorites.length === 0 ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gray-500 py-12"
-                  >
-                    <div className="mb-4">💖</div>
-                    <p className="font-medium">No favorites yet</p>
-                    <p className="text-sm mt-2 text-gray-400">
-                      Your favorite quotes will appear here
-                    </p>
-                  </motion.div>
-                ) : (
-                  <AnimatePresence mode="popLayout">
-                    {favorites.map((item) => (
+            </div>
+          </motion.div>
+        )}
+
+        {/* Favorites Page */}
+        {showFavorites && (
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 120 }}
+            className="fixed inset-0 bg-gray-950 z-50"
+          >
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                <h2 className="text-xl font-semibold text-white">Favorites</h2>
+                <button 
+                  onClick={() => setShowFavorites(false)}
+                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div className="grid gap-4">
+                  {favorites.length === 0 ? (
+                    <div className="text-center text-gray-400 py-8">
+                      No favorites yet
+                    </div>
+                  ) : (
+                    favorites.map((item, index) => (
                       <motion.div
                         key={item.id}
-                        layout
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
-                        className="group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                        onClick={() => handleReuseQuote(item)}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors relative group"
+                        onClick={() => {
+                          setQuote(item.text);
+                          setGifUrl(item.gifUrl);
+                          setShowFavorites(false);
+                        }}
                       >
-                        <div 
-                          className="p-4 cursor-pointer bg-gray-900 hover:bg-gray-800 transition-colors duration-200"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <p className="text-white font-medium flex-1">{item.text}</p>
-                            <span className="text-xs text-white/70 ml-2">
-                              {formatTimestamp(item.timestamp)}
-                            </span>
-                          </div>
-                          
-                          {item.gifUrl && (
-                            <div className="relative h-32 mt-3 rounded-md overflow-hidden">
+                        {item.gifUrl ? (
+                          <div className="flex gap-4">
+                            <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-gray-700 overflow-hidden relative">
                               <Image
                                 src={item.gifUrl}
                                 alt="Quote GIF"
                                 fill
-                                className="object-cover transition-transform group-hover:scale-105"
+                                className="object-cover"
                                 unoptimized
                               />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                             </div>
-                          )}
-                          
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-white/80">
-                              <span className="text-xs">Click to reuse</span>
-                              <motion.div
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                →
-                              </motion.div>
+                            <div className="flex-1 flex items-center">
+                              <p className="text-white text-sm">{item.text}</p>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(item);
-                              }}
-                              className="text-white/80 hover:text-pink-500 transition-colors"
-                            >
-                              <Heart className="w-5 h-5 fill-current" />
-                            </button>
                           </div>
-                        </div>
+                        ) : (
+                          <p className="text-white text-sm">{item.text}</p>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(item);
+                          }}
+                          className="absolute top-2 right-2 text-gray-400 hover:text-pink-500 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Heart className="w-5 h-5 fill-current" />
+                        </button>
                       </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Theme Menu Modal */}
-        {showThemeMenu && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowThemeMenu(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Choose Background
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowThemeMenu(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
+                    ))
+                  )}
                 </div>
               </div>
-              
-              <div className="overflow-y-auto max-h-[330px] pr-2 custom-scrollbar">
-                <div className="grid grid-cols-3 gap-4 pb-4">
+            </div>
+          </motion.div>
+        )}
+
+        {/* Theme Page */}
+        {showThemeMenu && (
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 120 }}
+            className="fixed inset-0 bg-black z-50"
+          >
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <h2 className="text-xl font-semibold text-white">Theme</h2>
+                <button 
+                  onClick={() => setShowThemeMenu(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {[
                     {
                       id: 'nature1',
@@ -1993,22 +1908,25 @@ export default function Demo({ title = "Fun Quotes" }) {
                       gradientClass: 'from-[#472A91] via-purple-600 to-purple-800'
                     }
                   ].map((bg) => (
-                    <div
+                    <motion.div
                       key={bg.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileHover={{ scale: 1.05 }}
                       onClick={async () => {
                         const newTheme = bg.isGradient ? bg.path : bg.path;
                         setBgImage(newTheme);
                         if (context?.user?.fid) {
                           try {
                             await saveThemePreference(context.user.fid, newTheme);
-                            toast.success('Theme preference saved');
+                            toast.success('Theme updated');
                           } catch (error) {
                             console.error('Error saving theme preference:', error);
                           }
                         }
                       }}
-                      className={`relative h-40 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 overflow-hidden ${
-                        bgImage === bg.path ? 'ring-4 ring-purple-600 ring-offset-2' : ''
+                      className={`aspect-square rounded-lg overflow-hidden cursor-pointer relative ${
+                        bgImage === bg.path ? 'ring-2 ring-white' : ''
                       }`}
                     >
                       {bg.isGradient ? (
@@ -2019,178 +1937,148 @@ export default function Demo({ title = "Fun Quotes" }) {
                           alt={bg.name}
                           fill
                           className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 33vw"
+                          sizes="(max-width: 768px) 50vw, 33vw"
                           unoptimized
                         />
                       )}
                       {bgImage === bg.path && (
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <Check className="w-8 h-8 text-white" />
+                          <Check className="w-6 h-6 text-white" />
                         </div>
                       )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-center text-sm">
-                        {bg.name}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
+                        <p className="text-white text-xs text-center">{bg.name}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
 
-        {/* Settings Modal */}
+        {/* Settings Page */}
         {showSettings && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowSettings(false)}
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 120 }}
+            className="fixed inset-0 bg-black z-50"
           >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col m-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Settings
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="rounded-full h-7 w-7 p-0"
-                    onClick={() => setShowSettings(false)}
-                  >
-                    <X className="h-4 w-4 text-black" />
-                  </Button>
-                </div>
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <h2 className="text-xl font-semibold text-white">Settings</h2>
+                <button 
+                  onClick={() => setShowSettings(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
               </div>
-              
-              <div className="overflow-y-auto custom-scrollbar pr-2">
-                <div className="space-y-6 pb-4">
-                  {/* GIF Toggle Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">GIF Generation</h3>
-                    <motion.div
-                      animate={{ x: gifEnabled ? 0 : -5 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    >
-                      <Button
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div className="space-y-4">
+                  {/* GIF Toggle */}
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-white font-medium">GIF Generation</h3>
+                        <p className="text-white/60 text-sm">Enable or disable GIF generation for quotes</p>
+                      </div>
+                      <button
                         onClick={() => {
                           handleGifToggle();
                           toast.success(`GIF Generation ${!gifEnabled ? 'Enabled' : 'Disabled'}`);
                         }}
-                        className={`${
+                        className={`px-4 py-2 rounded-lg transition-colors ${
                           gifEnabled 
-                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                            : 'bg-gray-600 text-white hover:bg-gray-700'
-                        } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-white/20 text-white/60'
+                        }`}
                       >
                         {gifEnabled ? 'On' : 'Off'}
-                      </Button>
-                    </motion.div>
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="h-px bg-gray-200" />
-
-                  {/* Clear History Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Clear History</h3>
-                    <Button
-                      onClick={() => {
-                        handleClearHistory();
-                        toast.success('History cleared successfully');
-                      }}
-                      disabled={isClearing}
-                      className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-
-                  {/* Clear Favorites Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Clear Favorites</h3>
-                    <Button
-                      onClick={() => {
-                        if (context?.user?.fid) {
-                          setFavorites([]);
-                          toast.success('Favorites cleared successfully');
-                        }
-                      }}
-                      className="bg-red-600 text-white hover:bg-red-700 w-20 text-sm font-semibold transition-colors duration-200"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-
-                  {/* Music Toggle Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Background Music</h3>
-                    <motion.div
-                      animate={{ x: isMusicEnabled ? 0 : -5 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    >
-                      <Button
+                  {/* Music Toggle */}
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-white font-medium">Background Music</h3>
+                        <p className="text-white/60 text-sm">Enable or disable background music</p>
+                      </div>
+                      <button
                         onClick={() => {
                           setIsMusicEnabled(!isMusicEnabled);
                           toast.success(`Background Music ${!isMusicEnabled ? 'Enabled' : 'Disabled'}`);
                         }}
-                        className={`${
+                        className={`px-4 py-2 rounded-lg transition-colors ${
                           isMusicEnabled 
-                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                            : 'bg-gray-600 text-white hover:bg-gray-700'
-                        } w-20 text-sm flex items-center justify-center transition-all duration-200`}
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-white/20 text-white/60'
+                        }`}
                       >
                         {isMusicEnabled ? 'On' : 'Off'}
-                      </Button>
-                    </motion.div>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Reset Onboarding Option */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <div>
-                      <h3 className="font-semibold text-gray-800">Start Onboarding</h3>
-                      <p className="text-xs text-gray-500">Customize your quote preferences</p>
+                  {/* Clear History */}
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-white font-medium">Clear History</h3>
+                        <p className="text-white/60 text-sm">Remove all quote history</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          handleClearHistory();
+                          toast.success('History cleared');
+                        }}
+                        disabled={isClearing}
+                        className="px-4 py-2 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition-colors"
+                      >
+                        Clear
+                      </button>
                     </div>
-                    <Button
-                      onClick={() => {
-                        setOnboarding({
-                          step: 1,
-                          personalInfo: {
-                            gender: '',
-                            relationshipStatus: '',
-                            selectedTheme: '',
-                            areasToImprove: [],
-                            personalGoals: '',
-                            preferredQuoteStyle: '',
-                            preferredLength: '',
-                            favoriteAuthors: [],
-                            dailyReminders: false,
-                            preferredLanguage: '',
-                            preferredStyles: []
-                          },
-                          hasCompletedOnboarding: false
-                        });
-                        setShowSettings(false);
-                        setHasCheckedOnboarding(true);
-                        toast.success('Starting onboarding flow...');
-                      }}
-                      className="bg-purple-600 text-white hover:bg-purple-700 w-20 text-sm font-semibold transition-colors duration-200"
-                    >
-                      Start
-                    </Button>
+                  </div>
+
+                  {/* Clear Favorites */}
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-white font-medium">Clear Favorites</h3>
+                        <p className="text-white/60 text-sm">Remove all favorite quotes</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (context?.user?.fid) {
+                            setFavorites([]);
+                            toast.success('Favorites cleared');
+                          }
+                        }}
+                        className="px-4 py-2 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
 
                   {/* Version Info */}
-                  <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">Version</h3>
-                    <span className="text-sm font-medium text-gray-700 w-20 text-right">2.0.0</span>
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-white font-medium">Version</h3>
+                      <span className="text-white/60">2.0.0</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
 
         {/* Share Preview Modal */}
