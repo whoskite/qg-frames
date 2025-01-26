@@ -50,6 +50,7 @@ import { Button } from "../components/ui/Button";
 // Utils and Services
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -2229,38 +2230,30 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <div className="flex gap-2 w-full">
                       <Button
                         onClick={async () => {
-                          setIsCasting(true);
                           try {
                             const shareText = `"${quote}" - Created by @kite /thepod`;
                             const shareUrl = 'https://qg-frames.vercel.app';
-                            let mediaUrl = '';
                             
-                            if (gifUrl) {
-                              mediaUrl = gifUrl;
-                            }
-
                             const params = new URLSearchParams();
                             params.append('text', shareText);
-                            params.append('embeds[]', shareUrl);
-                            if (mediaUrl) {
-                              params.append('embeds[]', mediaUrl);
+                            if (gifUrl) {
+                              params.append('embeds[]', gifUrl);
                             }
                             
                             const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                            sdk.actions.openUrl(url);
                             
                             logAnalyticsEvent('cast_created', {
                               quote: quote,
-                              hasMedia: !!mediaUrl,
+                              hasMedia: !!gifUrl,
                               mediaType: 'gif'
                             });
                             
-                            sdk.actions.openUrl(url);
                             setShowPreview(false);
                             setPreviewImage(null);
                           } catch (error) {
                             console.error('Error sharing:', error);
-                          } finally {
-                            setIsCasting(false);
+                            toast.error('Failed to share. Please try again.');
                           }
                         }}
                         disabled={!gifUrl || isCasting}
@@ -2284,36 +2277,62 @@ export default function Demo({ title = "Fun Quotes" }) {
                         onClick={async () => {
                           try {
                             setIsGeneratingPreview(true);
-                            // Generate the image first
                             const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                            // Show the preview immediately
                             setPreviewImage(dataUrl);
-                            
-                            // Then start the upload process
                             setIsCasting(true);
-                            const uploadedUrl = await uploadImage(dataUrl);
-                            const shareText = `"${quote}" - Created by @kite /thepod`;
-                            const shareUrl = 'https://qg-frames.vercel.app';
+
+                            // Convert data URL to blob
+                            const response = await fetch(dataUrl);
+                            const blob = await response.blob();
+
+                            // Upload directly to Firebase Storage
+                            const storage = getStorage();
+                            const fileName = `quotes/${Date.now()}-${context?.user?.username || 'user'}.png`;
+                            const storageRef = ref(storage, fileName);
                             
-                            const params = new URLSearchParams();
-                            params.append('text', shareText);
-                            params.append('embeds[]', shareUrl);
-                            params.append('embeds[]', uploadedUrl);
+                            try {
+                              // Upload the blob
+                              const uploadTask = await uploadBytes(storageRef, blob);
+                              // Get the download URL
+                              const imageUrl = await getDownloadURL(uploadTask.ref);
+
+                              // Ensure the URL is properly encoded
+                              const encodedImageUrl = encodeURI(imageUrl);
+                              const shareText = `"${quote}" - Created by @kite /thepod`;
+                              const shareUrl = 'https://qg-frames.vercel.app';
+
+                              const params = new URLSearchParams();
+                              params.append('text', shareText);
+                              params.append('embeds[]', shareUrl);
+                              params.append('embeds[]', encodedImageUrl);
+                              
+                              const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                              sdk.actions.openUrl(url);
+                              
+                              logAnalyticsEvent('cast_created', {
+                                quote: quote,
+                                hasMedia: true,
+                                mediaType: 'canvas'
+                              });
+                            } catch (uploadError) {
+                              console.error('Upload error:', uploadError);
+                              // If upload fails, share without image
+                              const shareText = `"${quote}" - Created by @kite /thepod`;
+                              const shareUrl = 'https://qg-frames.vercel.app';
+                              const params = new URLSearchParams();
+                              params.append('text', shareText);
+                              params.append('embeds[]', shareUrl);
+                              
+                              const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                              sdk.actions.openUrl(url);
+                              toast.error('Could not upload image, sharing quote text only');
+                            }
                             
-                            const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                            
-                            logAnalyticsEvent('cast_created', {
-                              quote: quote,
-                              hasMedia: true,
-                              mediaType: 'canvas'
-                            });
-                            
-                            sdk.actions.openUrl(url);
                             setShowPreview(false);
                             setPreviewImage(null);
                           } catch (error) {
-                            console.error('Error sharing:', error);
-                            toast.error('Failed to share quote. Please try again.');
+                            console.error('Error in share process:', error);
+                            toast.error('Failed to share. Please try again.');
                           } finally {
                             setIsGeneratingPreview(false);
                             setIsCasting(false);
