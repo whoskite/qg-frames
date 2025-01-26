@@ -2149,7 +2149,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <div className="bg-white/10 rounded-lg p-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-white font-medium">Version</h3>
-                        <span className="text-white/60">1.1.1</span>
+                        <span className="text-white/60">1.2.2</span>
                       </div>
                     </div>
                   </div>
