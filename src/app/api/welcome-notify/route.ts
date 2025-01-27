@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 
 export async function POST(req: Request) {
   try {
@@ -20,26 +21,28 @@ export async function POST(req: Request) {
         'api_key': process.env.NEYNAR_API_KEY || ''
       },
       body: JSON.stringify({
-        notifications: [{
-          url,
-          notificationToken,
-          message: "Welcome to FunQuotes! 🎉 Start generating and sharing amazing quotes with your friends.",
-          title: "Welcome to FunQuotes"
-        }]
+        notificationId: randomUUID(),
+        title: "Welcome to FunQuotes",
+        body: "Start generating and sharing amazing quotes with your friends! 🎉",
+        targetUrl: process.env.NEXT_PUBLIC_HOST || '',
+        tokens: [notificationToken]
       })
     });
 
     if (!response.ok) {
-      console.error('Error sending welcome notification:', await response.text());
+      const errorText = await response.text();
+      console.error('Error sending welcome notification:', errorText);
       return NextResponse.json(
-        { error: 'Failed to send welcome notification' },
+        { error: 'Failed to send welcome notification', details: errorText },
         { status: 500 }
       );
     }
 
+    const result = await response.json();
     return NextResponse.json({
       success: true,
-      message: 'Welcome notification sent successfully'
+      message: 'Welcome notification sent successfully',
+      result
     });
   } catch (error) {
     console.error('Error sending welcome notification:', error);
