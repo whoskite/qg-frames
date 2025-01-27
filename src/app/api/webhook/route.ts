@@ -29,11 +29,15 @@ export async function POST(req: Request) {
           const welcomeResponse = await fetch('/api/welcome-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(event.notificationDetails)
+            body: JSON.stringify({
+              ...event.notificationDetails,
+              targetUrl: process.env.NEXT_PUBLIC_HOST || 'https://qg-frames.vercel.app'
+            })
           });
 
           if (!welcomeResponse.ok) {
-            console.error('Failed to send welcome notification');
+            const errorText = await welcomeResponse.text();
+            console.error('Failed to send welcome notification:', errorText);
           }
         }
         break;
