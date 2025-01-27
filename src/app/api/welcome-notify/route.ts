@@ -1,49 +1,69 @@
-import { NextResponse } from 'next/server';
-import { randomUUID } from 'crypto';
+import {
+  SendNotificationRequest,
+  sendNotificationResponseSchema,
+} from "@farcaster/frame-sdk";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 
-export async function POST(req: Request) {
+const requestSchema = z.object({
+  token: z.string(),
+  url: z.string(),
+  targetUrl: z.string(),
+});
+
+export async function POST(request: Request) {
   try {
-    // Get notification details from request body
-    const { url, notificationToken } = await req.json();
+    const requestJson = await request.json();
+    const requestBody = requestSchema.safeParse(requestJson);
 
-    if (!url || !notificationToken) {
+    if (requestBody.success === false) {
       return NextResponse.json(
-        { error: 'URL and notification token are required' },
+        { success: false, errors: requestBody.error.errors },
         { status: 400 }
       );
     }
 
-    // Send welcome notification using Neynar's API
-    const response = await fetch('https://api.neynar.com/v2/farcaster/notifications/frame', {
-      method: 'POST',
+    const response = await fetch(requestBody.data.url, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'api_key': process.env.NEYNAR_API_KEY || ''
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        notificationId: randomUUID(),
+        notificationId: crypto.randomUUID(),
         title: "Welcome to FunQuotes",
-        body: "Start generating and sharing amazing quotes with your friends! 🎉",
-        targetUrl: process.env.NEXT_PUBLIC_HOST || '',
-        tokens: [notificationToken]
-      })
+        body: "Start creating and sharing amazing quotes with your friends! 🎉",
+        targetUrl: requestBody.data.targetUrl,
+        tokens: [requestBody.data.token],
+      } satisfies SendNotificationRequest),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error sending welcome notification:', errorText);
+    const responseJson = await response.json();
+
+    if (response.status === 200) {
+      // Ensure correct response
+      const responseBody = sendNotificationResponseSchema.safeParse(responseJson);
+      if (responseBody.success === false) {
+        return NextResponse.json(
+          { success: false, errors: responseBody.error.errors },
+          { status: 500 }
+        );
+      }
+
+      // Fail when rate limited
+      if (responseBody.data.result.rateLimitedTokens.length) {
+        return NextResponse.json(
+          { success: false, error: "Rate limited" },
+          { status: 429 }
+        );
+      }
+
+      return NextResponse.json({ success: true });
+    } else {
       return NextResponse.json(
-        { error: 'Failed to send welcome notification', details: errorText },
+        { success: false, error: responseJson },
         { status: 500 }
       );
     }
-
-    const result = await response.json();
-    return NextResponse.json({
-      success: true,
-      message: 'Welcome notification sent successfully',
-      result
-    });
   } catch (error) {
     console.error('Error sending welcome notification:', error);
     return NextResponse.json(
