@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { eventHeaderSchema, eventPayloadSchema, eventSchema } from "@farcaster/frame-sdk";
+import { eventHeaderSchema, eventPayloadSchema, eventSchema } from "~/lib/schemas";
 
 export async function POST(request: NextRequest) {
   const requestJson = await request.json();
