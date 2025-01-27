@@ -15,6 +15,9 @@ const frame = {
       splashBackgroundColor: "#F9C001",
     },
   },
+  supports: {
+    notifications: true,
+  },
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,6 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     other: {
       "fc:frame": JSON.stringify(frame),
+      "fc:frame:notification": "true",
     },
   };
 } 

@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { eventHeaderSchema, eventPayloadSchema, eventSchema } from "~/lib/schemas";
+import { saveNotificationDetails, removeNotificationDetails } from "~/lib/redis";
+import { sendFrameNotification } from "~/lib/notifs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,77 +53,89 @@ export async function POST(request: NextRequest) {
     console.log('Processing event:', payload.data.event, 'for FID:', fid);
 
     switch (payload.data.event) {
-      case "frame-added":
+      case "frame_added":
         console.log(
           payload.data.notificationDetails
-            ? `Got frame-added event for fid ${fid} with notification token ${payload.data.notificationDetails.token} and url ${payload.data.notificationDetails.url}`
-            : `Got frame-added event for fid ${fid} with no notification details`
+            ? `Got frame_added event for fid ${fid} with notification token ${payload.data.notificationDetails.token} and url ${payload.data.notificationDetails.url}`
+            : `Got frame_added event for fid ${fid} with no notification details`
         );
         
         if (payload.data.notificationDetails) {
-          // Send welcome notification
-          const welcomeResponse = await fetch('/api/welcome-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...payload.data.notificationDetails,
-              targetUrl: process.env.NEXT_PUBLIC_HOST || 'https://qg-frames.vercel.app'
-            })
+          // Save notification details to Redis
+          await saveNotificationDetails(fid, {
+            token: payload.data.notificationDetails.token,
+            url: payload.data.notificationDetails.url
           });
 
-          if (!welcomeResponse.ok) {
-            const errorText = await welcomeResponse.text();
-            console.error('Failed to send welcome notification:', errorText);
+          // Send welcome notification
+          const result = await sendFrameNotification({
+            fid,
+            title: "Welcome to FunQuotes",
+            body: "Start creating and sharing amazing quotes with your friends! 🎉",
+          });
+
+          if (result.state === "error") {
+            console.error('Failed to send welcome notification:', result.error);
+          } else if (result.state === "rate_limit") {
+            console.log('Welcome notification rate limited');
+          } else if (result.state === "no_token") {
+            console.log('No notification token found');
           } else {
             console.log('Welcome notification sent successfully');
           }
         }
         break;
 
-      case "frame-removed":
-        console.log(`Got frame-removed event for fid ${fid}`);
+      case "frame_removed":
+        console.log(`Got frame_removed event for fid ${fid}`);
+        // Remove notification details from Redis
+        await removeNotificationDetails(fid);
         break;
 
-      case "notifications-enabled":
-        console.log('Received notifications-enabled event');
+      case "notifications_enabled":
+        console.log('Received notifications_enabled event');
         
         if (!payload.data.notificationDetails) {
-          console.error(`Got notifications-enabled event for fid ${fid} but no notification details`);
+          console.error(`Got notifications_enabled event for fid ${fid} but no notification details`);
           return Response.json(
             { success: false, error: 'No notification details provided' },
             { status: 400 }
           );
         }
 
+        // Save new notification details to Redis
+        await saveNotificationDetails(fid, {
+          token: payload.data.notificationDetails.token,
+          url: payload.data.notificationDetails.url
+        });
+
         console.log(
-          `Processing notifications-enabled event for fid ${fid}:`,
+          `Processing notifications_enabled event for fid ${fid}:`,
           JSON.stringify(payload.data.notificationDetails, null, 2)
         );
       
         // Send confirmation notification
-        try {
-          const enableResponse = await fetch('/api/welcome-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...payload.data.notificationDetails,
-              targetUrl: process.env.NEXT_PUBLIC_HOST || 'https://qg-frames.vercel.app'
-            })
-          });
+        const enableResult = await sendFrameNotification({
+          fid,
+          title: "Notifications Enabled",
+          body: "You'll now receive notifications from FunQuotes! 🔔",
+        });
 
-          const responseText = await enableResponse.text();
-          if (!enableResponse.ok) {
-            console.error('Failed to send notification enabled confirmation:', responseText);
-          } else {
-            console.log('Notification enabled confirmation sent successfully:', responseText);
-          }
-        } catch (error) {
-          console.error('Error sending notification enabled confirmation:', error);
+        if (enableResult.state === "error") {
+          console.error('Failed to send notification enabled confirmation:', enableResult.error);
+        } else if (enableResult.state === "rate_limit") {
+          console.log('Notification enabled confirmation rate limited');
+        } else if (enableResult.state === "no_token") {
+          console.log('No notification token found');
+        } else {
+          console.log('Notification enabled confirmation sent successfully');
         }
         break;
 
-      case "notifications-disabled":
-        console.log(`Got notifications-disabled event for fid ${fid}`);
+      case "notifications_disabled":
+        console.log(`Got notifications_disabled event for fid ${fid}`);
+        // Remove notification details from Redis
+        await removeNotificationDetails(fid);
         break;
     }
 

@@ -12,7 +12,7 @@ export const notificationDetailsSchema = z.object({
 });
 
 export const eventPayloadSchema = z.object({
-  event: z.enum(['frame-added', 'frame-removed', 'notifications-enabled', 'notifications-disabled']),
+  event: z.enum(['frame_added', 'frame_removed', 'notifications_enabled', 'notifications_disabled']),
   notificationDetails: notificationDetailsSchema.optional(),
 });
 

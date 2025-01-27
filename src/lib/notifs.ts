@@ -2,9 +2,9 @@ import {
   SendNotificationRequest,
   sendNotificationResponseSchema,
 } from "@farcaster/frame-sdk";
-import { getUserNotificationDetails } from "~/lib/kv";
+import { getNotificationDetails } from "~/lib/redis";
 
-const appUrl = process.env.NEXT_PUBLIC_URL || "";
+const appUrl = process.env.NEXT_PUBLIC_HOST || "";
 
 type SendFrameNotificationResult =
   | {
@@ -24,7 +24,7 @@ export async function sendFrameNotification({
   title: string;
   body: string;
 }): Promise<SendFrameNotificationResult> {
-  const notificationDetails = await getUserNotificationDetails(fid);
+  const notificationDetails = await getNotificationDetails(fid);
   if (!notificationDetails) {
     return { state: "no_token" };
   }
