@@ -13,6 +13,7 @@
     "buttonTitle": "Create FunQuotes",
     "splashImageUrl": "https://qg-frames.vercel.app/splash.png",
     "splashBackgroundColor": "#F9C001",
-    "postUrl": "https://qg-frames.vercel.app/api/frame"
+    "postUrl": "https://qg-frames.vercel.app/api/frame",
+    "webhookUrl": "https://qg-frames.vercel.app/api/webhook"
   }
 } 

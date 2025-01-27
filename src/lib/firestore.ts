@@ -378,4 +378,40 @@ export const getOnboardingData = async (fid: number) => {
     console.error('Error getting onboarding data:', error);
     return null;
   }
+};
+
+// Save notification details for a user
+export const saveNotificationDetails = async (fid: number | undefined, details: { url?: string; token?: string }) => {
+  if (!fid || !db) return;
+  
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    await setDoc(userRef, {
+      notificationDetails: details,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    console.log('Notification details saved for user:', fid);
+  } catch (error) {
+    console.error('Error saving notification details:', error);
+    throw error;
+  }
+};
+
+// Remove notification details for a user
+export const removeNotificationDetails = async (fid: number | undefined) => {
+  if (!fid || !db) return;
+  
+  try {
+    const userRef = doc(db, 'users', fid.toString());
+    await updateDoc(userRef, {
+      notificationDetails: deleteField(),
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log('Notification details removed for user:', fid);
+  } catch (error) {
+    console.error('Error removing notification details:', error);
+    throw error;
+  }
 }; 

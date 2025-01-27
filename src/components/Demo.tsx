@@ -32,7 +32,9 @@ import {
   updateUserStreak,
   getUserStreak,
   saveOnboardingData,
-  getOnboardingData
+  getOnboardingData,
+  saveNotificationDetails,
+  removeNotificationDetails
 } from '../lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -365,6 +367,19 @@ const generateRandomPrompt = (favorites: FavoriteQuote[] = []) => {
   return prompt;
 };
 
+// Add interface for notification details
+interface NotificationState {
+  url?: string;
+  token?: string;
+}
+
+// Add this interface near the top of the file, with other interfaces
+interface FrameEvent {
+  type: 'frameAdded' | 'notificationsEnabled' | 'notificationsDisabled';
+  url?: string;
+  notificationToken?: string;
+}
+
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
   const [quote, setQuote] = useState('');
@@ -384,7 +399,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Frame-specific state
   const [added, setAdded] = useState(false);
-  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
+  const [notificationDetails, setNotificationDetails] = useState<{ url?: string; token?: string } | null>(null);
   const [lastEvent, setLastEvent] = useState("");
   const [addFrameResult, setAddFrameResult] = useState("");
   const [sendNotificationResult, setSendNotificationResult] = useState("");
@@ -508,7 +523,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         sdk.on("frameRemoved", () => {
           setLastEvent("frameRemoved");
           setAdded(false);
-          setNotificationDetails(null);
+          setNotificationDetails({});
         });
 
         sdk.actions.ready({});
@@ -1381,6 +1396,110 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
   }, []);
 
+  // Add frame event listeners
+  useEffect(() => {
+    // Frame added event
+    sdk.on('frameAdded', ({ notificationDetails }) => {
+      console.log('Frame added:', notificationDetails);
+      if (notificationDetails) {
+        setNotificationDetails(notificationDetails);
+        // Save notification details to your backend/database here
+        saveNotificationDetails(context?.user?.fid, notificationDetails);
+      }
+    });
+
+    // Notifications enabled event
+    sdk.on('notificationsEnabled', ({ notificationDetails }) => {
+      console.log('Notifications enabled:', notificationDetails);
+      setNotificationDetails(notificationDetails);
+      // Save notification details to your backend/database here
+      saveNotificationDetails(context?.user?.fid, notificationDetails);
+    });
+
+    // Notifications disabled event
+    sdk.on('notificationsDisabled', () => {
+      console.log('Notifications disabled');
+      setNotificationDetails({});
+      // Remove notification details from your backend/database here
+      removeNotificationDetails(context?.user?.fid);
+    });
+
+    return () => {
+      sdk.removeAllListeners();
+    };
+  }, [context?.user?.fid]);
+
+  // Function to prompt user to add frame
+  const promptAddFrame = async () => {
+    try {
+      const result = await sdk.actions.addFrame();
+      if (result.added && result.notificationDetails) {
+        setNotificationDetails(result.notificationDetails);
+        // Save notification details to your backend/database here
+        saveNotificationDetails(context?.user?.fid, result.notificationDetails);
+        toast.success('Frame added successfully!');
+      } else if (!result.added) {
+        toast.error(`Failed to add frame: ${result.reason}`);
+      }
+    } catch (error) {
+      console.error('Error adding frame:', error);
+      toast.error('Failed to add frame');
+    }
+  };
+
+  // Update the event handler type
+  useEffect(() => {
+    const handleFrameEvent = async (event: MessageEvent<FrameEvent>) => {
+      // Ensure the event is from our frame
+      if (!event.data || typeof event.data !== 'object') return;
+      
+      if (event.data.type === 'frameAdded') {
+        // Save notification details
+        const details = {
+          url: event.data.url,
+          token: event.data.notificationToken
+        };
+        await saveNotificationDetails(context?.user?.fid, details);
+        setNotificationDetails(details);
+
+        // Send welcome notification
+        try {
+          const response = await fetch('/api/welcome-notify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              url: event.data.url,
+              notificationToken: event.data.notificationToken
+            })
+          });
+
+          if (!response.ok) {
+            console.error('Failed to send welcome notification');
+          }
+        } catch (error) {
+          console.error('Error sending welcome notification:', error);
+        }
+      } else if (event.data.type === 'notificationsEnabled') {
+        const details = {
+          url: event.data.url,
+          token: event.data.notificationToken
+        };
+        await saveNotificationDetails(context?.user?.fid, details);
+        setNotificationDetails(details);
+      } else if (event.data.type === 'notificationsDisabled') {
+        await removeNotificationDetails(context?.user?.fid);
+        setNotificationDetails(null);
+      }
+    };
+
+    window.addEventListener('message', handleFrameEvent);
+    return () => {
+      window.removeEventListener('message', handleFrameEvent);
+    };
+  }, [context?.user?.fid]);
+
   return (
     <ErrorBoundary>
       <div className="relative min-h-screen">
@@ -1460,6 +1579,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                       >
                         <Settings className="w-4 h-4" />
                         <span>Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={promptAddFrame}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Frame className="w-4 h-4" />
+                        Add to Farcaster
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
