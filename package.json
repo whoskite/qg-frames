@@ -16,6 +16,7 @@
     "@farcaster/frame-node": "^0.0.7",
     "@farcaster/frame-sdk": "^0.0.20",
     "@farcaster/frame-wagmi-connector": "^0.0.6",
+    "@farcaster/hub-web": "^0.9.5",
     "@iconify/react": "^5.2.0",
     "@neynar/nodejs-sdk": "^2.8.1",
     "@noble/curves": "^1.8.0",
