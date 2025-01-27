@@ -1,37 +1,35 @@
 import { NextResponse } from 'next/server';
-import { FrameSignaturePacket, validateFrameMessage } from '@farcaster/core';
+import { ParseWebhookEvent, parseWebhookEvent, verifyAppKeyWithNeynar } from '@farcaster/frame-node';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     
-    // Validate the Farcaster message signature
-    const packet = body as FrameSignaturePacket;
-    const validationResult = await validateFrameMessage(packet);
-    
-    if (!validationResult.isValid) {
-      console.error('Invalid signature:', validationResult.message);
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    let data;
+    try {
+      data = await parseWebhookEvent(body, verifyAppKeyWithNeynar);
+    } catch (e: unknown) {
+      const error = e as ParseWebhookEvent.ErrorType;
+      console.error('Webhook parsing error:', error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Decode the base64url encoded payload
-    const payloadStr = Buffer.from(packet.payload, 'base64url').toString();
-    const payload = JSON.parse(payloadStr);
+    const fid = data.fid;
+    const event = data.event;
 
-    console.log('Webhook event:', payload.event);
+    console.log('Webhook event:', event.event, 'from FID:', fid);
 
-    switch (payload.event) {
+    switch (event.event) {
       case 'frame_added':
-        if (payload.notificationDetails) {
+        if (event.notificationDetails) {
           // Store notification details (token and url) in your database
-          // This is where you'd save to your database
-          console.log('Notification details:', payload.notificationDetails);
+          console.log('Notification details:', event.notificationDetails);
           
           // Send immediate welcome notification
           const welcomeResponse = await fetch('/api/welcome-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload.notificationDetails)
+            body: JSON.stringify(event.notificationDetails)
           });
 
           if (!welcomeResponse.ok) {
@@ -42,17 +40,17 @@ export async function POST(req: Request) {
 
       case 'frame_removed':
         // Handle frame removal - invalidate stored tokens
-        console.log('Frame removed for user');
+        console.log('Frame removed for user:', fid);
         break;
 
       case 'notifications_enabled':
         // Store new notification details
-        console.log('Notifications enabled:', payload.notificationDetails);
+        console.log('Notifications enabled for user:', fid, event.notificationDetails);
         break;
 
       case 'notifications_disabled':
         // Invalidate stored tokens
-        console.log('Notifications disabled');
+        console.log('Notifications disabled for user:', fid);
         break;
     }
 
