@@ -1430,22 +1430,33 @@ export default function Demo({ title = "Fun Quotes" }) {
   }, [context?.user?.fid]);
 
   // Function to prompt user to add frame
-  const promptAddFrame = async () => {
+  const promptAddFrame = useCallback(async () => {
     try {
+      setNotificationDetails(null);
+
       const result = await sdk.actions.addFrame();
-      if (result.added && result.notificationDetails) {
-        setNotificationDetails(result.notificationDetails);
-        // Save notification details to your backend/database here
-        saveNotificationDetails(context?.user?.fid, result.notificationDetails);
-        toast.success('Frame added successfully!');
-      } else if (!result.added) {
-        toast.error(`Failed to add frame: ${result.reason}`);
+
+      if (result.added) {
+        if (result.notificationDetails) {
+          setNotificationDetails(result.notificationDetails);
+          toast.success('Frame added with notifications enabled!');
+        } else {
+          toast.success('Frame added! Enable notifications to get updates.');
+        }
+        setAddFrameResult(
+          result.notificationDetails
+            ? `Added with notifications enabled`
+            : `Added without notifications`
+        );
+      } else {
+        setAddFrameResult(`Not added: ${result.reason}`);
+        toast.error('Failed to add frame');
       }
     } catch (error) {
-      console.error('Error adding frame:', error);
-      toast.error('Failed to add frame');
+      setAddFrameResult(`Error: ${error}`);
+      toast.error('Error adding frame');
     }
-  };
+  }, []);
 
   // Update the event handler type
   useEffect(() => {
@@ -1585,7 +1596,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                         className="flex items-center gap-2 cursor-pointer"
                       >
                         <Frame className="w-4 h-4" />
-                        Add to Farcaster
+                        {added ? (
+                          notificationDetails ? 
+                            'Notifications enabled' : 
+                            'Enable notifications'
+                        ) : (
+                          'Add to Warpcast'
+                        )}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
