@@ -1,82 +1,65 @@
-import {
-  ParseWebhookEvent,
-  parseWebhookEvent,
-  verifyAppKeyWithNeynar,
-} from "@farcaster/frame-node";
-import { NextRequest } from "next/server";
-import {
-  deleteUserNotificationDetails,
-  setUserNotificationDetails,
-} from "~/lib/kv";
-import { sendFrameNotification } from "~/lib/notifs";
+import { NextResponse } from 'next/server';
+import { ParseWebhookEvent, parseWebhookEvent, verifyAppKeyWithNeynar } from '@farcaster/frame-node';
 
-export async function POST(request: NextRequest) {
-  const requestJson = await request.json();
-
-  let data;
+export async function POST(req: Request) {
   try {
-    data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
-  } catch (e: unknown) {
-    const error = e as ParseWebhookEvent.ErrorType;
-
-    switch (error.name) {
-      case "VerifyJsonFarcasterSignature.InvalidDataError":
-      case "VerifyJsonFarcasterSignature.InvalidEventDataError":
-        // The request data is invalid
-        return Response.json(
-          { success: false, error: error.message },
-          { status: 400 }
-        );
-      case "VerifyJsonFarcasterSignature.InvalidAppKeyError":
-        // The app key is invalid
-        return Response.json(
-          { success: false, error: error.message },
-          { status: 401 }
-        );
-      case "VerifyJsonFarcasterSignature.VerifyAppKeyError":
-        // Internal error verifying the app key (caller may want to try again)
-        return Response.json(
-          { success: false, error: error.message },
-          { status: 500 }
-        );
+    const body = await req.json();
+    
+    let data;
+    try {
+      data = await parseWebhookEvent(body, verifyAppKeyWithNeynar);
+    } catch (e: unknown) {
+      const error = e as ParseWebhookEvent.ErrorType;
+      console.error('Webhook parsing error:', error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    const fid = data.fid;
+    const event = data.event;
+
+    console.log('Webhook event:', event.event, 'from FID:', fid);
+
+    switch (event.event) {
+      case 'frame_added':
+        if (event.notificationDetails) {
+          // Store notification details (token and url) in your database
+          console.log('Notification details:', event.notificationDetails);
+          
+          // Send immediate welcome notification
+          const welcomeResponse = await fetch('/api/welcome-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(event.notificationDetails)
+          });
+
+          if (!welcomeResponse.ok) {
+            console.error('Failed to send welcome notification');
+          }
+        }
+        break;
+
+      case 'frame_removed':
+        // Handle frame removal - invalidate stored tokens
+        console.log('Frame removed for user:', fid);
+        break;
+
+      case 'notifications_enabled':
+        // Store new notification details
+        console.log('Notifications enabled for user:', fid, event.notificationDetails);
+        break;
+
+      case 'notifications_disabled':
+        // Invalidate stored tokens
+        console.log('Notifications disabled for user:', fid);
+        break;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return NextResponse.json(
+      { error: 'Failed to process webhook' },
+      { status: 500 }
+    );
   }
-
-  const fid = data.fid;
-  const event = data.event;
-
-  switch (event.event) {
-    case "frame_added":
-      if (event.notificationDetails) {
-        await setUserNotificationDetails(fid, event.notificationDetails);
-        await sendFrameNotification({
-          fid,
-          title: "Welcome to Frames v2",
-          body: "Frame is now added to your client",
-        });
-      } else {
-        await deleteUserNotificationDetails(fid);
-      }
-
-      break;
-    case "frame_removed":
-      await deleteUserNotificationDetails(fid);
-
-      break;
-    case "notifications_enabled":
-      await setUserNotificationDetails(fid, event.notificationDetails);
-      await sendFrameNotification({
-        fid,
-        title: "Ding ding ding",
-        body: "Notifications are now enabled",
-      });
-
-      break;
-    case "notifications_disabled":
-      await deleteUserNotificationDetails(fid);
-
-      break;
-  }
-
-  return Response.json({ success: true });
 }
