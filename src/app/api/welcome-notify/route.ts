@@ -1,12 +1,4 @@
 import { NextResponse } from 'next/server';
-import { type Firestore } from 'firebase/firestore';
-import { db } from '~/lib/firebase';
-
-// Helper function to ensure we have a valid Firestore instance
-function getDb(): Firestore {
-  if (!db) throw new Error('Firestore not initialized');
-  return db;
-}
 
 export async function POST(req: Request) {
   try {
