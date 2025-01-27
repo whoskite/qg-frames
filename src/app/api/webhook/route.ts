@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { eventHeaderSchema, eventPayloadSchema, eventSchema } from "~/lib/schemas";
 import { saveNotificationDetails, removeNotificationDetails } from "~/lib/redis";
+import { sendFrameNotification } from "~/lib/notifs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,25 +68,20 @@ export async function POST(request: NextRequest) {
           });
 
           // Send welcome notification
-          try {
-            const welcomeResponse = await fetch('/api/welcome-notify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                token: payload.data.notificationDetails.token,
-                url: payload.data.notificationDetails.url,
-                targetUrl: process.env.NEXT_PUBLIC_HOST || 'https://qg-frames.vercel.app'
-              })
-            });
+          const result = await sendFrameNotification({
+            fid,
+            title: "Welcome to FunQuotes",
+            body: "Start creating and sharing amazing quotes with your friends! 🎉",
+          });
 
-            const responseText = await welcomeResponse.text();
-            if (!welcomeResponse.ok) {
-              console.error('Failed to send welcome notification:', responseText);
-            } else {
-              console.log('Welcome notification sent successfully:', responseText);
-            }
-          } catch (error) {
-            console.error('Error sending welcome notification:', error);
+          if (result.state === "error") {
+            console.error('Failed to send welcome notification:', result.error);
+          } else if (result.state === "rate_limit") {
+            console.log('Welcome notification rate limited');
+          } else if (result.state === "no_token") {
+            console.log('No notification token found');
+          } else {
+            console.log('Welcome notification sent successfully');
           }
         }
         break;
@@ -119,25 +115,20 @@ export async function POST(request: NextRequest) {
         );
       
         // Send confirmation notification
-        try {
-          const enableResponse = await fetch('/api/welcome-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token: payload.data.notificationDetails.token,
-              url: payload.data.notificationDetails.url,
-              targetUrl: process.env.NEXT_PUBLIC_HOST || 'https://qg-frames.vercel.app'
-            })
-          });
+        const enableResult = await sendFrameNotification({
+          fid,
+          title: "Notifications Enabled",
+          body: "You'll now receive notifications from FunQuotes! 🔔",
+        });
 
-          const responseText = await enableResponse.text();
-          if (!enableResponse.ok) {
-            console.error('Failed to send notification enabled confirmation:', responseText);
-          } else {
-            console.log('Notification enabled confirmation sent successfully:', responseText);
-          }
-        } catch (error) {
-          console.error('Error sending notification enabled confirmation:', error);
+        if (enableResult.state === "error") {
+          console.error('Failed to send notification enabled confirmation:', enableResult.error);
+        } else if (enableResult.state === "rate_limit") {
+          console.log('Notification enabled confirmation rate limited');
+        } else if (enableResult.state === "no_token") {
+          console.log('No notification token found');
+        } else {
+          console.log('Notification enabled confirmation sent successfully');
         }
         break;
 
