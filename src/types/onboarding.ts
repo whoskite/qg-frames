@@ -5,6 +5,7 @@ export interface OnboardingPersonalInfo {
   areasToImprove: string[];
   personalGoals: string;
   preferredQuoteStyle?: string;
+  preferredStyles: string[];  // Array of preferred quote styles
 }
 
 export interface OnboardingState {
