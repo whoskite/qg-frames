@@ -1591,19 +1591,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                         <Settings className="w-4 h-4" />
                         <span>Settings</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={promptAddFrame}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Frame className="w-4 h-4" />
-                        {added ? (
-                          notificationDetails ? 
-                            'Notifications enabled' : 
-                            'Enable notifications'
-                        ) : (
-                          'Add to Warpcast'
-                        )}
-                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

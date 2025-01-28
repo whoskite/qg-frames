@@ -13,7 +13,7 @@ const frame = {
       url: appUrl,
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#F9C001",
-    },
+  },
   },
   supports: {
     notifications: true,
