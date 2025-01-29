@@ -2369,6 +2369,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                             
                             const params = new URLSearchParams();
                             params.append('text', shareText);
+                            params.append('embeds[]', shareUrl);
                             if (gifUrl) {
                               params.append('embeds[]', gifUrl);
                             }
