@@ -8,8 +8,9 @@ export function useOnboarding(
   isFirebaseInitialized: boolean,
   setBgImage: (image: string) => void
 ) {
-  const [onboarding, setOnboarding] = useState<OnboardingState>({
+  const initialState: OnboardingState = {
     step: 1,
+    hasCompletedOnboarding: false,
     personalInfo: {
       gender: '',
       relationshipStatus: '',
@@ -17,14 +18,11 @@ export function useOnboarding(
       areasToImprove: [],
       personalGoals: '',
       preferredQuoteStyle: '',
-      preferredLength: '',
-      favoriteAuthors: [],
-      dailyReminders: false,
-      preferredLanguage: '',
-      preferredStyles: []
-    },
-    hasCompletedOnboarding: false
-  });
+      preferredStyles: []  // Initialize empty array for preferred styles
+    }
+  };
+
+  const [onboarding, setOnboarding] = useState<OnboardingState>(initialState);
 
   useEffect(() => {
     const loadOnboardingData = async () => {

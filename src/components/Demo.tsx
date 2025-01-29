@@ -456,6 +456,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [showAreasPage, setShowAreasPage] = useState(false);
   const [showGoalsPage, setShowGoalsPage] = useState(false);
 
+  // Add new state for temporary quote styles
+  const [tempQuoteStyles, setTempQuoteStyles] = useState<string | undefined>(undefined);
+
   const handleNavigation = (section: string) => {
     // Close all profile menu pages
     setShowPreferences(false);
@@ -2366,6 +2369,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                             
                             const params = new URLSearchParams();
                             params.append('text', shareText);
+                            params.append('embeds[]', shareUrl);
                             if (gifUrl) {
                               params.append('embeds[]', gifUrl);
                             }
@@ -2629,38 +2633,53 @@ export default function Demo({ title = "Fun Quotes" }) {
                         className="text-white/70 text-sm"
                       >
                         Choose your preferred style for quotes.<br/><br/>
-                        This helps us generate quotes that matches your taste and personality.
+                        You can select up to 3 different styles to get a mix of quotes that match your personality.
                       </motion.p>
                     </div>
                     <div className="grid grid-cols-1 gap-2">
-                      {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style, index) => (
-                        <motion.button
-                          key={style}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                          onClick={() => {
-                            setOnboarding(prev => ({
-                              ...prev,
-                              personalInfo: {
-                                ...prev.personalInfo,
-                                preferredQuoteStyle: style
+                      {['casual', 'direct', 'eloquent', 'poetic', 'humorous', 'spiritual', 'philosophical'].map((style, index) => {
+                        // Use temporary state for selection
+                        const tempStyles = tempQuoteStyles || onboarding.personalInfo.preferredQuoteStyle || '';
+                        const isSelected = tempStyles.includes(style);
+                        const selectedCount = tempStyles.split(',').filter(s => s.length > 0).length || 0;
+                        
+                        return (
+                          <motion.button
+                            key={style}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                            onClick={() => {
+                              const currentStyles = tempStyles.split(',').filter(s => s.length > 0) || [];
+                              let newStyles;
+                              
+                              if (isSelected) {
+                                // Remove style if already selected
+                                newStyles = currentStyles.filter(s => s !== style);
+                              } else if (currentStyles.length < 3) {
+                                // Add style if under the limit
+                                newStyles = [...currentStyles, style];
+                              } else {
+                                toast.error('Maximum 3 styles allowed');
+                                return;
                               }
-                            }));
-                            toast.success('Quote style updated');
-                          }}
-                          className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
-                            onboarding.personalInfo.preferredQuoteStyle === style
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-white/10 text-white hover:bg-white/20'
-                          }`}
-                        >
-                          <span>{style}</span>
-                          {onboarding.personalInfo.preferredQuoteStyle === style && (
-                            <Check className="w-5 h-5" />
-                          )}
-                        </motion.button>
-                      ))}
+                              
+                              // Update temporary state instead of onboarding state
+                              setTempQuoteStyles(newStyles.join(','));
+                            }}
+                            className={`px-4 py-3 rounded-lg capitalize flex items-center justify-between ${
+                              isSelected
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white/10 text-white hover:bg-white/20'
+                            } ${selectedCount >= 3 && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <span>{style}</span>
+                            {isSelected && (
+                              <Check className="w-5 h-5" />
+                            )}
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 </div>
@@ -2668,14 +2687,30 @@ export default function Demo({ title = "Fun Quotes" }) {
                 <div className="fixed bottom-16 left-0 right-0 p-4 bg-black">
                   <button
                     onClick={() => {
-                      if (context?.user?.fid) {
-                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
-                        toast.success('Style saved successfully');
+                      if (context?.user?.fid && tempQuoteStyles !== undefined) {
+                        // Update onboarding state
+                        const updatedPersonalInfo = {
+                          ...onboarding.personalInfo,
+                          preferredQuoteStyle: tempQuoteStyles
+                        };
+                        
+                        setOnboarding(prev => ({
+                          ...prev,
+                          personalInfo: updatedPersonalInfo
+                        }));
+                        
+                        // Save to backend
+                        saveOnboardingData(context.user.fid, updatedPersonalInfo);
+                        
+                        toast.success('Styles saved successfully');
+                        setShowQuoteStylePage(false);
+                        // Reset temporary state
+                        setTempQuoteStyles(undefined);
                       }
                     }}
                     className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    Save Style
+                    Save Changes
                   </button>
                 </div>
               </div>
