@@ -414,4 +414,24 @@ export const removeNotificationDetails = async (fid: number | undefined) => {
     console.error('Error removing notification details:', error);
     throw error;
   }
-}; 
+};
+
+// Add this function to get notification details
+export async function getNotificationDetails(fid: number) {
+  try {
+    if (!db) throw new Error('Firestore not initialized');
+    
+    const userDoc = doc(db, 'users', fid.toString());
+    const userSnap = await getDoc(userDoc);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      return userData.notificationDetails;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting notification details:', error);
+    return null;
+  }
+} 

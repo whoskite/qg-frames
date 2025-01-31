@@ -7,7 +7,7 @@ import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronD
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import sdk, { FrameNotificationDetails, type FrameContext } from "@farcaster/frame-sdk";
+import sdk, { type FrameContext } from "@farcaster/frame-sdk";
 import { logEvent, setUserProperties } from "firebase/analytics";
 import { Toaster, toast } from 'sonner';
 import {
@@ -53,6 +53,9 @@ import { Button } from "../components/ui/Button";
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+// Add import for Frame types
+import type { AddFrameResult, FrameEvent, FrameNotificationDetails } from '~/types/frame';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -373,12 +376,50 @@ interface NotificationState {
   token?: string;
 }
 
-// Add this interface near the top of the file, with other interfaces
-interface FrameEvent {
-  type: 'frameAdded' | 'notificationsEnabled' | 'notificationsDisabled';
-  url?: string;
-  notificationToken?: string;
+// Add the sendFrameNotification type
+interface SendFrameNotificationParams {
+  fid: number;
+  title: string;
+  body: string;
 }
+
+interface SendFrameNotificationResult {
+  state: 'success' | 'error' | 'rate_limit' | 'no_token';
+  error?: string;
+}
+
+// Add the sendFrameNotification function
+const sendFrameNotification = async ({ 
+  fid, 
+  title, 
+  body 
+}: SendFrameNotificationParams): Promise<SendFrameNotificationResult> => {
+  try {
+    const response = await fetch('/api/notify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fid, title, body })
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return { state: 'rate_limit' };
+      }
+      return { state: 'error', error: await response.text() };
+    }
+
+    const data = await response.json();
+    if (data.error === 'no_token') {
+      return { state: 'no_token' };
+    }
+
+    return { state: 'success' };
+  } catch (error) {
+    return { state: 'error', error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
 
 // 4. Main Component
 export default function Demo({ title = "Fun Quotes" }) {
@@ -399,9 +440,8 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Frame-specific state
   const [added, setAdded] = useState(false);
-  const [notificationDetails, setNotificationDetails] = useState<{ url?: string; token?: string } | null>(null);
+  const [notificationDetails, setNotificationDetails] = useState<NotificationState | null>(null);
   const [lastEvent, setLastEvent] = useState("");
-  const [addFrameResult, setAddFrameResult] = useState("");
   const [sendNotificationResult, setSendNotificationResult] = useState("");
 
   // Add to your state declarations
@@ -510,28 +550,97 @@ export default function Demo({ title = "Fun Quotes" }) {
           setAdded(frameContext.client.added);
         }
 
-        // Setup Frame event listeners
-        sdk.on("frameAdded", ({ notificationDetails }) => {
-          setLastEvent(`frameAdded${!!notificationDetails ? ", notifications enabled" : ""}`);
+        // Frame added event
+        sdk.on('frameAdded', ({ notificationDetails }) => {
+          logAnalyticsEvent('frame_added', {
+            fid: frameContext.user?.fid,
+            has_notifications: !!notificationDetails
+          });
+
           setAdded(true);
           if (notificationDetails) {
             setNotificationDetails(notificationDetails);
+            // Save notification details to Firestore
+            if (frameContext.user?.fid) {
+              saveNotificationDetails(frameContext.user.fid, notificationDetails)
+                .catch(err => {
+                  console.error('Error saving notification details:', err);
+                });
+            }
           }
         });
 
-        sdk.on("frameAddRejected", ({ reason }) => {
-          setLastEvent(`frameAddRejected, reason ${reason}`);
+        // Frame add rejected event
+        sdk.on('frameAddRejected', ({ reason }) => {
+          logAnalyticsEvent('frame_add_rejected', {
+            fid: frameContext.user?.fid,
+            reason
+          });
+          
+          toast.error(`Failed to add frame: ${reason}`);
+          setAdded(false);
         });
 
-        sdk.on("frameRemoved", () => {
-          setLastEvent("frameRemoved");
+        // Frame removed event
+        sdk.on('frameRemoved', () => {
+          logAnalyticsEvent('frame_removed', {
+            fid: frameContext.user?.fid
+          });
+          
           setAdded(false);
-          setNotificationDetails({});
+          setNotificationDetails(null);
+          // Remove notification details from Firestore
+          if (frameContext.user?.fid) {
+            removeNotificationDetails(frameContext.user.fid)
+              .catch(err => {
+                console.error('Error removing notification details:', err);
+              });
+          }
+        });
+
+        // Notifications enabled event
+        sdk.on('notificationsEnabled', ({ notificationDetails }) => {
+          logAnalyticsEvent('notifications_enabled', {
+            fid: frameContext.user?.fid
+          });
+          
+          setNotificationDetails(notificationDetails);
+          // Save notification details to Firestore
+          if (frameContext.user?.fid) {
+            saveNotificationDetails(frameContext.user.fid, notificationDetails)
+              .then(() => {
+                // Send welcome notification
+                return sendFrameNotification({
+                  fid: frameContext.user!.fid,
+                  title: "Welcome to FunQuotes!",
+                  body: "You'll now receive notifications for new quotes and features! 🎉"
+                });
+              })
+              .catch(err => {
+                console.error('Error handling notifications enabled:', err);
+              });
+          }
+        });
+
+        // Notifications disabled event
+        sdk.on('notificationsDisabled', () => {
+          logAnalyticsEvent('notifications_disabled', {
+            fid: frameContext.user?.fid
+          });
+          
+          setNotificationDetails(null);
+          // Remove notification details from Firestore
+          if (frameContext.user?.fid) {
+            removeNotificationDetails(frameContext.user.fid)
+              .catch(err => {
+                console.error('Error removing notification details:', err);
+              });
+          }
         });
 
         sdk.actions.ready({});
-      } catch (error) {
-        console.error('Error in initializeFrameSDK:', error);
+      } catch (err) {
+        console.error('Error in initializeFrameSDK:', err);
       }
     };
 
@@ -539,7 +648,12 @@ export default function Demo({ title = "Fun Quotes" }) {
       setIsSDKLoaded(true);
       initializeFrameSDK();
     }
-  }, [isSDKLoaded, setAdded, setNotificationDetails, setLastEvent, isFirebaseInitialized]);
+
+    // Cleanup function to remove all event listeners
+    return () => {
+      sdk.removeAllListeners();
+    };
+  }, [isSDKLoaded, context?.user?.fid, logAnalyticsEvent, setAdded, setContext, setNotificationDetails]);
 
   // 7. Quote Generation Functions
   const handleGenerateQuote = useCallback(async () => {
@@ -1401,110 +1515,57 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Add frame event listeners
   useEffect(() => {
-    // Frame added event
-    sdk.on('frameAdded', ({ notificationDetails }) => {
-      console.log('Frame added:', notificationDetails);
-      if (notificationDetails) {
-        setNotificationDetails(notificationDetails);
-        // Save notification details to your backend/database here
-        saveNotificationDetails(context?.user?.fid, notificationDetails);
-      }
-    });
-
-    // Notifications enabled event
-    sdk.on('notificationsEnabled', ({ notificationDetails }) => {
-      console.log('Notifications enabled:', notificationDetails);
-      setNotificationDetails(notificationDetails);
-      // Save notification details to your backend/database here
-      saveNotificationDetails(context?.user?.fid, notificationDetails);
-    });
-
-    // Notifications disabled event
-    sdk.on('notificationsDisabled', () => {
-      console.log('Notifications disabled');
-      setNotificationDetails({});
-      // Remove notification details from your backend/database here
-      removeNotificationDetails(context?.user?.fid);
-    });
-
-    return () => {
-      sdk.removeAllListeners();
-    };
-  }, [context?.user?.fid]);
-
-  // Function to prompt user to add frame
-  const promptAddFrame = useCallback(async () => {
-    try {
-      setNotificationDetails(null);
-
-      const result = await sdk.actions.addFrame();
-
-      if (result.added) {
-        if (result.notificationDetails) {
-          setNotificationDetails(result.notificationDetails);
-          toast.success('Frame added with notifications enabled!');
-        } else {
-          toast.success('Frame added! Enable notifications to get updates.');
-        }
-        setAddFrameResult(
-          result.notificationDetails
-            ? `Added with notifications enabled`
-            : `Added without notifications`
-        );
-      } else {
-        setAddFrameResult(`Not added: ${result.reason}`);
-        toast.error('Failed to add frame');
-      }
-    } catch (error) {
-      setAddFrameResult(`Error: ${error}`);
-      toast.error('Error adding frame');
-    }
-  }, []);
-
-  // Update the event handler type
-  useEffect(() => {
-    const handleFrameEvent = async (event: MessageEvent<FrameEvent>) => {
-      // Ensure the event is from our frame
-      if (!event.data || typeof event.data !== 'object') return;
+    const handleFrameEvent = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
       
-      if (event.data.type === 'frameAdded') {
-        // Save notification details
-        const details = {
-          url: event.data.url,
-          token: event.data.notificationToken
-        };
-        await saveNotificationDetails(context?.user?.fid, details);
-        setNotificationDetails(details);
-
-        // Send welcome notification
-        try {
-          const response = await fetch('/api/welcome-notify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              url: event.data.url,
-              notificationToken: event.data.notificationToken
-            })
-          });
-
-          if (!response.ok) {
-            console.error('Failed to send welcome notification');
+      try {
+        const { type, data } = event.data;
+        
+        // Handle frame addition response
+        if (type === 'frame.addResponse') {
+          if (data?.success) {
+            setAdded(true);
+            // Note: Notification details will come either in the addFrame response
+            // or via webhook, so we don't need to handle them here
+            toast.success('Frame added successfully!');
+          } else {
+            toast.error(`Failed to add frame: ${data?.reason || 'Unknown error'}`);
           }
-        } catch (error) {
-          console.error('Error sending welcome notification:', error);
+          return;
         }
-      } else if (event.data.type === 'notificationsEnabled') {
-        const details = {
-          url: event.data.url,
-          token: event.data.notificationToken
-        };
-        await saveNotificationDetails(context?.user?.fid, details);
-        setNotificationDetails(details);
-      } else if (event.data.type === 'notificationsDisabled') {
-        await removeNotificationDetails(context?.user?.fid);
-        setNotificationDetails(null);
+
+        // Handle notification state changes
+        if (type === 'frame.notificationsEnabled' && context?.user?.fid) {
+          if (data?.url && data?.token) {
+            await saveNotificationDetails(context.user.fid, {
+              url: data.url,
+              token: data.token
+            });
+            
+            setNotificationDetails({
+              url: data.url,
+              token: data.token
+            });
+            
+            toast.success('Notifications enabled!');
+            logAnalyticsEvent('notifications_enabled', {
+              fid: context.user.fid
+            });
+          }
+          return;
+        }
+
+        if (type === 'frame.notificationsDisabled' && context?.user?.fid) {
+          await removeNotificationDetails(context.user.fid);
+          setNotificationDetails(null);
+          toast.info('Notifications disabled');
+          logAnalyticsEvent('notifications_disabled', {
+            fid: context.user.fid
+          });
+        }
+      } catch (err) {
+        console.error('Frame event error:', err);
+        toast.error('Error handling frame event');
       }
     };
 
@@ -1512,6 +1573,47 @@ export default function Demo({ title = "Fun Quotes" }) {
     return () => {
       window.removeEventListener('message', handleFrameEvent);
     };
+  }, [context?.user?.fid]);
+
+  // Function to prompt user to add frame
+  const promptAddFrame = useCallback(async () => {
+    try {
+      const result = await sdk.actions.addFrame() as AddFrameResult;
+      
+      if (!result.added) {
+        toast.error(`Failed to add frame: ${result.reason}`);
+        return;
+      }
+
+      setAdded(true);
+      
+      // If we got notification details directly, save them
+      if (result.notificationDetails) {
+        if (context?.user?.fid) {
+          await saveNotificationDetails(context.user.fid, {
+            url: result.notificationDetails.url,
+            token: result.notificationDetails.token
+          });
+          
+          setNotificationDetails(result.notificationDetails);
+          toast.success('Frame added with notifications enabled!');
+          
+          logAnalyticsEvent('frame_added', {
+            fid: context.user.fid,
+            has_notifications: true
+          });
+        }
+      } else {
+        toast.success('Frame added! Notifications will be enabled via webhook.');
+        logAnalyticsEvent('frame_added', {
+          fid: context?.user?.fid,
+          has_notifications: false
+        });
+      }
+    } catch (error) {
+      console.error('Error adding frame:', error);
+      toast.error('Error adding frame');
+    }
   }, [context?.user?.fid]);
 
   return (
