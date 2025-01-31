@@ -1,104 +1,133 @@
-import { NextResponse } from "next/server";
-import { 
-  ParseWebhookEvent,
-  parseWebhookEvent,
-  verifyAppKeyWithNeynar 
-} from "@farcaster/frame-node";
-import { 
-  saveNotificationDetails, 
-  removeNotificationDetails 
-} from "~/lib/firestore";
-import { logAnalyticsEvent } from "~/lib/analytics";
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { saveNotificationDetails, removeNotificationDetails } from "~/lib/firestore";
 
-export async function POST(request: Request) {
-  try {
-    // Get the request body
-    const requestJson = await request.json();
+// Define the schemas since they're not exported from frame-sdk
+const eventHeaderSchema = z.object({
+  fid: z.number(),
+  network: z.number(),
+  timestamp: z.number(),
+  version: z.number(),
+});
 
-    // Parse and validate the webhook event
-    let data;
-    try {
-      data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
-    } catch (e: unknown) {
-      const error = e as ParseWebhookEvent.ErrorType;
+const eventPayloadSchema = z.object({
+  event: z.enum(["frame-added", "frame-removed", "notifications-enabled", "notifications-disabled"]),
+  notificationDetails: z.object({
+    token: z.string(),
+    url: z.string(),
+  }).optional(),
+});
 
-      switch (error.name) {
-        case "VerifyJsonFarcasterSignature.InvalidDataError":
-        case "VerifyJsonFarcasterSignature.InvalidEventDataError":
-          return NextResponse.json(
-            { error: "Invalid request data", details: error.message },
-            { status: 400 }
-          );
-        case "VerifyJsonFarcasterSignature.InvalidAppKeyError":
-          return NextResponse.json(
-            { error: "Invalid app key", details: error.message },
-            { status: 401 }
-          );
-        case "VerifyJsonFarcasterSignature.VerifyAppKeyError":
-          return NextResponse.json(
-            { error: "Error verifying app key", details: error.message },
-            { status: 500 }
-          );
-        default:
-          throw error;
-      }
-    }
+const eventSchema = z.object({
+  header: z.string(),
+  payload: z.string(),
+  signature: z.string(),
+});
 
-    const { fid, event } = data;
+export async function POST(request: NextRequest) {
+  console.log('Received webhook event:', new Date().toISOString());
+  const requestJson = await request.json();
+  console.log('Request body:', JSON.stringify(requestJson, null, 2));
 
-    // Handle different event types
-    switch (event.event) {
-      case "frame_added": {
-        logAnalyticsEvent('frame_added', { fid });
-        
-        // Save notification details if provided
-        if (event.notificationDetails) {
-          await saveNotificationDetails(fid, event.notificationDetails);
-          logAnalyticsEvent('notifications_enabled_with_frame', { fid });
-        }
-        break;
-      }
+  const requestBody = eventSchema.safeParse(requestJson);
 
-      case "frame_removed": {
-        logAnalyticsEvent('frame_removed', { fid });
-        // Remove notification details when frame is removed
-        await removeNotificationDetails(fid);
-        break;
-      }
-
-      case "notifications_disabled": {
-        logAnalyticsEvent('notifications_disabled', { fid });
-        // Remove notification details when notifications are disabled
-        await removeNotificationDetails(fid);
-        break;
-      }
-
-      case "notifications_enabled": {
-        logAnalyticsEvent('notifications_enabled', { fid });
-        // Save new notification details
-        if (!event.notificationDetails) {
-          return NextResponse.json(
-            { error: "Missing notification details" },
-            { status: 400 }
-          );
-        }
-        await saveNotificationDetails(fid, event.notificationDetails);
-        break;
-      }
-    }
-
-    return NextResponse.json({ success: true });
-
-  } catch (error) {
-    console.error('Webhook error:', error);
-    logAnalyticsEvent('webhook_error', {
-      error_type: 'unexpected',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+  if (requestBody.success === false) {
+    console.error('Invalid event schema:', requestBody.error.errors);
+    return Response.json(
+      { success: false, errors: requestBody.error.errors },
+      { status: 400 }
     );
+  }
+
+  // Parse and validate header
+  const headerData = JSON.parse(
+    Buffer.from(requestBody.data.header, "base64url").toString("utf-8")
+  );
+  console.log('Decoded header:', headerData);
+  
+  const header = eventHeaderSchema.safeParse(headerData);
+  if (header.success === false) {
+    console.error('Invalid header schema:', header.error.errors);
+    return Response.json(
+      { success: false, errors: header.error.errors },
+      { status: 400 }
+    );
+  }
+  const fid = header.data.fid;
+
+  // Parse and validate payload
+  const payloadData = JSON.parse(
+    Buffer.from(requestBody.data.payload, "base64url").toString("utf-8")
+  );
+  console.log('Decoded payload:', payloadData);
+  
+  const payload = eventPayloadSchema.safeParse(payloadData);
+
+  if (payload.success === false) {
+    console.error('Invalid payload schema:', payload.error.errors);
+    return Response.json(
+      { success: false, errors: payload.error.errors },
+      { status: 400 }
+    );
+  }
+
+  try {
+    switch (payload.data.event) {
+      case "frame-added":
+        if (payload.data.notificationDetails) {
+          console.log(
+            `Got frame-added event for fid ${fid} with notification token ${payload.data.notificationDetails.token} and url ${payload.data.notificationDetails.url}`
+          );
+          // Save notification details
+          await saveNotificationDetails(fid, payload.data.notificationDetails);
+          // Send a welcome notification
+          await fetch("/api/send-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: payload.data.notificationDetails.token,
+              url: payload.data.notificationDetails.url,
+              targetUrl: process.env.NEXT_PUBLIC_URL || "https://qg-frames.vercel.app",
+            }),
+          });
+        } else {
+          console.log(`Got frame-added event for fid ${fid} with no notification details`);
+        }
+        break;
+      case "frame-removed":
+        console.log(`Got frame-removed event for fid ${fid}`);
+        await removeNotificationDetails(fid);
+        break;
+      case "notifications-enabled":
+        if (payload.data.notificationDetails) {
+          console.log(
+            `Got notifications-enabled event for fid ${fid} with token ${
+              payload.data.notificationDetails.token
+            } and url ${payload.data.notificationDetails.url}`
+          );
+          await saveNotificationDetails(fid, payload.data.notificationDetails);
+          // Send a welcome notification
+          await fetch("/api/send-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: payload.data.notificationDetails.token,
+              url: payload.data.notificationDetails.url,
+              targetUrl: process.env.NEXT_PUBLIC_URL || "https://qg-frames.vercel.app",
+            }),
+          });
+        }
+        break;
+      case "notifications-disabled":
+        console.log(`Got notifications-disabled event for fid ${fid}`);
+        await removeNotificationDetails(fid);
+        break;
+    }
+
+    console.log('Successfully processed webhook event');
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

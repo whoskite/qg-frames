@@ -482,6 +482,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingGif, setIsLoadingGif] = useState(false);
+  const [addFrameResult, setAddFrameResult] = useState("");
 
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
@@ -1578,41 +1579,57 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Function to prompt user to add frame
   const promptAddFrame = useCallback(async () => {
     try {
-      const result = await sdk.actions.addFrame() as AddFrameResult;
-      
-      if (!result.added) {
-        toast.error(`Failed to add frame: ${result.reason}`);
-        return;
-      }
+      setAddFrameResult("");
+      setNotificationDetails(null);
 
-      setAdded(true);
-      
-      // If we got notification details directly, save them
-      if (result.notificationDetails) {
-        if (context?.user?.fid) {
-          await saveNotificationDetails(context.user.fid, {
-            url: result.notificationDetails.url,
-            token: result.notificationDetails.token
-          });
-          
+      const result = await sdk.actions.addFrame();
+
+      if (result.added) {
+        if (result.notificationDetails) {
           setNotificationDetails(result.notificationDetails);
-          toast.success('Frame added with notifications enabled!');
+          setAddFrameResult(
+            `Added, got notification token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
+          );
           
-          logAnalyticsEvent('frame_added', {
-            fid: context.user.fid,
-            has_notifications: true
-          });
+          // Save notification details to Firestore
+          if (context?.user?.fid) {
+            await saveNotificationDetails(context.user.fid, result.notificationDetails);
+            
+            // Send welcome notification
+            try {
+              const response = await fetch("/api/send-notification", {
+                method: "POST",
+                mode: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  token: result.notificationDetails.token,
+                  url: result.notificationDetails.url,
+                  targetUrl: window.location.href,
+                }),
+              });
+
+              if (response.status === 200) {
+                toast.success("Welcome notification sent!");
+              } else {
+                const data = await response.text();
+                console.error("Error sending welcome notification:", data);
+              }
+            } catch (error) {
+              console.error("Error sending welcome notification:", error);
+            }
+          }
+        } else {
+          setAddFrameResult("Added, got no notification details");
         }
+        setAdded(true);
+        toast.success("Frame added successfully!");
       } else {
-        toast.success('Frame added! Notifications will be enabled via webhook.');
-        logAnalyticsEvent('frame_added', {
-          fid: context?.user?.fid,
-          has_notifications: false
-        });
+        setAddFrameResult(`Not added: ${result.reason}`);
+        toast.error(`Failed to add frame: ${result.reason}`);
       }
     } catch (error) {
-      console.error('Error adding frame:', error);
-      toast.error('Error adding frame');
+      setAddFrameResult(`Error: ${error}`);
+      toast.error("Error adding frame");
     }
   }, [context?.user?.fid]);
 
