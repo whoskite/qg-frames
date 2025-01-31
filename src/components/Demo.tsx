@@ -7,7 +7,7 @@ import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronD
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import sdk, { type FrameContext } from "@farcaster/frame-sdk";
+import sdk, { type FrameContext, type FrameNotificationDetails } from "@farcaster/frame-sdk";
 import { logEvent, setUserProperties } from "firebase/analytics";
 import { Toaster, toast } from 'sonner';
 import {
@@ -53,9 +53,6 @@ import { Button } from "../components/ui/Button";
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
-// Add import for Frame types
-import type { AddFrameResult, FrameEvent, FrameNotificationDetails } from '~/types/frame';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -440,7 +437,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Frame-specific state
   const [added, setAdded] = useState(false);
-  const [notificationDetails, setNotificationDetails] = useState<NotificationState | null>(null);
+  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
   const [lastEvent, setLastEvent] = useState("");
   const [sendNotificationResult, setSendNotificationResult] = useState("");
 
