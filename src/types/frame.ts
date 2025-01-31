@@ -1,30 +1,26 @@
-// Frame notification types
-export type FrameNotificationDetails = {
-  url: string;
-  token: string;
-};
+import type { FrameNotificationDetails } from "@farcaster/frame-sdk";
 
 export type AddFrameRejectedReason =
   | 'invalid_domain_manifest'
   | 'rejected_by_user';
 
-export type AddFrameResult =
-  | {
-      added: true;
-      notificationDetails?: FrameNotificationDetails;
-    }
-  | {
-      added: false;
-      reason: AddFrameRejectedReason;
-    };
+export type AddFrameResult = {
+  added: boolean;
+  reason?: string;
+  notificationDetails?: FrameNotificationDetails;
+};
 
 // Frame event types
-export interface FrameEvent {
-  type: 'frame.addResponse' | 'frame.notificationsEnabled' | 'frame.notificationsDisabled';
-  data?: {
-    url?: string;
-    token?: string;
-    success?: boolean;
-    reason?: string;
-  };
-} 
+export type FrameEventType = 'frame.addResponse' | 'frame.notificationsEnabled' | 'frame.notificationsDisabled';
+
+export type FrameEventData = {
+  url?: string;
+  token?: string;
+  success?: boolean;
+  reason?: string;
+};
+
+export type FrameEvent = {
+  type: FrameEventType;
+  data?: FrameEventData;
+}; 

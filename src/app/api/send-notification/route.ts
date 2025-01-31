@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify({
       notificationId: crypto.randomUUID(),
       title: "Welcome to FunQuotes",
-      body: "Start sharing your favorite quotes with your friends!",
+      body: "This is a test notification",
       targetUrl: requestBody.data.targetUrl,
       tokens: [requestBody.data.token],
     } satisfies SendNotificationRequest),
