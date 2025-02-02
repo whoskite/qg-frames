@@ -4,20 +4,20 @@ export async function GET() {
   const config = {
     accountAssociation: {
       header:
-        "eyJmaWQiOjM2MjEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgyY2Q4NWEwOTMyNjFmNTkyNzA4MDRBNkVBNjk3Q2VBNENlQkVjYWZFIn0",
-      payload: "eyJkb21haW4iOiJmcmFtZXMtdjIudmVyY2VsLmFwcCJ9",
+        "eyJmaWQiOjE1NDA5LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NjA5NTU5MDYyMUE4YUZGM2ZjOTY0QjEwYzMzN2EzNzVjNTI3OTI0OCJ9",
+      payload: "eyJkb21haW4iOiI1OThmNjE5MmU4MzMubmdyb2suYXBwIn0",
       signature:
-        "MHhiNDIwMzQ1MGZkNzgzYTExZjRiOTllZTFlYjA3NmMwOTdjM2JkOTY1NGM2ODZjYjkyZTAyMzk2Y2Q0YjU2MWY1MjY5NjI5ZGQ5NTliYjU0YzEwOGI4OGVmNjdjMTVlZTdjZDc2YTRiMGU5NzkzNzA3YzkxYzFkOWFjNTg0YmQzNjFi",
+        "MHg0NjZiMDhlM2FlOTQzOGRkODc0ZThlMjY5Y2EyZDRkZmQxZmE0NjgwZjAxMjA2N2ZiY2FiNjBkNTEyYmEyYjg0NDgyZDFjYzBkNGQ2YWM0NDBmYmNmOTAzMGViMWNlY2RjMjAwZGZhNWQ3YWMzNWE3YTZhYzgyMDkyMjljYjY5NzFi",
     },
     frame: {
       version: "1",
-      name: "Frames v2 Demo",
+      name: "FunQuotes",
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
       imageUrl: `${appUrl}/frames/hello/opengraph-image`,
-      buttonTitle: "Launch Frame",
+      buttonTitle: "Create FunQuotes",
       splashImageUrl: `${appUrl}/splash.png`,
-      splashBackgroundColor: "#f7f7f7",
+      splashBackgroundColor: "#F9C001",
       webhookUrl: `${appUrl}/api/webhook`,
     },
   };

@@ -1,0 +1,23 @@
+[
+  {
+    "origin": [
+      "https://funquotes-test.vercel.app",
+      "http://localhost:3000",
+      "https://warpcast.com",
+      "https://*.warpcast.com",
+      "https://qg-frames.vercel.app",
+      "*"
+    ],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": [
+      "Content-Type",
+      "Access-Control-Allow-Origin",
+      "Cache-Control",
+      "Content-Disposition",
+      "Content-Encoding",
+      "Content-Length",
+      "Content-Range"
+    ]
+  }
+] 
