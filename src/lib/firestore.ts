@@ -179,15 +179,6 @@ export interface UserStreak {
   timezone: string;
 }
 
-export interface StreakUpdate {
-  current_streak: number;
-  last_login_timestamp: Date;
-  next_eligible_login: Date;
-  streak_deadline: Date;
-  timezone?: string;
-  grace_period_used?: boolean;
-}
-
 // Update the getUserStreak function
 export const getUserStreak = async (fid: number): Promise<UserStreak> => {
   if (!db) {
@@ -333,52 +324,57 @@ export const updateUserStreak = async (fid: number, data: StreakUpdate): Promise
 };
 
 // Save onboarding data
-export const saveOnboardingData = async (fid: number, onboardingData: {
-  gender: string;
-  relationshipStatus: string;
-  selectedTheme: string;
-  areasToImprove: string[];
-  personalGoals: string;
-}) => {
-  if (!db) {
-    console.error('Firestore not initialized');
-    return false;
-  }
+export async function saveOnboardingData(fid: number, data: {
+  preferredQuoteStyle?: string;
+  gender?: string;
+  relationshipStatus?: string;
+  selectedTheme?: string;
+  areasToImprove?: string[];
+  personalGoals?: string;
+  preferredStyles?: string[];
+}) {
   try {
-    const userRef = doc(db, 'users', fid.toString());
-    await setDoc(userRef, {
-      onboardingData,
-      hasCompletedOnboarding: true,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    return true;
+    const database = getDb();
+    const userDocRef = doc(database, 'users', fid.toString());
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      await updateDoc(userDocRef, {
+        onboardingData: data,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      await setDoc(userDocRef, {
+        onboardingData: data,
+        updatedAt: serverTimestamp()
+      });
+    }
   } catch (error) {
     console.error('Error saving onboarding data:', error);
-    return false;
+    throw error;
   }
-};
+}
 
 // Get onboarding data
-export const getOnboardingData = async (fid: number) => {
-  if (!db) {
-    console.error('Firestore not initialized');
-    return null;
-  }
+export async function getOnboardingData(fid: number) {
   try {
-    const userRef = doc(db, 'users', fid.toString());
-    const userDoc = await getDoc(userRef);
+    const database = getDb();
+    const userDocRef = doc(database, 'users', fid.toString());
+    const userDoc = await getDoc(userDocRef);
+    
     if (userDoc.exists()) {
+      const data = userDoc.data();
       return {
-        onboardingData: userDoc.data()?.onboardingData || null,
-        hasCompletedOnboarding: userDoc.data()?.hasCompletedOnboarding || false
+        onboardingData: data.onboardingData || null,
+        hasCompletedOnboarding: true // Always return true since we're not using the onboarding flow
       };
     }
     return null;
   } catch (error) {
     console.error('Error getting onboarding data:', error);
-    return null;
+    throw error;
   }
-};
+}
 
 // Save notification details for a user
 export const saveNotificationDetails = async (fid: number | undefined, details: { url?: string; token?: string }) => {
@@ -434,4 +430,13 @@ export async function getNotificationDetails(fid: number) {
     console.error('Error getting notification details:', error);
     return null;
   }
+}
+
+export interface StreakUpdate {
+  current_streak: number;
+  last_login_timestamp: Date;
+  next_eligible_login: Date;
+  streak_deadline: Date;
+  timezone?: string;
+  grace_period_used?: boolean;
 } 

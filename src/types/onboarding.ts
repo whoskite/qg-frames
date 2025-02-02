@@ -1,15 +1,15 @@
-export interface OnboardingPersonalInfo {
+export interface PersonalInfo {
   gender: string;
   relationshipStatus: string;
   selectedTheme: string;
   areasToImprove: string[];
   personalGoals: string;
-  preferredQuoteStyle?: string;
-  preferredStyles: string[];  // Array of preferred quote styles
+  preferredQuoteStyle: string;
+  preferredStyles: string[];
 }
 
 export interface OnboardingState {
   step: number;
-  personalInfo: OnboardingPersonalInfo;
   hasCompletedOnboarding: boolean;
+  personalInfo: PersonalInfo;
 } 

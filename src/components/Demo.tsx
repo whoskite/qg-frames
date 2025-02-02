@@ -11,8 +11,7 @@ import sdk, {
   AddFrame,
   FrameNotificationDetails,
   SignIn as SignInCore,
-  type Context,
-
+  type FrameContext,
 } from "@farcaster/frame-sdk";
 
 import { logEvent, setUserProperties } from "firebase/analytics";
@@ -434,7 +433,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [bgImage, setBgImage] = useState<string>('/Background_Nature_1_pexels-asumaani-16545605.jpg');
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
-  const [context, setContext] = useState<Context.FrameContext>();
+  const [context, setContext] = useState<FrameContext>();
   const [isCasting, setIsCasting] = useState(false);
   const [sessionStartTime] = useState(Date.now());
   const [quoteHistory, setQuoteHistory] = useState<QuoteHistoryItem[]>([]);
@@ -1128,7 +1127,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const generateQuoteImage = async (
     quote: string, 
     bgImage: string, 
-    userContext?: Context.FrameContext  // Update this type
+    userContext?: FrameContext  // Update this type
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
@@ -2672,7 +2671,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <button 
                       onClick={() => {
                         if (context?.user?.fid) {
-                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                          saveOnboardingData(context.user.fid, {
+                            preferredQuoteStyle: onboarding.personalInfo.preferredQuoteStyle,
+                            gender: onboarding.personalInfo.gender,
+                            relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                            selectedTheme: onboarding.personalInfo.selectedTheme,
+                            areasToImprove: onboarding.personalInfo.areasToImprove,
+                            personalGoals: onboarding.personalInfo.personalGoals,
+                            preferredStyles: onboarding.personalInfo.preferredStyles
+                          });
                         }
                         setShowQuoteStylePage(false);
                       }}
@@ -2771,7 +2778,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                         }));
                         
                         // Save to backend
-                        saveOnboardingData(context.user.fid, updatedPersonalInfo);
+                        saveOnboardingData(context.user.fid, {
+                          preferredQuoteStyle: tempQuoteStyles,
+                          gender: onboarding.personalInfo.gender,
+                          relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                          selectedTheme: onboarding.personalInfo.selectedTheme,
+                          areasToImprove: onboarding.personalInfo.areasToImprove,
+                          personalGoals: onboarding.personalInfo.personalGoals,
+                          preferredStyles: onboarding.personalInfo.preferredStyles
+                        });
                         
                         toast.success('Styles saved successfully');
                         setShowQuoteStylePage(false);
@@ -2797,7 +2812,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <button 
                       onClick={() => {
                         if (context?.user?.fid) {
-                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                          saveOnboardingData(context.user.fid, {
+                            preferredQuoteStyle: onboarding.personalInfo.preferredQuoteStyle,
+                            gender: onboarding.personalInfo.gender,
+                            relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                            selectedTheme: onboarding.personalInfo.selectedTheme,
+                            areasToImprove: onboarding.personalInfo.areasToImprove,
+                            personalGoals: onboarding.personalInfo.personalGoals,
+                            preferredStyles: onboarding.personalInfo.preferredStyles
+                          });
                         }
                         setShowAreasPage(false);
                       }}
@@ -2878,7 +2901,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <button
                     onClick={() => {
                       if (context?.user?.fid) {
-                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        saveOnboardingData(context.user.fid, {
+                          preferredQuoteStyle: onboarding.personalInfo.preferredQuoteStyle,
+                          gender: onboarding.personalInfo.gender,
+                          relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                          selectedTheme: onboarding.personalInfo.selectedTheme,
+                          areasToImprove: onboarding.personalInfo.areasToImprove,
+                          personalGoals: onboarding.personalInfo.personalGoals,
+                          preferredStyles: onboarding.personalInfo.preferredStyles
+                        });
                         toast.success('Areas saved successfully');
                       }
                     }}
@@ -2900,7 +2931,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                     <button 
                       onClick={() => {
                         if (context?.user?.fid) {
-                          saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                          saveOnboardingData(context.user.fid, {
+                            preferredQuoteStyle: onboarding.personalInfo.preferredQuoteStyle,
+                            gender: onboarding.personalInfo.gender,
+                            relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                            selectedTheme: onboarding.personalInfo.selectedTheme,
+                            areasToImprove: onboarding.personalInfo.areasToImprove,
+                            personalGoals: onboarding.personalInfo.personalGoals,
+                            preferredStyles: onboarding.personalInfo.preferredStyles
+                          });
                         }
                         setShowGoalsPage(false);
                       }}
@@ -2958,7 +2997,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <button
                     onClick={() => {
                       if (context?.user?.fid) {
-                        saveOnboardingData(context.user.fid, onboarding.personalInfo);
+                        saveOnboardingData(context.user.fid, {
+                          preferredQuoteStyle: onboarding.personalInfo.preferredQuoteStyle,
+                          gender: onboarding.personalInfo.gender,
+                          relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                          selectedTheme: onboarding.personalInfo.selectedTheme,
+                          areasToImprove: onboarding.personalInfo.areasToImprove,
+                          personalGoals: onboarding.personalInfo.personalGoals,
+                          preferredStyles: onboarding.personalInfo.preferredStyles
+                        });
                         toast.success('Goals saved successfully');
                       }
                     }}
@@ -2993,7 +3040,7 @@ const formatDate = (timestamp: number) => {
 // Update the ProfileModal interface
 interface ProfileModalProps {
   onClose: () => void;
-  context: Context.FrameContext | undefined;  // Update this type
+  context: FrameContext | undefined;  // Update this type
   favorites: FavoriteQuote[];
   quoteHistory: QuoteHistoryItem[];
   sessionStartTime: number;

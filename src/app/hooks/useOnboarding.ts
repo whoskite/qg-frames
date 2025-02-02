@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FrameContext } from "@farcaster/frame-sdk";
-import { getOnboardingData } from '../lib/firestore';
+import { getOnboardingData } from '~/lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
 
 export function useOnboarding(

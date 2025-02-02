@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { QuoteHistoryItem, QuoteHistoryItemFields, FavoriteQuote } from '../types/quotes';
-import { generateRandomString } from '../lib/utils';
+import { generateRandomString } from '~/lib/utils';
 
 interface UserDataContextType {
   quoteHistory: QuoteHistoryItem[];
