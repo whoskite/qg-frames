@@ -13,7 +13,7 @@
     "@farcaster/auth-kit": "^0.6.0",
     "@farcaster/frame-core": "^0.0.22",
     "@farcaster/frame-node": "^0.0.7",
-    "@farcaster/frame-sdk": "^0.0.26",
+    "@farcaster/frame-sdk": "0.0.20",
     "@farcaster/frame-wagmi-connector": "^0.0.6",
     "@radix-ui/react-dialog": "^1.1.5",
     "@radix-ui/react-dropdown-menu": "^2.1.5",
@@ -31,8 +31,8 @@
     "next-auth": "^4.24.11",
     "openai": "^4.82.0",
     "ox": "^0.4.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-error-boundary": "^5.0.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
@@ -50,5 +50,8 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   },
-  "packageManager": "yarn@4.1.1+sha512.ec40d0639bb307441b945d9467139cbb88d14394baac760b52eca038b330d16542d66fef61574271534ace5a200518dabf3b53a85f1f9e4bfa37141b538a9590"
+  "packageManager": "yarn@4.1.1+sha512.ec40d0639bb307441b945d9467139cbb88d14394baac760b52eca038b330d16542d66fef61574271534ace5a200518dabf3b53a85f1f9e4bfa37141b538a9590",
+  "npm": {
+    "legacy-peer-deps": true
+  }
 }
