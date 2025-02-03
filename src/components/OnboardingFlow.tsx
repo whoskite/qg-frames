@@ -4,13 +4,13 @@ import { toast } from 'sonner';
 import { Button } from "./ui/Button";
 import { saveOnboardingData, saveThemePreference } from '../lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
-import type { Context } from '@farcaster/frame-sdk';
+import type { FrameContext } from "@farcaster/frame-sdk";
 
 interface OnboardingProps {
   onboarding: OnboardingState;
   setOnboarding: React.Dispatch<React.SetStateAction<OnboardingState>>;
   onComplete: () => void;
-  context: Context.FrameContext | undefined;
+  context: FrameContext | undefined;
   setBgImage: (image: string) => void;
 }
 
