@@ -1,3 +1,5 @@
+import type { Configuration } from 'webpack';
+
 /** @type {import('next').NextConfig} */
 const config = {
   images: {
@@ -12,6 +14,15 @@ const config = {
     serverActions: {
       bodySizeLimit: '2mb'
     },
+  },
+  webpack: (config: Configuration) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': './src',
+      '~': './src',
+    };
+    return config;
   },
 };
 
