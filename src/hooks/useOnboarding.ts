@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
-import type { FrameContext } from "@farcaster/frame-sdk";
+
 import { getOnboardingData } from '~/lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
 
+interface UserContext {
+  user?: {
+    fid: number;
+  };
+}
+
 export function useOnboarding(
-  context: FrameContext | undefined,
+  context: UserContext | undefined,
   isFirebaseInitialized: boolean,
   setBgImage: (image: string) => void
 ) {
