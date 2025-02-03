@@ -2,8 +2,6 @@
 
 export async function GET() {
   const appUrl = process.env.NEXT_PUBLIC_URL;
-  
-  console.log('Serving manifest with appUrl:', appUrl);
 
   const config = {
     accountAssociation: {
@@ -26,12 +24,5 @@ export async function GET() {
     },
   };
 
-  return new Response(JSON.stringify(config), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+  return Response.json(config);
 }
