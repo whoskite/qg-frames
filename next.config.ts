@@ -1,4 +1,5 @@
 import type { Configuration } from 'webpack';
+import path from 'path';
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -19,8 +20,8 @@ const config = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': './src',
-      '~': './src',
+      '@': path.join(__dirname, 'src'),
+      '~': path.join(__dirname, 'src'),
     };
     return config;
   },
