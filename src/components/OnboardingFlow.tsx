@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from "./ui/Button";
 import { saveOnboardingData, saveThemePreference } from '../lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
-import type { FrameContext } from "@farcaster/frame-sdk";
+import type { FrameContext } from "@farcaster/frame-core";
 
 interface OnboardingProps {
   onboarding: OnboardingState;

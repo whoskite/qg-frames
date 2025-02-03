@@ -12,7 +12,7 @@ import sdk, {
   FrameNotificationDetails,
   SignIn as SignInCore,
 } from "@farcaster/frame-sdk";
-import type { FrameContext } from "@farcaster/frame-sdk";
+import type { FrameContext } from "@farcaster/frame-core";
 
 import { logEvent, setUserProperties } from "firebase/analytics";
 import { Toaster, toast } from 'sonner';
@@ -548,7 +548,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           return;
         }
         
-        setContext(frameContext);
+        setContext(frameContext as unknown as FrameContext);
         if (frameContext.client) {
           setAdded(frameContext.client.added);
         }
