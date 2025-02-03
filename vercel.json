@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "npm install --legacy-peer-deps && npm run build",
   "functions": {
     "src/app/api/**": {
       "maxDuration": 10
