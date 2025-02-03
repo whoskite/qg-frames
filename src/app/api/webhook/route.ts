@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
         await setUserNotificationDetails(fid, event.notificationDetails);
         await sendFrameNotification({
           fid,
-          title: "Welcome to Frames v2",
-          body: "Frame is now added to your client",
+          title: "Welcome to FunQuotes!",
+          body: "Share your favorite quotes with friends!",
         });
       } else {
         await deleteUserNotificationDetails(fid);
