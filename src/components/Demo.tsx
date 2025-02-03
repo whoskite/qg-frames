@@ -9,8 +9,9 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, {
   AddFrame,
-  FrameNotificationDetails,
-  SignIn as SignInCore,
+FrameNotificationDetails,
+SignIn as SignInCore,
+type Context,
 } from "@farcaster/frame-sdk";
 import type { FrameContext } from "@farcaster/frame-core";
 
