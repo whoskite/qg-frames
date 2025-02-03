@@ -7,16 +7,16 @@ export async function GET() {
     accountAssociation: {
       header:
         "eyJmaWQiOjE1NDA5LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NjA5NTU5MDYyMUE4YUZGM2ZjOTY0QjEwYzMzN2EzNzVjNTI3OTI0OCJ9",
-      payload: "eyJkb21haW4iOiI5YmJiOGZiOWExN2Qubmdyb2suYXBwIn0",
+      payload: "eyJkb21haW4iOiJxZy1mcmFtZXMudmVyY2VsLmFwcCJ9",
       signature:
-        "MHg1ZGU2ZDU0MWM3ZTc4ODExOWE3ZTcxODRjMjI3ZWFmZjFlMzQ5NTVhNjFkYzljYmU0MjcxODRmOTk0YTY5MDM3MDkyM2JkOThmMjhiZWMwYmMzMzk0N2U2OWFlYjBhZDUxYTE1ZjQxZDUzNzY2MTk0ZjA4NjI0NTIzOWE0ZTkxYzFi",
+        "MHg2NzlmYmRkMGRiODExNTY2OTg0ZDRkYWM1MDBkMTAxYzNjZmRhMzQ5MDM5YzZjMDZlNTgzZmFhZmM3ODgyNDgwMWY0MDNkYTJkODkxY2ExNzQ1MmUwNDY5NjE1M2IxZjE3YzU3NjgyZmVhOWMwNjZlNWI5NzRkMjU0ZTMzMmI3YjFj",
     },
     frame: {
       version: "1",
       name: "FunQuotes",
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
-      imageUrl: `${appUrl}/frames/hello/opengraph-image`,
+      imageUrl: `${appUrl}/frames/hello/frame-cast.png`,
       buttonTitle: "Create FunQuotes",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#F9C001",
