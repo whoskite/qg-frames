@@ -1,23 +1,25 @@
+/// <reference types="node" />
+
 export async function GET() {
   const appUrl = process.env.NEXT_PUBLIC_URL;
 
   const config = {
     accountAssociation: {
       header:
-        "eyJmaWQiOjM2MjEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgyY2Q4NWEwOTMyNjFmNTkyNzA4MDRBNkVBNjk3Q2VBNENlQkVjYWZFIn0",
-      payload: "eyJkb21haW4iOiJmcmFtZXMtdjIudmVyY2VsLmFwcCJ9",
+        "eyJmaWQiOjE1NDA5LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NjA5NTU5MDYyMUE4YUZGM2ZjOTY0QjEwYzMzN2EzNzVjNTI3OTI0OCJ9",
+      payload: "eyJkb21haW4iOiI5YmJiOGZiOWExN2Qubmdyb2suYXBwIn0",
       signature:
-        "MHhiNDIwMzQ1MGZkNzgzYTExZjRiOTllZTFlYjA3NmMwOTdjM2JkOTY1NGM2ODZjYjkyZTAyMzk2Y2Q0YjU2MWY1MjY5NjI5ZGQ5NTliYjU0YzEwOGI4OGVmNjdjMTVlZTdjZDc2YTRiMGU5NzkzNzA3YzkxYzFkOWFjNTg0YmQzNjFi",
+        "MHg1ZGU2ZDU0MWM3ZTc4ODExOWE3ZTcxODRjMjI3ZWFmZjFlMzQ5NTVhNjFkYzljYmU0MjcxODRmOTk0YTY5MDM3MDkyM2JkOThmMjhiZWMwYmMzMzk0N2U2OWFlYjBhZDUxYTE1ZjQxZDUzNzY2MTk0ZjA4NjI0NTIzOWE0ZTkxYzFi",
     },
     frame: {
       version: "1",
-      name: "Frames v2 Demo",
+      name: "FunQuotes",
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
       imageUrl: `${appUrl}/frames/hello/opengraph-image`,
-      buttonTitle: "Launch Frame",
+      buttonTitle: "Create FunQuotes",
       splashImageUrl: `${appUrl}/splash.png`,
-      splashBackgroundColor: "#f7f7f7",
+      splashBackgroundColor: "#F9C001",
       webhookUrl: `${appUrl}/api/webhook`,
     },
   };
