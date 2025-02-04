@@ -2516,42 +2516,72 @@ export default function Demo({ title = "Fun Quotes" }) {
                             setPreviewImage(dataUrl);
                             setIsCasting(true);
 
-                            // Convert data URL to blob
-                            const response = await fetch(dataUrl);
-                            const blob = await response.blob();
+                            // Convert data URL to blob more reliably
+                            const base64Data = dataUrl.split(',')[1];
+                            const byteCharacters = atob(base64Data);
+                            const byteArrays = [];
+                            
+                            for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+                              const slice = byteCharacters.slice(offset, offset + 1024);
+                              const byteNumbers = new Array(slice.length);
+                              for (let i = 0; i < slice.length; i++) {
+                                byteNumbers[i] = slice.charCodeAt(i);
+                              }
+                              const byteArray = new Uint8Array(byteNumbers);
+                              byteArrays.push(byteArray);
+                            }
+                            
+                            const blob = new Blob(byteArrays, { type: 'image/png' });
 
-                            // Upload directly to Firebase Storage
+                            // Upload to Firebase Storage with proper metadata
                             const storage = getStorage();
                             const fileName = `quotes/${Date.now()}-${context?.user?.username || 'user'}.png`;
                             const storageRef = ref(storage, fileName);
                             
+                            // Set proper metadata for public access
+                            const metadata = {
+                              contentType: 'image/png',
+                              cacheControl: 'public, max-age=31536000',
+                            };
+
                             try {
-                              // Upload the blob
-                              const uploadTask = await uploadBytes(storageRef, blob);
+                              // Upload with metadata
+                              const uploadTask = await uploadBytes(storageRef, blob, metadata);
                               // Get the download URL
                               const imageUrl = await getDownloadURL(uploadTask.ref);
 
-                              // Ensure the URL is properly encoded
-                              const encodedImageUrl = encodeURI(imageUrl);
+                              // Double check the URL is accessible
+                              const checkResponse = await fetch(imageUrl, { method: 'HEAD' });
+                              if (!checkResponse.ok) {
+                                throw new Error('Image URL not accessible');
+                              }
+
+                              // Use the raw URL without encoding for Warpcast
                               const shareText = `"${quote}" - Created by @kite /thepod`;
                               const shareUrl = 'https://qg-frames.vercel.app';
 
                               const params = new URLSearchParams();
                               params.append('text', shareText);
                               params.append('embeds[]', shareUrl);
-                              params.append('embeds[]', encodedImageUrl);
-                              
+                              params.append('embeds[]', imageUrl); // Use raw URL
+
                               const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                              
+                              // Log success for debugging
+                              console.log('Share URL:', url);
+                              console.log('Image URL:', imageUrl);
+                              
                               sdk.actions.openUrl(url);
                               
                               logAnalyticsEvent('cast_created', {
                                 quote: quote,
                                 hasMedia: true,
-                                mediaType: 'canvas'
+                                mediaType: 'canvas',
+                                platform: 'mobile'
                               });
                             } catch (uploadError) {
-                              console.error('Upload error:', uploadError);
-                              // If upload fails, share without image
+                              console.error('Upload/Share error:', uploadError);
+                              // If image sharing fails, fall back to text-only share
                               const shareText = `"${quote}" - Created by @kite /thepod`;
                               const shareUrl = 'https://qg-frames.vercel.app';
                               const params = new URLSearchParams();
