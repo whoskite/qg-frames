@@ -2,6 +2,7 @@
   {
     "origin": [
       "https://funquotes-test.vercel.app",
+      "https://app.funquotes.xyz",
       "http://localhost:3000",
       "https://warpcast.com",
       "https://*.warpcast.com",
