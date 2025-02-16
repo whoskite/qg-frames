@@ -16,7 +16,7 @@ export async function GET() {
       name: "FunQuotes",
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
-      imageUrl: `${appUrl}/frames/hello/opengraph-image`,
+      imageUrl: `${appUrl}/frame-cast.png`,
       buttonTitle: "Create FunQuotes",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#F9C001",
