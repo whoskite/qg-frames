@@ -2552,37 +2552,33 @@ export default function Demo({ title = "Fun Quotes" }) {
 
                               // Verify the image URL is accessible
                               try {
-                                // Use no-cors mode to avoid CORS issues during verification
-                                const checkResponse = await fetch(imageUrl, { 
-                                  method: 'HEAD',
-                                  mode: 'no-cors'
-                                });
-                                
+                                const checkResponse = await fetch(imageUrl);
+                                if (!checkResponse.ok) {
+                                  throw new Error('Image URL not accessible');
+                                }
+                                const contentType = checkResponse.headers.get('content-type');
+                                if (!contentType?.startsWith('image/')) {
+                                  throw new Error('URL does not point to an image');
+                                }
                                 console.log('Image URL verified:', imageUrl);
                               } catch (error) {
                                 console.error('Image verification failed:', error);
                                 throw new Error('Image verification failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
                               }
 
-                              // Create the share text
+                              // Create the share text and data
                               const shareText = `"${quote}" - Created by @kite /thepod`;
                               
-                              // Try using the direct Warpcast API format
-                              const castData = {
-                                text: shareText,
-                                embeds: [imageUrl]  // Only include the image URL
-                              };
-
-                              // Construct URL manually to avoid encoding issues
-                              const baseUrl = 'https://warpcast.com/~/compose';
-                              const textParam = `text=${encodeURIComponent(shareText)}`;
-                              const embedsParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
-                              const url = `${baseUrl}?${textParam}&${embedsParam}`;
+                              // Construct the share URL using URLSearchParams
+                              const params = new URLSearchParams();
+                              params.append('text', shareText);
+                              params.append('embeds[]', imageUrl);
+                              
+                              const url = `https://warpcast.com/~/compose?${params.toString()}`;
                               
                               // Log for debugging
                               console.log('Share URL:', url);
                               console.log('Raw Image URL:', imageUrl);
-                              console.log('Cast Data:', castData);
                               
                               // Use the SDK to open the URL
                               await sdk.actions.openUrl(url);
