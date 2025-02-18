@@ -18,7 +18,11 @@
       "Content-Disposition",
       "Content-Encoding",
       "Content-Length",
-      "Content-Range"
+      "Content-Range",
+      "ETag",
+      "Last-Modified",
+      "X-Download-Options",
+      "X-Requested-With"
     ]
   }
-] 
+]
