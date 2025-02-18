@@ -2550,26 +2550,40 @@ export default function Demo({ title = "Fun Quotes" }) {
                               // Get the download URL
                               const imageUrl = await getDownloadURL(uploadTask.ref);
 
-                              // Verify the image URL is accessible
+                              // Verify the image URL is accessible and returns proper content type
                               try {
                                 const checkResponse = await fetch(imageUrl, { method: 'HEAD' });
                                 if (!checkResponse.ok) {
                                   throw new Error('Image URL not accessible');
                                 }
+                                
+                                const contentType = checkResponse.headers.get('content-type');
+                                if (!contentType?.startsWith('image/')) {
+                                  throw new Error('URL does not point to an image');
+                                }
+
                                 console.log('Image URL verified accessible:', imageUrl);
+                                console.log('Content-Type:', contentType);
                               } catch (error) {
-                                console.error('Image accessibility check failed:', error);
-                                throw new Error('Generated image is not accessible');
+                                console.error('Image verification failed:', error);
+                                throw new Error('Image verification failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
                               }
 
-                              // Use the raw URL without encoding for Warpcast
-                              const shareText = `"${quote}" - Created by @kite /thepod`;
-                              const shareUrl = 'https://qg-frames.vercel.app';
+                              // Use the Farcaster-specific format for sharing
+                              const shareData = {
+                                text: `"${quote}" - Created by @kite /thepod`,
+                                embeds: [
+                                  { url: 'https://qg-frames.vercel.app' },
+                                  { url: imageUrl }
+                                ]
+                              };
 
+                              // Construct URL with proper encoding
                               const params = new URLSearchParams();
-                              params.append('text', shareText);
-                              params.append('embeds[]', shareUrl);
-                              params.append('embeds[]', imageUrl); // Use raw URL
+                              params.append('text', shareData.text);
+                              shareData.embeds.forEach(embed => {
+                                params.append('embeds[]', embed.url);
+                              });
 
                               const url = `https://warpcast.com/~/compose?${params.toString()}`;
                               
