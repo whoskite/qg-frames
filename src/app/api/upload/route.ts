@@ -29,9 +29,10 @@ export async function POST(request: Request) {
       // Add metadata for proper caching and public access
       const metadata = {
         contentType: 'image/png',
-        cacheControl: 'public, max-age=31536000',
+        cacheControl: 'public, max-age=31536000, immutable',
         customMetadata: {
-          'access-control-allow-origin': '*'
+          'access-control-allow-origin': '*',
+          'access-control-expose-headers': 'Content-Length'
         }
       };
 
