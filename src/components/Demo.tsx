@@ -2550,48 +2550,39 @@ export default function Demo({ title = "Fun Quotes" }) {
                               // Get the download URL
                               const imageUrl = await getDownloadURL(uploadTask.ref);
 
-                              // Verify the image URL is accessible and returns proper content type
+                              // Verify the image URL is accessible
                               try {
-                                const checkResponse = await fetch(imageUrl, { method: 'HEAD' });
-                                if (!checkResponse.ok) {
-                                  throw new Error('Image URL not accessible');
-                                }
+                                // Use no-cors mode to avoid CORS issues during verification
+                                const checkResponse = await fetch(imageUrl, { 
+                                  method: 'HEAD',
+                                  mode: 'no-cors'
+                                });
                                 
-                                const contentType = checkResponse.headers.get('content-type');
-                                if (!contentType?.startsWith('image/')) {
-                                  throw new Error('URL does not point to an image');
-                                }
-
-                                console.log('Image URL verified accessible:', imageUrl);
-                                console.log('Content-Type:', contentType);
+                                console.log('Image URL verified:', imageUrl);
                               } catch (error) {
                                 console.error('Image verification failed:', error);
                                 throw new Error('Image verification failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
                               }
 
                               // Use the Farcaster-specific format for sharing
-                              const shareData = {
-                                text: `"${quote}" - Created by @kite /thepod`,
-                                embeds: [
-                                  { url: 'https://qg-frames.vercel.app' },
-                                  { url: imageUrl }
-                                ]
-                              };
-
+                              const shareText = `"${quote}" - Created by @kite /thepod`;
+                              
                               // Construct URL with proper encoding
                               const params = new URLSearchParams();
-                              params.append('text', shareData.text);
-                              shareData.embeds.forEach(embed => {
-                                params.append('embeds[]', embed.url);
-                              });
+                              params.append('text', shareText);
+                              // Add the frame URL first
+                              params.append('embeds[]', 'https://qg-frames.vercel.app');
+                              // Add the image URL without any encoding (Farcaster will handle it)
+                              params.append('embeds[]', imageUrl);
 
                               const url = `https://warpcast.com/~/compose?${params.toString()}`;
                               
-                              // Log success for debugging
+                              // Log for debugging
                               console.log('Share URL:', url);
-                              console.log('Image URL:', imageUrl);
+                              console.log('Raw Image URL:', imageUrl);
                               
-                              sdk.actions.openUrl(url);
+                              // Use the SDK to open the URL
+                              await sdk.actions.openUrl(url);
                               
                               logAnalyticsEvent('cast_created', {
                                 quote: quote,

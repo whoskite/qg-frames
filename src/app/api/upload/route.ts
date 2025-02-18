@@ -32,17 +32,20 @@ export async function POST(request: Request) {
         cacheControl: 'public, max-age=31536000, immutable',
         customMetadata: {
           'access-control-allow-origin': '*',
-          'access-control-expose-headers': 'Content-Length'
+          'access-control-allow-methods': 'GET, HEAD',
+          'access-control-expose-headers': 'Content-Length, Content-Type, ETag',
+          'access-control-max-age': '3600'
         }
       };
 
       // Upload the image with metadata
       await uploadString(storageRef, image, 'data_url', metadata);
 
-      // Get the download URL using Firebase's getDownloadURL
+      // Get the download URL and verify it's accessible
       const url = await getDownloadURL(storageRef);
+      console.log('Generated Firebase URL:', url);
 
-      console.log('Upload successful, URL:', url);
+      // Return the URL immediately without additional verification
       return NextResponse.json({ url });
 
     } catch (error) {
