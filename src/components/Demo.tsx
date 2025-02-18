@@ -2550,10 +2550,16 @@ export default function Demo({ title = "Fun Quotes" }) {
                               // Get the download URL
                               const imageUrl = await getDownloadURL(uploadTask.ref);
 
-                              // Double check the URL is accessible
-                              const checkResponse = await fetch(imageUrl, { method: 'HEAD' });
-                              if (!checkResponse.ok) {
-                                throw new Error('Image URL not accessible');
+                              // Verify the image URL is accessible
+                              try {
+                                const checkResponse = await fetch(imageUrl, { method: 'HEAD' });
+                                if (!checkResponse.ok) {
+                                  throw new Error('Image URL not accessible');
+                                }
+                                console.log('Image URL verified accessible:', imageUrl);
+                              } catch (error) {
+                                console.error('Image accessibility check failed:', error);
+                                throw new Error('Generated image is not accessible');
                               }
 
                               // Use the raw URL without encoding for Warpcast

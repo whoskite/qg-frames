@@ -26,8 +26,17 @@ export async function POST(request: Request) {
       const imagePath = `quotes/${timestamp}.png`;
       const storageRef = ref(storage, imagePath);
 
-      // Upload the image as a data URL
-      await uploadString(storageRef, image, 'data_url');
+      // Add metadata for proper caching and public access
+      const metadata = {
+        contentType: 'image/png',
+        cacheControl: 'public, max-age=31536000',
+        customMetadata: {
+          'access-control-allow-origin': '*'
+        }
+      };
+
+      // Upload the image with metadata
+      await uploadString(storageRef, image, 'data_url', metadata);
 
       // Get the download URL using Firebase's getDownloadURL
       const url = await getDownloadURL(storageRef);
