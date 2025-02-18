@@ -2564,18 +2564,18 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 throw new Error('Image verification failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
                               }
 
-                              // Use the Farcaster-specific format for sharing
+                              // Create the share text
                               const shareText = `"${quote}" - Created by @kite /thepod`;
                               
                               // Try using the direct Warpcast API format
                               const castData = {
-                                text,
+                                text: shareText,
                                 embeds: [imageUrl]  // Only include the image URL
                               };
 
                               // Construct URL manually to avoid encoding issues
                               const baseUrl = 'https://warpcast.com/~/compose';
-                              const textParam = `text=${encodeURIComponent(text)}`;
+                              const textParam = `text=${encodeURIComponent(shareText)}`;
                               const embedsParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
                               const url = `${baseUrl}?${textParam}&${embedsParam}`;
                               
