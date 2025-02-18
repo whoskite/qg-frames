@@ -2556,36 +2556,22 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 throw new Error('Image URL not accessible');
                               }
 
-                              // Prepare the share text and URLs
+                              // Use the raw URL without encoding for Warpcast
                               const shareText = `"${quote}" - Created by @kite /thepod`;
                               const shareUrl = 'https://qg-frames.vercel.app';
 
-                              // Create URLSearchParams with proper encoding
                               const params = new URLSearchParams();
                               params.append('text', shareText);
                               params.append('embeds[]', shareUrl);
+                              params.append('embeds[]', imageUrl); // Use raw URL
 
-                              // Properly encode the image URL before adding it to params
-                              const encodedImageUrl = encodeURIComponent(imageUrl);
-                              params.append('embeds[]', encodedImageUrl);
-
-                              // Alternative approach using direct object
-                              const shareData = {
-                                text: `"${quote}" - Created by @kite /thepod`,
-                                embeds: [
-                                  'https://qg-frames.vercel.app',
-                                  imageUrl // Raw Firebase URL
-                                ]
-                              };
-
-                              const encodedData = encodeURIComponent(JSON.stringify(shareData));
-                              const warpcastUrl = `https://warpcast.com/~/compose?data=${encodedData}`;
-
-                              // Log for debugging
-                              console.log('Share URL:', warpcastUrl);
+                              const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                              
+                              // Log success for debugging
+                              console.log('Share URL:', url);
                               console.log('Image URL:', imageUrl);
-
-                              sdk.actions.openUrl(warpcastUrl);
+                              
+                              sdk.actions.openUrl(url);
                               
                               logAnalyticsEvent('cast_created', {
                                 quote: quote,
