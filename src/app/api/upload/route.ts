@@ -29,23 +29,33 @@ export async function POST(request: Request) {
       // Add metadata for proper caching and public access
       const metadata = {
         contentType: 'image/png',
-        cacheControl: 'public, max-age=31536000, immutable',
+        cacheControl: 'public, no-transform, max-age=31536000, immutable',
         customMetadata: {
           'access-control-allow-origin': '*',
-          'access-control-allow-methods': 'GET, HEAD',
-          'access-control-expose-headers': 'Content-Length, Content-Type, ETag',
-          'access-control-max-age': '3600'
+          'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+          'access-control-expose-headers': '*',
+          'access-control-max-age': '86400'
         }
       };
 
       // Upload the image with metadata
       await uploadString(storageRef, image, 'data_url', metadata);
 
-      // Get the download URL and verify it's accessible
+      // Get the download URL and ensure it's a proper URL
       const url = await getDownloadURL(storageRef);
+      
+      // Log the URL for debugging
       console.log('Generated Firebase URL:', url);
+      
+      try {
+        // Verify URL is valid
+        new URL(url);
+      } catch (error) {
+        console.error('Invalid URL generated:', error);
+        throw new Error('Invalid URL generated');
+      }
 
-      // Return the URL immediately without additional verification
+      // Return the URL
       return NextResponse.json({ url });
 
     } catch (error) {

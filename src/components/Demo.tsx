@@ -2567,19 +2567,22 @@ export default function Demo({ title = "Fun Quotes" }) {
                               // Use the Farcaster-specific format for sharing
                               const shareText = `"${quote}" - Created by @kite /thepod`;
                               
-                              // Construct URL with proper encoding
-                              const params = new URLSearchParams();
-                              params.append('text', shareText);
-                              // Add the frame URL first
-                              params.append('embeds[]', 'https://qg-frames.vercel.app');
-                              // Add the image URL without any encoding (Farcaster will handle it)
-                              params.append('embeds[]', imageUrl);
+                              // Try using the direct Warpcast API format
+                              const castData = {
+                                text,
+                                embeds: [imageUrl]  // Only include the image URL
+                              };
 
-                              const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                              // Construct URL manually to avoid encoding issues
+                              const baseUrl = 'https://warpcast.com/~/compose';
+                              const textParam = `text=${encodeURIComponent(text)}`;
+                              const embedsParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
+                              const url = `${baseUrl}?${textParam}&${embedsParam}`;
                               
                               // Log for debugging
                               console.log('Share URL:', url);
                               console.log('Raw Image URL:', imageUrl);
+                              console.log('Cast Data:', castData);
                               
                               // Use the SDK to open the URL
                               await sdk.actions.openUrl(url);
