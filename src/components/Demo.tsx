@@ -4,6 +4,7 @@
 
 // 1. Imports
 import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, FaLeaf } from 'react-icons/fa';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -503,6 +504,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for temporary quote styles
   const [tempQuoteStyles, setTempQuoteStyles] = useState<string | undefined>(undefined);
 
+  // Add new state for categories
+  const [showCategories, setShowCategories] = useState(false);
+
   const handleNavigation = (section: string) => {
     // Close all profile menu pages
     setShowPreferences(false);
@@ -515,6 +519,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     // Close all pages and set new section immediately
     setShowFavorites(false);
     setShowHistory(false);
+    setShowCategories(false);
 
     if (section === 'generate') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -522,6 +527,8 @@ export default function Demo({ title = "Fun Quotes" }) {
       setShowFavorites(true);
     } else if (section === 'history') {
       setShowHistory(true);
+    } else if (section === 'categories') {
+      setShowCategories(true);
     }
     setActiveSection(section);
   };
@@ -3088,6 +3095,120 @@ export default function Demo({ title = "Fun Quotes" }) {
                   >
                     Save Goals
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Categories Page */}
+          {showCategories && (
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Categories</h2>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    {[
+                      {
+                        id: 1,
+                        name: 'Inspirational',
+                        slug: 'inspirational',
+                        description: 'Uplifting quotes to motivate and inspire',
+                        count: 150,
+                        icon: FaLightbulb
+                      },
+                      {
+                        id: 2,
+                        name: 'Love & Relationships',
+                        slug: 'love',
+                        description: 'Quotes about love, friendship, and connections',
+                        count: 120,
+                        icon: FaHeart
+                      },
+                      {
+                        id: 3,
+                        name: 'Humor',
+                        slug: 'humor',
+                        description: 'Funny and witty quotes to brighten your day',
+                        count: 80,
+                        icon: FaLaugh
+                      },
+                      {
+                        id: 4,
+                        name: 'Wisdom',
+                        slug: 'wisdom',
+                        description: 'Philosophical and thought-provoking quotes',
+                        count: 200,
+                        icon: FaBook
+                      },
+                      {
+                        id: 5,
+                        name: 'Success',
+                        slug: 'success',
+                        description: 'Quotes about achievement and personal growth',
+                        count: 100,
+                        icon: FaStar
+                      },
+                      {
+                        id: 6,
+                        name: 'Career & Business',
+                        slug: 'career',
+                        description: 'Professional and entrepreneurial insights',
+                        count: 90,
+                        icon: FaBriefcase
+                      },
+                      {
+                        id: 7,
+                        name: 'Leadership',
+                        slug: 'leadership',
+                        description: 'Quotes about leading and influencing others',
+                        count: 70,
+                        icon: FaUsers
+                      },
+                      {
+                        id: 8,
+                        name: 'Life & Mindfulness',
+                        slug: 'life',
+                        description: 'Quotes about living mindfully and purposefully',
+                        count: 130,
+                        icon: FaLeaf
+                      }
+                    ].map((category, index) => (
+                      <motion.div
+                        key={category.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="group p-6 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer"
+                        onClick={() => {
+                          setUserPrompt(category.name);
+                          handleGenerateQuote();
+                          setShowCategories(false);
+                        }}
+                      >
+                        <div className="flex items-center mb-4">
+                          <category.icon className="w-6 h-6 mr-3 text-primary-500" />
+                          <h3 className="text-xl font-semibold text-white">{category.name}</h3>
+                        </div>
+                        <p className="text-gray-400 mb-4">{category.description}</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-primary-400">{category.count} quotes</span>
+                          <span className="text-sm text-gray-400 group-hover:translate-x-2 transition-transform duration-300">
+                            Generate →
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
               </div>
             </div>
