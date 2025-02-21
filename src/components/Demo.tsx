@@ -3234,15 +3234,20 @@ export default function Demo({ title = "Fun Quotes" }) {
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
-                  <h2 className="text-xl font-semibold text-white">
-                    {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Quotes
-                  </h2>
-                  <button 
-                    onClick={() => setSelectedCategory(null)}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                  >
-                    <X className="w-6 h-6 text-white" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory(null);
+                        setShowCategories(true);
+                      }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                    <h2 className="text-xl font-semibold text-white">
+                      {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Quotes
+                    </h2>
+                  </div>
                 </div>
 
                 {/* Content */}
