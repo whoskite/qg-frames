@@ -1,53 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { FaArrowLeft, FaHeart } from 'react-icons/fa';
-import { Quote } from '../../types/categories';
+import quotesData from '../../data/quotes.json';
 
-// Example quotes data - replace with your actual data source
-const SAMPLE_QUOTES: { [key: string]: Quote[] } = {
-  inspirational: [
-    { 
-      id: 1, 
-      text: "The only way to do great work is to love what you do.", 
-      author: "Steve Jobs", 
-      categoryId: 1,
-      likes: 150,
-      createdAt: new Date().toISOString()
-    },
-    { 
-      id: 2, 
-      text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", 
-      author: "Winston Churchill", 
-      categoryId: 1,
-      likes: 120,
-      createdAt: new Date().toISOString()
-    },
-  ],
-  love: [
-    { 
-      id: 3, 
-      text: "Love all, trust a few, do wrong to none.", 
-      author: "William Shakespeare", 
-      categoryId: 2,
-      likes: 89,
-      createdAt: new Date().toISOString()
-    },
-    { 
-      id: 4, 
-      text: "The best thing to hold onto in life is each other.", 
-      author: "Audrey Hepburn", 
-      categoryId: 2,
-      likes: 76,
-      createdAt: new Date().toISOString()
-    },
-  ],
-};
+interface QuoteData {
+  id: string;
+  text: string;
+  author: string;
+  source: string;
+}
+
+interface QuotesDatabase {
+  [key: string]: QuoteData[];
+}
 
 export default function CategoryQuotes() {
   const router = useRouter();
   const { category } = router.query;
   const categorySlug = typeof category === 'string' ? category : '';
+  const [likedQuotes, setLikedQuotes] = useState<Set<string>>(new Set());
 
   const getCategoryTitle = (slug: string): string => {
     const categoryMap: { [key: string]: string } = {
@@ -64,7 +36,19 @@ export default function CategoryQuotes() {
   };
 
   // Get quotes for the current category
-  const quotes = SAMPLE_QUOTES[categorySlug] || [];
+  const quotes: QuoteData[] = (quotesData as QuotesDatabase)[categorySlug] || [];
+
+  const handleLikeClick = (quoteId: string) => {
+    setLikedQuotes(prev => {
+      const newLikes = new Set(prev);
+      if (newLikes.has(quoteId)) {
+        newLikes.delete(quoteId);
+      } else {
+        newLikes.add(quoteId);
+      }
+      return newLikes;
+    });
+  };
 
   if (!category) {
     return (
@@ -96,14 +80,18 @@ export default function CategoryQuotes() {
               className="p-6 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300"
             >
               <blockquote className="text-xl mb-4">&ldquo;{quote.text}&rdquo;</blockquote>
-              <div className="flex justify-between items-center text-gray-400">
-                <span>— {quote.author}</span>
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-gray-400">
+                <div className="flex flex-col">
+                  <span className="font-medium">— {quote.author}</span>
+                  <span className="text-sm opacity-75">{quote.source}</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <button 
+                    onClick={() => handleLikeClick(quote.id)}
                     className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
                   >
-                    <FaHeart className="text-primary-500" />
-                    <span>{quote.likes}</span>
+                    <FaHeart className={likedQuotes.has(quote.id) ? "text-red-500" : "text-primary-500"} />
+                    <span>{likedQuotes.has(quote.id) ? "Liked" : "Like"}</span>
                   </button>
                 </div>
               </div>

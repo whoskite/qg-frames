@@ -1,0 +1,258 @@
+{
+  "inspirational": [
+    {
+      "id": "insp-1",
+      "text": "The only way to do great work is to love what you do.",
+      "author": "Steve Jobs",
+      "source": "Stanford Commencement Speech, 2005"
+    },
+    {
+      "id": "insp-2",
+      "text": "I have not failed. I've just found 10,000 ways that won't work.",
+      "author": "Thomas A. Edison",
+      "source": "Harper's Monthly, 1921"
+    },
+    {
+      "id": "insp-3",
+      "text": "The future belongs to those who believe in the beauty of their dreams.",
+      "author": "Eleanor Roosevelt",
+      "source": "You Learn by Living, 1960"
+    },
+    {
+      "id": "insp-4",
+      "text": "Everything you've ever wanted is on the other side of fear.",
+      "author": "George Addair",
+      "source": "Personal Development Seminar"
+    },
+    {
+      "id": "insp-5",
+      "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+      "author": "Winston Churchill",
+      "source": "World War II Speech"
+    }
+  ],
+  "love": [
+    {
+      "id": "love-1",
+      "text": "The best thing to hold onto in life is each other.",
+      "author": "Audrey Hepburn",
+      "source": "Interview with Life Magazine, 1953"
+    },
+    {
+      "id": "love-2",
+      "text": "Love all, trust a few, do wrong to none.",
+      "author": "William Shakespeare",
+      "source": "All's Well That Ends Well"
+    },
+    {
+      "id": "love-3",
+      "text": "We accept the love we think we deserve.",
+      "author": "Stephen Chbosky",
+      "source": "The Perks of Being a Wallflower"
+    },
+    {
+      "id": "love-4",
+      "text": "To love and be loved is to feel the sun from both sides.",
+      "author": "David Viscott",
+      "source": "Finding Your Strength in Difficult Times"
+    },
+    {
+      "id": "love-5",
+      "text": "Love is composed of a single soul inhabiting two bodies.",
+      "author": "Aristotle",
+      "source": "Ancient Greek Philosophy"
+    }
+  ],
+  "humor": [
+    {
+      "id": "humor-1",
+      "text": "I'm not afraid of death; I just don't want to be there when it happens.",
+      "author": "Woody Allen",
+      "source": "Without Feathers, 1975"
+    },
+    {
+      "id": "humor-2",
+      "text": "Always remember that you are absolutely unique. Just like everyone else.",
+      "author": "Margaret Mead",
+      "source": "Anthropological Studies"
+    },
+    {
+      "id": "humor-3",
+      "text": "If you think you are too small to make a difference, try sleeping with a mosquito.",
+      "author": "Dalai Lama",
+      "source": "Public Speech"
+    },
+    {
+      "id": "humor-4",
+      "text": "I used to think I was indecisive, but now I'm not so sure.",
+      "author": "Tommy Cooper",
+      "source": "Stand-up Comedy Routine"
+    },
+    {
+      "id": "humor-5",
+      "text": "The only mystery in life is why the kamikaze pilots wore helmets.",
+      "author": "Al McGuire",
+      "source": "Sports Commentary"
+    }
+  ],
+  "wisdom": [
+    {
+      "id": "wisdom-1",
+      "text": "The only true wisdom is in knowing you know nothing.",
+      "author": "Socrates",
+      "source": "Plato's Apology"
+    },
+    {
+      "id": "wisdom-2",
+      "text": "The journey of a thousand miles begins with one step.",
+      "author": "Lao Tzu",
+      "source": "Tao Te Ching"
+    },
+    {
+      "id": "wisdom-3",
+      "text": "It is during our darkest moments that we must focus to see the light.",
+      "author": "Aristotle",
+      "source": "Ancient Greek Philosophy"
+    },
+    {
+      "id": "wisdom-4",
+      "text": "The unexamined life is not worth living.",
+      "author": "Socrates",
+      "source": "Plato's Dialogues"
+    },
+    {
+      "id": "wisdom-5",
+      "text": "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.",
+      "author": "Rumi",
+      "source": "Persian Poetry"
+    }
+  ],
+  "success": [
+    {
+      "id": "success-1",
+      "text": "Success is not the key to happiness. Happiness is the key to success.",
+      "author": "Albert Schweitzer",
+      "source": "Humanitarian Writings"
+    },
+    {
+      "id": "success-2",
+      "text": "Success usually comes to those who are too busy to be looking for it.",
+      "author": "Henry David Thoreau",
+      "source": "Walden"
+    },
+    {
+      "id": "success-3",
+      "text": "Don't be afraid to give up the good to go for the great.",
+      "author": "John D. Rockefeller",
+      "source": "Business Philosophy"
+    },
+    {
+      "id": "success-4",
+      "text": "Success is walking from failure to failure with no loss of enthusiasm.",
+      "author": "Winston Churchill",
+      "source": "Political Memoirs"
+    },
+    {
+      "id": "success-5",
+      "text": "The road to success and the road to failure are almost exactly the same.",
+      "author": "Colin R. Davis",
+      "source": "Musical Career Reflections"
+    }
+  ],
+  "career": [
+    {
+      "id": "career-1",
+      "text": "Choose a job you love, and you will never have to work a day in your life.",
+      "author": "Confucius",
+      "source": "Ancient Chinese Philosophy"
+    },
+    {
+      "id": "career-2",
+      "text": "The only way to do great work is to love what you do.",
+      "author": "Steve Jobs",
+      "source": "Stanford Commencement Speech, 2005"
+    },
+    {
+      "id": "career-3",
+      "text": "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+      "author": "Steve Jobs",
+      "source": "Stanford Commencement Speech, 2005"
+    },
+    {
+      "id": "career-4",
+      "text": "Find out what you like doing best and get someone to pay you for doing it.",
+      "author": "Katherine Whitehorn",
+      "source": "Observations Column"
+    },
+    {
+      "id": "career-5",
+      "text": "The harder you work, the luckier you get.",
+      "author": "Gary Player",
+      "source": "Golf Career Reflections"
+    }
+  ],
+  "leadership": [
+    {
+      "id": "leadership-1",
+      "text": "A leader is one who knows the way, goes the way, and shows the way.",
+      "author": "John C. Maxwell",
+      "source": "The 21 Irrefutable Laws of Leadership"
+    },
+    {
+      "id": "leadership-2",
+      "text": "Leadership is not about being in charge. It's about taking care of those in your charge.",
+      "author": "Simon Sinek",
+      "source": "Leaders Eat Last"
+    },
+    {
+      "id": "leadership-3",
+      "text": "The greatest leader is not necessarily the one who does the greatest things. He is the one that gets people to do the greatest things.",
+      "author": "Ronald Reagan",
+      "source": "Presidential Speeches"
+    },
+    {
+      "id": "leadership-4",
+      "text": "Innovation distinguishes between a leader and a follower.",
+      "author": "Steve Jobs",
+      "source": "Business Week Interview, 1998"
+    },
+    {
+      "id": "leadership-5",
+      "text": "Before you are a leader, success is all about growing yourself. When you become a leader, success is all about growing others.",
+      "author": "Jack Welch",
+      "source": "Winning"
+    }
+  ],
+  "life": [
+    {
+      "id": "life-1",
+      "text": "Life is what happens while you're busy making other plans.",
+      "author": "John Lennon",
+      "source": "Beautiful Boy (Darling Boy)"
+    },
+    {
+      "id": "life-2",
+      "text": "In three words I can sum up everything I've learned about life: it goes on.",
+      "author": "Robert Frost",
+      "source": "Poetry Collection"
+    },
+    {
+      "id": "life-3",
+      "text": "Life is really simple, but we insist on making it complicated.",
+      "author": "Confucius",
+      "source": "Ancient Chinese Philosophy"
+    },
+    {
+      "id": "life-4",
+      "text": "Life isn't about finding yourself. Life is about creating yourself.",
+      "author": "George Bernard Shaw",
+      "source": "Literary Works"
+    },
+    {
+      "id": "life-5",
+      "text": "The purpose of life is not to be happy. It is to be useful, to be honorable, to be compassionate, to have it make some difference that you have lived and lived well.",
+      "author": "Ralph Waldo Emerson",
+      "source": "Essays"
+    }
+  ]
+} 

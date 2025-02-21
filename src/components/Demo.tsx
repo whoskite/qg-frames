@@ -60,6 +60,8 @@ import { Button } from "../components/ui/Button";
 import { generateQuote } from '../app/actions';
 import { getGifForQuote } from '../app/utils/giphy';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useRouter as useNavigationRouter } from 'next/navigation';
+import quotesData from '../data/quotes.json';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -506,6 +508,17 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   // Add new state for categories
   const [showCategories, setShowCategories] = useState(false);
+
+  // Add new state for selected category quotes
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [categoryQuotes, setCategoryQuotes] = useState<Array<{
+    id: string;
+    text: string;
+    author: string;
+    source: string;
+  }>>([]);
+
+  const router = useNavigationRouter();
 
   const handleNavigation = (section: string) => {
     // Close all profile menu pages
@@ -1609,6 +1622,11 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
   }, [context?.user?.fid]);
 
+  const handleCategoryClick = (slug: string) => {
+    setSelectedCategory(slug);
+    setCategoryQuotes(quotesData[slug as keyof typeof quotesData] || []);
+    setShowCategories(false);
+  };
 
   return (
       <div className="relative min-h-screen">
@@ -3123,7 +3141,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Inspirational',
                         slug: 'inspirational',
                         description: 'Uplifting quotes to motivate and inspire',
-                        count: 150,
+                        count: quotesData.inspirational.length,
                         icon: FaLightbulb
                       },
                       {
@@ -3131,7 +3149,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Love & Relationships',
                         slug: 'love',
                         description: 'Quotes about love, friendship, and connections',
-                        count: 120,
+                        count: quotesData.love.length,
                         icon: FaHeart
                       },
                       {
@@ -3139,7 +3157,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Humor',
                         slug: 'humor',
                         description: 'Funny and witty quotes to brighten your day',
-                        count: 80,
+                        count: quotesData.humor.length,
                         icon: FaLaugh
                       },
                       {
@@ -3147,7 +3165,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Wisdom',
                         slug: 'wisdom',
                         description: 'Philosophical and thought-provoking quotes',
-                        count: 200,
+                        count: quotesData.wisdom.length,
                         icon: FaBook
                       },
                       {
@@ -3155,7 +3173,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Success',
                         slug: 'success',
                         description: 'Quotes about achievement and personal growth',
-                        count: 100,
+                        count: quotesData.success.length,
                         icon: FaStar
                       },
                       {
@@ -3163,7 +3181,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Career & Business',
                         slug: 'career',
                         description: 'Professional and entrepreneurial insights',
-                        count: 90,
+                        count: quotesData.career.length,
                         icon: FaBriefcase
                       },
                       {
@@ -3171,7 +3189,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Leadership',
                         slug: 'leadership',
                         description: 'Quotes about leading and influencing others',
-                        count: 70,
+                        count: quotesData.leadership.length,
                         icon: FaUsers
                       },
                       {
@@ -3179,7 +3197,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         name: 'Life & Mindfulness',
                         slug: 'life',
                         description: 'Quotes about living mindfully and purposefully',
-                        count: 130,
+                        count: quotesData.life.length,
                         icon: FaLeaf
                       }
                     ].map((category, index) => (
@@ -3189,11 +3207,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
                         className="group p-6 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer"
-                        onClick={() => {
-                          setUserPrompt(category.name);
-                          handleGenerateQuote();
-                          setShowCategories(false);
-                        }}
+                        onClick={() => handleCategoryClick(category.slug)}
                       >
                         <div className="flex items-center mb-4">
                           <category.icon className="w-6 h-6 mr-3 text-primary-500" />
@@ -3203,8 +3217,65 @@ export default function Demo({ title = "Fun Quotes" }) {
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-primary-400">{category.count} quotes</span>
                           <span className="text-sm text-gray-400 group-hover:translate-x-2 transition-transform duration-300">
-                            Generate →
+                            Browse →
                           </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Category Quotes */}
+          {selectedCategory && (
+            <div className="fixed inset-0 bottom-16 bg-black z-40">
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">
+                    {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Quotes
+                  </h2>
+                  <button 
+                    onClick={() => setSelectedCategory(null)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid gap-4"
+                  >
+                    {categoryQuotes.map((quote, index) => (
+                      <motion.div
+                        key={quote.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="bg-white/10 rounded-lg p-4 relative group"
+                      >
+                        <blockquote className="text-xl mb-4">&ldquo;{quote.text}&rdquo;</blockquote>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-gray-400">
+                          <div className="flex flex-col">
+                            <span className="font-medium">— {quote.author}</span>
+                            <span className="text-sm opacity-75">{quote.source}</span>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              setQuote(quote.text);
+                              setSelectedCategory(null);
+                            }}
+                            className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                          >
+                            <span>Use Quote</span>
+                          </button>
                         </div>
                       </motion.div>
                     ))}

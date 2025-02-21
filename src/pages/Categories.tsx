@@ -2,6 +2,7 @@ import React from 'react';
 import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, FaLeaf } from 'react-icons/fa';
 import Link from 'next/link';
 import { Category } from '../types/categories';
+import quotesData from '../data/quotes.json';
 
 export default function Categories() {
   const categories: Category[] = [
@@ -10,7 +11,7 @@ export default function Categories() {
       name: 'Inspirational',
       slug: 'inspirational',
       description: 'Uplifting quotes to motivate and inspire',
-      count: 150,
+      count: quotesData.inspirational.length,
       icon: FaLightbulb
     },
     {
@@ -18,7 +19,7 @@ export default function Categories() {
       name: 'Love & Relationships',
       slug: 'love',
       description: 'Quotes about love, friendship, and connections',
-      count: 120,
+      count: quotesData.love.length,
       icon: FaHeart
     },
     {
@@ -26,7 +27,7 @@ export default function Categories() {
       name: 'Humor',
       slug: 'humor',
       description: 'Funny and witty quotes to brighten your day',
-      count: 80,
+      count: quotesData.humor.length,
       icon: FaLaugh
     },
     {
@@ -34,7 +35,7 @@ export default function Categories() {
       name: 'Wisdom',
       slug: 'wisdom',
       description: 'Philosophical and thought-provoking quotes',
-      count: 200,
+      count: quotesData.wisdom.length,
       icon: FaBook
     },
     {
@@ -42,7 +43,7 @@ export default function Categories() {
       name: 'Success',
       slug: 'success',
       description: 'Quotes about achievement and personal growth',
-      count: 100,
+      count: quotesData.success.length,
       icon: FaStar
     },
     {
@@ -50,7 +51,7 @@ export default function Categories() {
       name: 'Career & Business',
       slug: 'career',
       description: 'Professional and entrepreneurial insights',
-      count: 90,
+      count: quotesData.career.length,
       icon: FaBriefcase
     },
     {
@@ -58,7 +59,7 @@ export default function Categories() {
       name: 'Leadership',
       slug: 'leadership',
       description: 'Quotes about leading and influencing others',
-      count: 70,
+      count: quotesData.leadership.length,
       icon: FaUsers
     },
     {
@@ -66,7 +67,7 @@ export default function Categories() {
       name: 'Life & Mindfulness',
       slug: 'life',
       description: 'Quotes about living mindfully and purposefully',
-      count: 130,
+      count: quotesData.life.length,
       icon: FaLeaf
     }
   ];
