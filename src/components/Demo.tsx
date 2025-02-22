@@ -1740,7 +1740,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
 
               {/* Card Component */}
-              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden shadow-2xl bg-transparent relative z-10">
+              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent">
                 <CardContent className="p-6 sm:p-4">
                   {/* GIF Display */}
                   <AnimatePresence mode="wait">
@@ -1777,11 +1777,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <AnimatePresence mode="wait">
                     <motion.div 
                       key={quote}
-                      initial={{ opacity: 0, y: 50 }}
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -50 }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                      className={`rounded-lg p-6 flex items-center justify-center relative transition-all duration-500 ${
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ 
+                        duration: 1.2,
+                        ease: [0.4, 0, 0.2, 1]
+                      }}
+                      className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 ${
                         isInitialState ? 'min-h-[150px]' : 'min-h-[250px]'
                       }`}
                       onDoubleClick={handleQuoteDoubleTap}
@@ -1793,22 +1796,46 @@ export default function Demo({ title = "Fun Quotes" }) {
                         setLastTapTime(now);
                       }}
                     >
-                      <motion.p 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="text-center text-white text-2xl font-medium select-none"
-                      >
-                        {quote || ""}
-                      </motion.p>
+                      {quote && (
+                        <motion.div
+                          initial="hidden"
+                          animate="visible"
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: { opacity: 1 }
+                          }}
+                          transition={{ duration: 0.8 }}
+                          className="flex flex-col items-center gap-2"
+                        >
+                          {quote.split(/(?<=[.!?])\s+/).map((line, index) => (
+                            <motion.p 
+                              key={`${line}-${index}`}
+                              variants={{
+                                hidden: { opacity: 0, y: 30 },
+                                visible: { 
+                                  opacity: 1, 
+                                  y: 0,
+                                  transition: {
+                                    duration: 1.5,
+                                    delay: index * 0.6,
+                                    ease: [0.4, 0, 0.2, 1]
+                                  }
+                                }
+                              }}
+                              className="text-center text-white text-2xl font-medium select-none"
+                            >
+                              {line}
+                            </motion.p>
+                          ))}
+                        </motion.div>
+                      )}
                       <AnimatePresence>
                         {showHeartAnimation && (
                           <motion.div
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1.5, opacity: 1 }}
                             exit={{ scale: 0.5, opacity: 0 }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
                             className="absolute inset-0 flex items-center justify-center pointer-events-none"
                           >
                             <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
