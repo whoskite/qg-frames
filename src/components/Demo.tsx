@@ -1815,26 +1815,75 @@ export default function Demo({ title = "Fun Quotes" }) {
                           transition={{ duration: 0.8 }}
                           className="flex flex-col items-center gap-2 w-full"
                         >
-                          {quote.split(/(?<=[.!?])\s+/).map((line, index) => (
-                            <motion.p 
-                              key={`${line}-${index}`}
-                              variants={{
-                                hidden: { opacity: 0, y: 30 },
-                                visible: { 
-                                  opacity: 1, 
-                                  y: 0,
-                                  transition: {
-                                    duration: 1.5,
-                                    delay: index * 0.6,
-                                    ease: [0.4, 0, 0.2, 1]
-                                  }
-                                }
-                              }}
-                              className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                            >
-                              {line}
-                            </motion.p>
-                          ))}
+                          {quote.split('\n\n').map((part, index) => {
+                            if (part.startsWith('- ')) {
+                              // This is the author part
+                              return (
+                                <motion.p 
+                                  key={`author-${index}`}
+                                  variants={{
+                                    hidden: { opacity: 0, y: 30 },
+                                    visible: { 
+                                      opacity: 1, 
+                                      y: 0,
+                                      transition: {
+                                        duration: 1.5,
+                                        delay: index * 0.6,
+                                        ease: [0.4, 0, 0.2, 1]
+                                      }
+                                    }
+                                  }}
+                                  className="text-center text-white text-xl font-medium select-none break-words w-full"
+                                >
+                                  {part}
+                                </motion.p>
+                              );
+                            } else if (part.includes('\n')) {
+                              // This is the source part
+                              return (
+                                <motion.p 
+                                  key={`source-${index}`}
+                                  variants={{
+                                    hidden: { opacity: 0, y: 30 },
+                                    visible: { 
+                                      opacity: 1, 
+                                      y: 0,
+                                      transition: {
+                                        duration: 1.5,
+                                        delay: index * 0.6,
+                                        ease: [0.4, 0, 0.2, 1]
+                                      }
+                                    }
+                                  }}
+                                  className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
+                                >
+                                  {part}
+                                </motion.p>
+                              );
+                            } else {
+                              // This is the quote text
+                              return (
+                                <motion.p 
+                                  key={`quote-${index}`}
+                                  variants={{
+                                    hidden: { opacity: 0, y: 30 },
+                                    visible: { 
+                                      opacity: 1, 
+                                      y: 0,
+                                      transition: {
+                                        duration: 1.5,
+                                        delay: index * 0.6,
+                                        ease: [0.4, 0, 0.2, 1]
+                                      }
+                                    }
+                                  }}
+                                  className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                                >
+                                  {part}
+                                </motion.p>
+                              );
+                            }
+                          })}
                         </motion.div>
                       )}
                       <AnimatePresence>
