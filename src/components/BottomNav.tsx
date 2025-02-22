@@ -19,7 +19,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 border-t border-white/10 z-50 ${className}`}>
+    <nav className={`fixed bottom-0 left-0 right-0 border-t border-white/10 z-50 pb-[2px] ${className}`}>
       <div className="max-w-md mx-auto px-4">
         <ul className="flex justify-around items-center h-16">
           {navItems.map((item) => (

@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft, Quote } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1730,22 +1730,9 @@ export default function Demo({ title = "Fun Quotes" }) {
               backgroundRepeat: 'no-repeat'
             } : {}}
           >
-            {/* Remove Music Indicator */}
-
-            {bgImage.includes('TheMrSazon') && (
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute inset-0" style={{ 
-                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bgImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  filter: 'blur(2px)',
-                  transform: 'scale(1.1)'  // Prevent blur edges from showing
-                }} />
-              </div>
-            )}
+            {renderBackground()}
             <div className="relative z-10 w-full flex flex-col items-center">
-              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm">
+              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm mb-4">
                 <AnimatePresence mode="wait">
                   {isInitialState && (
                     <motion.div 
@@ -1762,39 +1749,18 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
 
               {/* Card Component */}
-              {categoryQuotes.length > 0 ? (
-                <div className="w-full flex flex-col items-center">
-                  <div className="w-full flex items-center justify-start px-4 mb-4">
-                    <motion.button
-                      onClick={() => {
-                        setShowCategories(true);
-                        setCategoryQuotes([]);
-                        setCurrentQuoteIndex(0);
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-white/80 hover:text-white flex items-center gap-2 transition-colors"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                      <span>Back to Categories</span>
-                    </motion.button>
-                  </div>
-                  <motion.div
-                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32 cursor-grab active:cursor-grabbing`}
-                    drag
-                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    dragElastic={0.3}
-                    whileDrag={{ 
-                      scale: 0.98,
-                      boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
-                    }}
-                    dragTransition={{ 
-                      bounceStiffness: 400, 
-                      bounceDamping: 30,
-                      power: 0.2
-                    }}
-                    onDragEnd={(_, info) => {
-                      const swipe = info.offset.x;
+              {(activeSection === 'generate' || categoryQuotes.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  className="relative w-full max-w-md mx-auto"
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.2}
+                  onDragEnd={(e, { offset, velocity }) => {
+                    if (categoryQuotes.length > 0) {
+                      const swipe = offset.x;
                       const threshold = 50;
                       
                       if (Math.abs(swipe) > threshold) {
@@ -1814,191 +1780,196 @@ export default function Demo({ title = "Fun Quotes" }) {
                           setGifUrl(null);
                         }
                       }
+                    }
+                  }}
+                >
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-xl"
+                    style={{ filter: 'blur(20px)', transform: 'translateY(10px) scale(0.95)' }}
+                  />
+                  <motion.div 
+                    className="w-full h-full bg-black/10 backdrop-blur-[2px] rounded-xl border border-white/5 overflow-hidden"
+                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                    style={{
+                      boxShadow: '0 4px 15px -3px rgba(0,0,0,0.1), 0 2px 8px -2px rgba(0,0,0,0.05)',
                     }}
                   >
-                    <Card className="w-full h-full bg-transparent shadow-xl shadow-black/30">
-                      <CardContent className="p-6 sm:p-4">
-                        {/* GIF Display */}
-                        <AnimatePresence mode="wait">
-                          {gifUrl && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              className="mb-3 rounded-lg overflow-hidden cursor-pointer relative group"
-                              onClick={handleRegenerateGif}
-                            >
-                              <div className="relative w-full h-[200px] sm:h-[150px]">
-                                <Image
-                                  src={gifUrl}
-                                  alt="Quote-related GIF"
-                                  fill
-                                  unoptimized
-                                  sizes="(max-width: 600px) 100vw, 50vw"
-                                  className={`object-cover rounded-lg transition-opacity duration-200 ${
-                                    isLoading ? 'opacity-50' : 'opacity-100'
-                                  }`}
-                                />
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    Click to regenerate GIF
-                                  </span>
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Quote Display */}
-                        <AnimatePresence mode="wait">
-                          <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 overflow-y-auto ${
-                              isInitialState ? 'min-h-[150px]' : 'min-h-[250px] max-h-[400px]'
-                            }`}
-                            onDoubleClick={handleQuoteDoubleTap}
-                            onTouchStart={(e) => {
-                              const now = Date.now();
-                              if (now - lastTapTime < 300) {  // 300ms between taps
-                                handleQuoteDoubleTap();
-                              }
-                              setLastTapTime(now);
-                            }}
-                          >
-                            {/* Swipe Tutorial Overlay - Only for first quote and if not seen */}
-                            {categoryQuotes.length > 0 && currentQuoteIndex === 0 && !hasSeenSwipeTutorial && (
-                              <motion.div 
-                                className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 cursor-pointer"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                onClick={() => setHasSeenSwipeTutorial(true)}
+                    <CardContent className="p-4 sm:p-3">
+                      {/* Empty State */}
+                      {!quote && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                          className="flex flex-col items-center justify-center h-[300px] text-center space-y-4"
+                        >
+                          <Quote className="w-12 h-12 text-white/20" />
+                          <p className="text-white/50">Generate a quote or select a category to begin</p>
+                        </motion.div>
+                      )}
+                      
+                      {/* Quote Content */}
+                      {quote && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          {/* GIF Display */}
+                          <AnimatePresence mode="wait">
+                            {gifUrl && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="mb-2 rounded-lg overflow-hidden cursor-pointer relative group"
+                                onClick={handleRegenerateGif}
                               >
-                                <motion.div
-                                  className="flex flex-col items-center gap-4"
-                                  initial={{ scale: 0.9, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  exit={{ scale: 0.9, opacity: 0 }}
-                                  transition={{ delay: 0.2 }}
+                                <div className="relative w-full h-[150px] sm:h-[120px]">
+                                  <Image
+                                    src={gifUrl}
+                                    alt="Quote-related GIF"
+                                    fill
+                                    unoptimized
+                                    sizes="(max-width: 600px) 100vw, 50vw"
+                                    className={`object-cover rounded-lg transition-opacity duration-200 ${
+                                      isLoading ? 'opacity-50' : 'opacity-100'
+                                    }`}
+                                  />
+                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      Click to regenerate GIF
+                                    </span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          {/* Quote Display */}
+                          <AnimatePresence mode="wait">
+                            <motion.div 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 overflow-y-auto ${
+                                isInitialState ? 'min-h-[150px]' : 'min-h-[250px] max-h-[400px]'
+                              }`}
+                              onDoubleClick={handleQuoteDoubleTap}
+                              onTouchStart={(e) => {
+                                const now = Date.now();
+                                if (now - lastTapTime < 300) {  // 300ms between taps
+                                  handleQuoteDoubleTap();
+                                }
+                                setLastTapTime(now);
+                              }}
+                            >
+                              {/* Swipe Tutorial Overlay - Only for first quote and if not seen */}
+                              {categoryQuotes.length > 0 && currentQuoteIndex === 0 && !hasSeenSwipeTutorial && (
+                                <motion.div 
+                                  className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 cursor-pointer"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  onClick={() => setHasSeenSwipeTutorial(true)}
                                 >
                                   <motion.div
-                                    className="flex items-center gap-3 text-white/90"
-                                    animate={{
-                                      x: [-20, 20, -20],
-                                      opacity: [0.5, 1, 0.5]
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      repeat: Infinity,
-                                      ease: "easeInOut"
-                                    }}
+                                    className="flex flex-col items-center gap-4"
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    transition={{ delay: 0.2 }}
                                   >
-                                    <ChevronLeft className="w-6 h-6" />
-                                    <div className="w-16 h-1 rounded-full bg-white/60" />
-                                    <ChevronRight className="w-6 h-6" />
+                                    <motion.div
+                                      className="flex items-center gap-3 text-white/90"
+                                      animate={{
+                                        x: [-20, 20, -20],
+                                        opacity: [0.5, 1, 0.5]
+                                      }}
+                                      transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                      }}
+                                    >
+                                      <ChevronLeft className="w-6 h-6" />
+                                      <div className="w-16 h-1 rounded-full bg-white/60" />
+                                      <ChevronRight className="w-6 h-6" />
+                                    </motion.div>
+                                    <p className="text-white/90 text-sm font-medium">Swipe to navigate quotes</p>
+                                    <p className="text-white/60 text-xs">Tap to dismiss</p>
                                   </motion.div>
-                                  <p className="text-white/90 text-sm font-medium">Swipe to navigate quotes</p>
-                                  <p className="text-white/60 text-xs">Tap to dismiss</p>
-                                </motion.div>
-                              </motion.div>
-                            )}
-
-                            {quote && (
-                              <motion.div
-                                initial={{ opacity: 0, x: 0 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex flex-col items-center gap-2 w-full"
-                              >
-                                {quote.split('\n\n').map((part, index) => {
-                                  if (part.startsWith('- ')) {
-                                    // This is the author part
-                                    return (
-                                      <motion.p 
-                                        key={`author-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else if (part.includes('\n')) {
-                                    // This is the source part
-                                    return (
-                                      <motion.p 
-                                        key={`source-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else {
-                                    // This is the quote text
-                                    return (
-                                      <motion.p 
-                                        key={`quote-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  }
-                                })}
-                              </motion.div>
-                            )}
-                            <AnimatePresence>
-                              {showHeartAnimation && (
-                                <motion.div
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1.5, opacity: 1 }}
-                                  exit={{ scale: 0.5, opacity: 0 }}
-                                  transition={{ duration: 0.8, ease: "easeOut" }}
-                                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                                >
-                                  <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
                                 </motion.div>
                               )}
-                            </AnimatePresence>
-                          </motion.div>
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
+
+                              {quote ? (
+                                <motion.div
+                                  initial={{ opacity: 0, x: 0 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  exit={{ opacity: 0, x: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex flex-col items-center gap-2 w-full"
+                                >
+                                  {quote.split('\n\n').map((part, index) => (
+                                    <motion.div
+                                      key={`quote-${index}`}
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ 
+                                        duration: 0.8,
+                                        delay: index * 0.3,
+                                        ease: "easeOut"
+                                      }}
+                                      className="overflow-hidden w-full"
+                                    >
+                                      <motion.p 
+                                        className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ 
+                                          duration: 1,
+                                          delay: index * 0.3 + 0.2
+                                        }}
+                                      >
+                                        {part}
+                                      </motion.p>
+                                    </motion.div>
+                                  ))}
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="text-center text-white/60"
+                                >
+                                  Enter a topic or click generate for a random quote
+                                </motion.div>
+                              )}
+                              <AnimatePresence>
+                                {showHeartAnimation && (
+                                  <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1.5, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                  >
+                                    <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </motion.div>
+                          </AnimatePresence>
+                        </motion.div>
+                      )}
+                    </CardContent>
                   </motion.div>
-                </div>
-              ) : (
-                <div className="py-8">
-                </div>
+                </motion.div>
               )}
             </div>
           </main>
