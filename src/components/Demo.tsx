@@ -1755,7 +1755,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
 
               {/* Card Component */}
-              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32">
+              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32 shadow-xl shadow-black/30">
                 <CardContent className="p-6 sm:p-4">
                   {/* GIF Display */}
                   <AnimatePresence mode="wait">
