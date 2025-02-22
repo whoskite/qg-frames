@@ -22,4 +22,24 @@ export type FavoriteQuote = QuoteHistoryItem;
 
 export interface Quote extends BaseQuote {
   timestamp?: Date;
+}
+
+export interface CategoryQuote {
+  id: string;
+  text: string;
+  author: string;
+  source: string;
+  topics: string[];
+  year: number | null;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  quotes: CategoryQuote[];
+}
+
+export interface QuotesData {
+  categories: Category[];
 } 

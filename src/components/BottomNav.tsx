@@ -1,4 +1,4 @@
-import { Sparkles, Heart, History } from 'lucide-react';
+import { Sparkles, Heart, History, Book } from 'lucide-react';
 
 interface BottomNavProps {
   activeSection: string;
@@ -13,6 +13,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 }) => {
   const navItems = [
     { name: 'Generate', id: 'generate', icon: Sparkles },
+    { name: 'Categories', id: 'categories', icon: Book },
     { name: 'Favorites', id: 'favorites', icon: Heart },
     { name: 'History', id: 'history', icon: History }
   ];

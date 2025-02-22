@@ -1,0 +1,239 @@
+{
+  "categories": [
+    {
+      "id": "motivation",
+      "name": "Motivation",
+      "description": "Inspiring quotes to boost your drive and determination",
+      "quotes": [
+        {
+          "id": "mot1",
+          "text": "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle.",
+          "author": "Steve Jobs",
+          "source": "Stanford Commencement Speech",
+          "topics": ["passion", "work", "purpose"],
+          "year": 2005
+        },
+        {
+          "id": "mot2",
+          "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+          "author": "Winston Churchill",
+          "source": "Public Speech",
+          "topics": ["success", "perseverance", "courage"],
+          "year": 1940
+        },
+        {
+          "id": "mot3",
+          "text": "It does not matter how slowly you go as long as you do not stop.",
+          "author": "Confucius",
+          "source": "The Analects",
+          "topics": ["progress", "persistence", "determination"],
+          "year": null
+        },
+        {
+          "id": "mot4",
+          "text": "Everything you've ever wanted is on the other side of fear.",
+          "author": "George Addair",
+          "source": "Personal Development Seminar",
+          "topics": ["fear", "growth", "courage"],
+          "year": null
+        },
+        {
+          "id": "mot5",
+          "text": "The future belongs to those who believe in the beauty of their dreams.",
+          "author": "Eleanor Roosevelt",
+          "source": "You Learn by Living",
+          "topics": ["dreams", "future", "belief"],
+          "year": 1960
+        }
+      ]
+    },
+    {
+      "id": "wisdom",
+      "name": "Wisdom",
+      "description": "Timeless insights and profound thoughts about life",
+      "quotes": [
+        {
+          "id": "wis1",
+          "text": "The unexamined life is not worth living.",
+          "author": "Socrates",
+          "source": "Plato's Apology",
+          "topics": ["reflection", "philosophy", "life"],
+          "year": null
+        },
+        {
+          "id": "wis2",
+          "text": "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+          "author": "Aristotle",
+          "source": "Nicomachean Ethics",
+          "topics": ["habits", "excellence", "character"],
+          "year": null
+        },
+        {
+          "id": "wis3",
+          "text": "The journey of a thousand miles begins with one step.",
+          "author": "Lao Tzu",
+          "source": "Tao Te Ching",
+          "topics": ["beginnings", "journey", "action"],
+          "year": null
+        },
+        {
+          "id": "wis4",
+          "text": "Life is really simple, but we insist on making it complicated.",
+          "author": "Confucius",
+          "source": "The Analects",
+          "topics": ["simplicity", "life", "wisdom"],
+          "year": null
+        },
+        {
+          "id": "wis5",
+          "text": "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.",
+          "author": "Rumi",
+          "source": "Persian Poetry",
+          "topics": ["change", "wisdom", "self-improvement"],
+          "year": null
+        }
+      ]
+    },
+    {
+      "id": "leadership",
+      "name": "Leadership",
+      "description": "Quotes about leading, inspiring, and empowering others",
+      "quotes": [
+        {
+          "id": "lead1",
+          "text": "A leader is one who knows the way, goes the way, and shows the way.",
+          "author": "John C. Maxwell",
+          "source": "The 21 Irrefutable Laws of Leadership",
+          "topics": ["guidance", "example", "leadership"],
+          "year": 1998
+        },
+        {
+          "id": "lead2",
+          "text": "Leadership is not about being in charge. It's about taking care of those in your charge.",
+          "author": "Simon Sinek",
+          "source": "Leaders Eat Last",
+          "topics": ["responsibility", "care", "service"],
+          "year": 2014
+        },
+        {
+          "id": "lead3",
+          "text": "The greatest leader is not necessarily the one who does the greatest things. He is the one that gets people to do the greatest things.",
+          "author": "Ronald Reagan",
+          "source": "Presidential Speeches",
+          "topics": ["empowerment", "inspiration", "achievement"],
+          "year": 1985
+        },
+        {
+          "id": "lead4",
+          "text": "Before you are a leader, success is all about growing yourself. When you become a leader, success is all about growing others.",
+          "author": "Jack Welch",
+          "source": "Winning",
+          "topics": ["growth", "development", "success"],
+          "year": 2005
+        },
+        {
+          "id": "lead5",
+          "text": "The function of leadership is to produce more leaders, not more followers.",
+          "author": "Ralph Nader",
+          "source": "Public Speech",
+          "topics": ["empowerment", "development", "leadership"],
+          "year": 1970
+        }
+      ]
+    },
+    {
+      "id": "mindfulness",
+      "name": "Mindfulness",
+      "description": "Quotes about presence, awareness, and inner peace",
+      "quotes": [
+        {
+          "id": "mind1",
+          "text": "The present moment is filled with joy and happiness. If you are attentive, you will see it.",
+          "author": "Thich Nhat Hanh",
+          "source": "Peace Is Every Step",
+          "topics": ["presence", "happiness", "awareness"],
+          "year": 1991
+        },
+        {
+          "id": "mind2",
+          "text": "The thing about meditation is: you become more and more you.",
+          "author": "David Lynch",
+          "source": "Catching the Big Fish",
+          "topics": ["meditation", "self-discovery", "awareness"],
+          "year": 2006
+        },
+        {
+          "id": "mind3",
+          "text": "Wherever you are, be there totally. If you find your here and now intolerable and it makes you unhappy, you have three options: remove yourself from the situation, change it, or accept it totally.",
+          "author": "Eckhart Tolle",
+          "source": "The Power of Now",
+          "topics": ["presence", "acceptance", "choice"],
+          "year": 1997
+        },
+        {
+          "id": "mind4",
+          "text": "You can't stop the waves, but you can learn to surf.",
+          "author": "Jon Kabat-Zinn",
+          "source": "Wherever You Go, There You Are",
+          "topics": ["adaptation", "resilience", "mindfulness"],
+          "year": 1994
+        },
+        {
+          "id": "mind5",
+          "text": "Between stimulus and response there is a space. In that space is our power to choose our response. In our response lies our growth and our freedom.",
+          "author": "Viktor E. Frankl",
+          "source": "Man's Search for Meaning",
+          "topics": ["choice", "awareness", "freedom"],
+          "year": 1946
+        }
+      ]
+    },
+    {
+      "id": "creativity",
+      "name": "Creativity",
+      "description": "Quotes about imagination, innovation, and artistic expression",
+      "quotes": [
+        {
+          "id": "cre1",
+          "text": "Creativity is intelligence having fun.",
+          "author": "Albert Einstein",
+          "source": "Collected Works",
+          "topics": ["intelligence", "fun", "creativity"],
+          "year": null
+        },
+        {
+          "id": "cre2",
+          "text": "Every child is an artist. The problem is how to remain an artist once we grow up.",
+          "author": "Pablo Picasso",
+          "source": "Art Interviews",
+          "topics": ["art", "childhood", "growth"],
+          "year": null
+        },
+        {
+          "id": "cre3",
+          "text": "You can't use up creativity. The more you use, the more you have.",
+          "author": "Maya Angelou",
+          "source": "Conversations with Maya Angelou",
+          "topics": ["creativity", "abundance", "inspiration"],
+          "year": 1989
+        },
+        {
+          "id": "cre4",
+          "text": "The worst enemy to creativity is self-doubt.",
+          "author": "Sylvia Plath",
+          "source": "The Unabridged Journals",
+          "topics": ["self-doubt", "creativity", "confidence"],
+          "year": 1982
+        },
+        {
+          "id": "cre5",
+          "text": "Creativity takes courage.",
+          "author": "Henri Matisse",
+          "source": "Art Essays",
+          "topics": ["courage", "creativity", "art"],
+          "year": 1947
+        }
+      ]
+    }
+  ]
+} 

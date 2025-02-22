@@ -49,6 +49,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
 import { logAnalyticsEvent, logUserAction, setAnalyticsUser } from '../lib/analytics';
 import { BottomNav } from './BottomNav';
+import { Categories } from './Categories';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -503,6 +504,8 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for temporary quote styles
   const [tempQuoteStyles, setTempQuoteStyles] = useState<string | undefined>(undefined);
 
+  const [showCategories, setShowCategories] = useState(false);
+
   const handleNavigation = (section: string) => {
     // Close all profile menu pages
     setShowPreferences(false);
@@ -515,6 +518,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     // Close all pages and set new section immediately
     setShowFavorites(false);
     setShowHistory(false);
+    setShowCategories(false);
 
     if (section === 'generate') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -522,6 +526,8 @@ export default function Demo({ title = "Fun Quotes" }) {
       setShowFavorites(true);
     } else if (section === 'history') {
       setShowHistory(true);
+    } else if (section === 'categories') {
+      setShowCategories(true);
     }
     setActiveSection(section);
   };
@@ -3129,6 +3135,19 @@ export default function Demo({ title = "Fun Quotes" }) {
             </div>
           )}
         </main>
+        {/* Categories Page */}
+        {showCategories && (
+          <Categories
+            onSelectQuote={(text, author, source) => {
+              setIsInitialState(false);
+              setQuote(`${text}\n\n- ${author}\n${source}`);
+              setGifUrl(null);
+              setShowCategories(false);
+              setActiveSection('generate');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
         <BottomNav 
           activeSection={activeSection} 
           onNavigate={handleNavigation} 
