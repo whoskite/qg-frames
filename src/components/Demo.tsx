@@ -2005,6 +2005,62 @@ export default function Demo({ title = "Fun Quotes" }) {
                           </motion.div>
                         )}
 
+                        {/* Interactive Buttons */}
+                        {categoryQuotes.length > 0 && (
+                          <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex justify-center items-center gap-6 mt-6"
+                          >
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => {
+                                const quoteItem: QuoteHistoryItem = {
+                                  text: quote,
+                                  style: 'default',
+                                  gifUrl,
+                                  timestamp: new Date(),
+                                  bgColor,
+                                  id: Date.now().toString()
+                                };
+                                toggleFavorite(quoteItem);
+                                setShowHeartAnimation(true);
+                                setTimeout(() => setShowHeartAnimation(false), 1000);
+                              }}
+                              className="relative"
+                            >
+                              <Heart 
+                                className={`w-7 h-7 cursor-pointer transition-all duration-300 ${
+                                  favorites.some(fav => fav.text === quote)
+                                    ? 'fill-pink-500 text-pink-500' 
+                                    : 'text-white hover:text-pink-200'
+                                }`}
+                              />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={async () => {
+                                try {
+                                  setIsGeneratingPreview(true);
+                                  const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                                  setPreviewImage(dataUrl);
+                                  setShowPreview(true);
+                                } catch (error) {
+                                  console.error('Error generating preview:', error);
+                                  toast.error('Failed to generate preview');
+                                } finally {
+                                  setIsGeneratingPreview(false);
+                                }
+                              }}
+                              className="relative"
+                            >
+                              <Share2 className="w-7 h-7 text-white hover:text-blue-200 cursor-pointer transition-all duration-300" />
+                            </motion.button>
+                          </motion.div>
+                        )}
+
                         {/* Heart Animation */}
                         <AnimatePresence>
                           {showHeartAnimation && (
@@ -3311,26 +3367,37 @@ export default function Demo({ title = "Fun Quotes" }) {
         </main>
         {/* Categories Page */}
         {showCategories && (
-          <Categories
-            onSelectQuote={(text, author, source) => {
+          <Categories 
+            onSelectQuote={(text, author, source, gifUrl) => {
               setIsInitialState(false);
               setQuote(`${text}\n\n- ${author}\n${source}`);
-              setGifUrl(null);
+              setGifUrl(gifUrl);
               setShowCategories(false);
-              setActiveSection('categories'); // Keep categories active
-              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onSelectCategory={(quotes, initialIndex) => {
               setCategoryQuotes(quotes);
               setCurrentQuoteIndex(initialIndex);
-              setIsInitialState(false);
-              const { text, author, source } = quotes[initialIndex];
-              setQuote(`${text}\n\n- ${author}\n${source}`);
-              setGifUrl(null);
-              setShowCategories(false);
-              setActiveSection('categories'); // Keep categories active
-              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onToggleFavorite={(quote) => {
+              const quoteItem: QuoteHistoryItem = {
+                text: `${quote.text}\n\n- ${quote.author}\n${quote.source}`,
+                style: 'default',
+                gifUrl: null,
+                timestamp: new Date(),
+                bgColor,
+                id: Date.now().toString()
+              };
+              toggleFavorite(quoteItem);
+              setShowHeartAnimation(true);
+              setTimeout(() => setShowHeartAnimation(false), 1000);
+            }}
+            onShare={(quote) => {
+              setIsInitialState(false);
+              setQuote(`${quote.text}\n\n- ${quote.author}\n${quote.source}`);
+              setGifUrl(null);
+              setShowPreview(true);
+            }}
+            favorites={favorites}
           />
         )}
         <BottomNav 
