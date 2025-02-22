@@ -1936,136 +1936,95 @@ export default function Demo({ title = "Fun Quotes" }) {
                           )}
                         </AnimatePresence>
 
-                    {/* Bottom Action Bar */}
-                    <div className="fixed bottom-16 left-0 right-0 z-30 p-4">
-                      <motion.div 
-                        className="flex justify-center items-center gap-8 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {/* Heart Icon */}
-                        <motion.div
-                          initial={false}
-                          animate={{ 
-                            scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
-                          }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Heart 
-                            onClick={() => {
-                              const quoteItem: QuoteHistoryItem = {
-                                text: quote,
-                                style: 'default',
-                                gifUrl: null,
-                                timestamp: new Date(),
-                                bgColor,
-                                id: Date.now().toString()
-                              };
-                              toggleFavorite(quoteItem);
-                              setShowHeartAnimation(true);
-                              setTimeout(() => setShowHeartAnimation(false), 1000);
-                            }}
-                            className={`w-6 h-6 cursor-pointer hover:scale-125 transition-all duration-300 ${
-                              favorites.some(fav => fav.text === quote)
-                                ? 'fill-pink-500 text-pink-500' 
-                                : 'text-white hover:text-pink-200'
-                            }`}
-                          />
-                        </motion.div>
-
-                            {quote && (
-                              <motion.div
-                                initial={{ opacity: 0, x: 0 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex flex-col items-center gap-2 w-full"
-                              >
-                                {quote.split('\n\n').map((part, index) => {
-                                  if (part.startsWith('- ')) {
-                                    // This is the author part
-                                    return (
-                                      <motion.p 
-                                        key={`author-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else if (part.includes('\n')) {
-                                    // This is the source part
-                                    return (
-                                      <motion.p 
-                                        key={`source-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else {
-                                    // This is the quote text
-                                    return (
-                                      <motion.p 
-                                        key={`quote-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  }
-                                })}
-                              </motion.div>
-                            )}
-                            <AnimatePresence>
-                              {showHeartAnimation && (
-                                <motion.div
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1.5, opacity: 1 }}
-                                  exit={{ scale: 0.5, opacity: 0 }}
-                                  transition={{ duration: 0.8, ease: "easeOut" }}
-                                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                                >
-                                  <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                        {/* Quote Text */}
+                        {quote && (
+                          <motion.div
+                            initial={{ opacity: 0, x: 0 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex flex-col items-center gap-2 w-full"
+                          >
+                            {quote.split('\n\n').map((part, index) => {
+                              if (part.startsWith('- ')) {
+                                return (
+                                  <motion.p 
+                                    key={`author-${index}`}
+                                    variants={{
+                                      hidden: { opacity: 0 },
+                                      visible: { 
+                                        opacity: 1,
+                                        transition: {
+                                          duration: 0.3
+                                        }
+                                      }
+                                    }}
+                                    className="text-center text-white text-xl font-medium select-none break-words w-full"
+                                  >
+                                    {part}
+                                  </motion.p>
+                                );
+                              } else if (part.includes('\n')) {
+                                return (
+                                  <motion.p 
+                                    key={`source-${index}`}
+                                    variants={{
+                                      hidden: { opacity: 0 },
+                                      visible: { 
+                                        opacity: 1,
+                                        transition: {
+                                          duration: 0.3
+                                        }
+                                      }
+                                    }}
+                                    className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
+                                  >
+                                    {part}
+                                  </motion.p>
+                                );
+                              } else {
+                                return (
+                                  <motion.p 
+                                    key={`quote-${index}`}
+                                    variants={{
+                                      hidden: { opacity: 0 },
+                                      visible: { 
+                                        opacity: 1,
+                                        transition: {
+                                          duration: 0.3
+                                        }
+                                      }
+                                    }}
+                                    className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                                  >
+                                    {part}
+                                  </motion.p>
+                                );
+                              }
+                            })}
                           </motion.div>
+                        )}
+
+                        {/* Heart Animation */}
+                        <AnimatePresence>
+                          {showHeartAnimation && (
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1.5, opacity: 1 }}
+                              exit={{ scale: 0.5, opacity: 0 }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                            >
+                              <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                            </motion.div>
+                          )}
                         </AnimatePresence>
                       </CardContent>
                     </Card>
                   </motion.div>
                 </div>
               ) : (
-                <div className="py-8">
-                </div>
+                <div className="py-8" />
               )}
             </div>
           </main>
