@@ -1710,29 +1710,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               backgroundRepeat: 'no-repeat'
             } : {}}
           >
-            {/* Music Indicator */}
-            {isMusicEnabled && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-[72px] right-4 flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full z-20"
-              >
-                <span className="text-white/90 text-sm font-medium">Forest Music</span>
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="w-2 h-2 bg-green-400 rounded-full"
-                />
-              </motion.div>
-            )}
+            {/* Remove Music Indicator */}
 
             {bgImage.includes('TheMrSazon') && (
               <div className="absolute inset-0 overflow-hidden">
