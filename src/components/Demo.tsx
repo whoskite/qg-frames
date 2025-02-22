@@ -861,13 +861,13 @@ export default function Demo({ title = "Fun Quotes" }) {
   }, [isLoading, quote]);
 
   const handleReuseQuote = (item: QuoteHistoryItem | FavoriteQuote) => {
+    setIsInitialState(false);
     setQuote(item.text);
     if (item.gifUrl) {
       setGifUrl(item.gifUrl);
     }
     setShowHistory(false);
     setShowFavorites(false);
-    setIsInitialState(false);
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Show success notification
@@ -923,13 +923,15 @@ export default function Demo({ title = "Fun Quotes" }) {
             console.log('Loaded history:', sortedHistory);
             setQuoteHistory(sortedHistory);
           }
-          if (favs) setFavorites(favs);
+          if (favs) {
+            setFavorites(favs);
+          }
           if (typeof gifPref === 'boolean') setGifEnabled(gifPref);
           if (theme) setBgImage(theme);
 
           // Update onboarding state if we have data
           if (onboardingData) {
-            setOnboarding(prev => ({
+            setOnboarding((prev: OnboardingState) => ({
               ...prev,
               hasCompletedOnboarding: onboardingData.hasCompletedOnboarding,
               personalInfo: onboardingData.onboardingData || prev.personalInfo
@@ -1691,7 +1693,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Main Content - Centered */}
           <main 
-            className={`min-h-screen w-full flex flex-col items-center justify-center p-4 pt-28 relative ${
+            className={`min-h-screen w-full flex flex-col items-center p-4 pt-20 relative ${
               bgImage?.includes('gradient') ? '' : ''
             }`}
             style={bgImage?.includes('gradient') ? {
@@ -1747,10 +1749,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className="mb-6 rounded-lg overflow-hidden cursor-pointer relative group"
+                        className="mb-3 rounded-lg overflow-hidden cursor-pointer relative group"
                         onClick={handleRegenerateGif}
                       >
-                        <div className="relative w-full h-[250px] sm:h-[200px]">
+                        <div className="relative w-full h-[200px] sm:h-[150px]">
                           <Image
                             src={gifUrl}
                             alt="Quote-related GIF"
@@ -1778,8 +1780,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                       initial={{ opacity: 0, y: 50 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -50 }}
-                      transition={{ duration: 0.5 }}
-                      className="rounded-lg p-6 mb-6 min-h-[150px] flex items-center justify-center relative"
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className={`rounded-lg p-6 flex items-center justify-center relative transition-all duration-500 ${
+                        isInitialState ? 'min-h-[150px]' : 'min-h-[250px]'
+                      }`}
                       onDoubleClick={handleQuoteDoubleTap}
                       onTouchStart={(e) => {
                         const now = Date.now();
@@ -1789,9 +1793,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                         setLastTapTime(now);
                       }}
                     >
-                      <p className="text-center text-white text-2xl font-medium select-none">
+                      <motion.p 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="text-center text-white text-2xl font-medium select-none"
+                      >
                         {quote || ""}
-                      </p>
+                      </motion.p>
                       <AnimatePresence>
                         {showHeartAnimation && (
                           <motion.div
@@ -1807,161 +1817,156 @@ export default function Demo({ title = "Fun Quotes" }) {
                       </AnimatePresence>
                     </motion.div>
                   </AnimatePresence>
-
-                  {/* Action Buttons */}
-                  <motion.div 
-                    className="mb-4 flex justify-between items-center"
-                  >
-                    <div className="flex items-center gap-4">
-                      {quote && (
-                        <motion.div
-                          initial={false}
-                          animate={{ 
-                            scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
-                          }}
-                          transition={{ duration: 0.3 }}
-                          className="relative"
-                        >
-                          <Heart 
-                            onClick={() => {
-                              const quoteItem: QuoteHistoryItem = {
-                                text: quote,
-                                style: 'default',
-                                gifUrl,
-                                timestamp: new Date(),
-                                bgColor,
-                                id: ''
-                              };
-                              toggleFavorite(quoteItem);
-                              setShowHeartAnimation(true);
-                              setTimeout(() => setShowHeartAnimation(false), 1000);
-                            }}
-                            className={`w-5 h-5 cursor-pointer hover:scale-125 transition-all duration-300 ${
-                              favorites.some(fav => fav.text === quote)
-                                ? 'fill-pink-500 text-pink-500' 
-                                : 'text-white hover:text-pink-200'
-                            }`}
-                          />
-                        </motion.div>
-                      )}
-                      <motion.div
-                        whileTap={{ rotate: 360, scale: 0.8 }}
-                        animate={isGenerating ? {
-                          rotate: [0, 360],
-                          scale: [1, 0.8, 1],
-                          transition: {
-                            rotate: {
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: [0.4, 0, 0.2, 1]
-                            },
-                            scale: {
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }
-                          }
-                        } : undefined}
-                      >
-                        <Dice3
-                          onClick={async () => {
-                            setIsGenerating(true);
-                            try {
-                              const response = await fetch('/api/openai', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                  userPreferences: {
-                                    gender: onboarding.personalInfo.gender,
-                                    relationshipStatus: onboarding.personalInfo.relationshipStatus,
-                                    areasToImprove: onboarding.personalInfo.areasToImprove,
-                                    personalGoals: onboarding.personalInfo.personalGoals,
-                                    preferredStyles: onboarding.personalInfo.preferredStyles
-                                  }
-                                }),
-                              });
-
-                              if (!response.ok) {
-                                throw new Error('Failed to get AI suggestion');
-                              }
-
-                              const data = await response.json();
-                              if (!data.result) {
-                                throw new Error('No suggestion received');
-                              }
-
-                              setUserPrompt(data.result);
-                              await handleGenerateQuote();
-                              
-                              toast.success('Generated a personalized quote based on AI suggestions!');
-                            } catch (error) {
-                              console.error('Error generating random quote:', error);
-                              const randomPrompt = generateRandomPrompt(favorites);
-                              setUserPrompt(randomPrompt);
-                              await handleGenerateQuote();
-                              toast.success('Generated a quote based on your preferences!');
-                            } finally {
-                              setIsGenerating(false);
-                            }
-                          }}
-                          className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white"
-                        />
-                      </motion.div>
-                    </div>
-                    {quote && (
-                      <Upload
-                        onClick={async () => {
-                          try {
-                            setIsGeneratingPreview(true);
-                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                            setPreviewImage(dataUrl);
-                            setShowPreview(true);
-                          } catch (error) {
-                            console.error('Error generating preview:', error);
-                            toast.error('Failed to generate preview');
-                          } finally {
-                            setIsGeneratingPreview(false);
-                          }
-                        }}
-                        className="w-5 h-5 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
-                      />
-                    )}
-                  </motion.div>
-
-                  {/* Input Field */}
-                  <div className="mb-6 relative">
-                    <Input
-                      type="text"
-                      placeholder="Enter a topic/word for your quote"
-                      value={userPrompt}
-                      onChange={(e) => setUserPrompt(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
-                    />
-                    <div 
-                      onClick={handleGenerateQuote}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
-                    >
-                      <Image
-                        src="/Submit_Icon.png"
-                        alt="Submit"
-                        width={20}
-                        height={20}
-                        className="invert brightness-0 object-contain"
-                        unoptimized
-                      />
-                    </div>
-                  </div>
                 </CardContent>
-
-                <CardFooter className="flex flex-col gap-4">
-                  {/* Remove the Cast Away button section entirely */}
-                </CardFooter>
               </Card>
             </div>
           </main>
+
+          {/* Fixed Action Buttons and Input */}
+          <div className="fixed bottom-16 left-0 right-0 z-30 p-4 space-y-4">
+            {/* Action Buttons */}
+            <motion.div className="flex justify-center items-center gap-8">
+              {quote && (
+                <motion.div
+                  initial={false}
+                  animate={{ 
+                    scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="relative"
+                >
+                  <Heart 
+                    onClick={() => {
+                      const quoteItem: QuoteHistoryItem = {
+                        text: quote,
+                        style: 'default',
+                        gifUrl,
+                        timestamp: new Date(),
+                        bgColor,
+                        id: ''
+                      };
+                      toggleFavorite(quoteItem);
+                      setShowHeartAnimation(true);
+                      setTimeout(() => setShowHeartAnimation(false), 1000);
+                    }}
+                    className={`w-6 h-6 cursor-pointer hover:scale-125 transition-all duration-300 ${
+                      favorites.some(fav => fav.text === quote)
+                        ? 'fill-pink-500 text-pink-500' 
+                        : 'text-white hover:text-pink-200'
+                    }`}
+                  />
+                </motion.div>
+              )}
+              <motion.div
+                whileTap={{ rotate: 360, scale: 0.8 }}
+                animate={isGenerating ? {
+                  rotate: [0, 360],
+                  scale: [1, 0.8, 1],
+                  transition: {
+                    rotate: {
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: [0.4, 0, 0.2, 1]
+                    },
+                    scale: {
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }
+                } : undefined}
+              >
+                <Dice3
+                  onClick={async () => {
+                    setIsGenerating(true);
+                    try {
+                      const response = await fetch('/api/openai', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          userPreferences: {
+                            gender: onboarding.personalInfo.gender,
+                            relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                            areasToImprove: onboarding.personalInfo.areasToImprove,
+                            personalGoals: onboarding.personalInfo.personalGoals,
+                            preferredStyles: onboarding.personalInfo.preferredStyles
+                          }
+                        }),
+                      });
+
+                      if (!response.ok) {
+                        throw new Error('Failed to get AI suggestion');
+                      }
+
+                      const data = await response.json();
+                      if (!data.result) {
+                        throw new Error('No suggestion received');
+                      }
+
+                      setUserPrompt(data.result);
+                      await handleGenerateQuote();
+                      
+                      toast.success('Generated a personalized quote based on AI suggestions!');
+                    } catch (error) {
+                      console.error('Error generating random quote:', error);
+                      const randomPrompt = generateRandomPrompt(favorites);
+                      setUserPrompt(randomPrompt);
+                      await handleGenerateQuote();
+                      toast.success('Generated a quote based on your preferences!');
+                    } finally {
+                      setIsGenerating(false);
+                    }
+                  }}
+                  className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white"
+                />
+              </motion.div>
+              {quote && (
+                <Upload
+                  onClick={async () => {
+                    try {
+                      setIsGeneratingPreview(true);
+                      const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                      setPreviewImage(dataUrl);
+                      setShowPreview(true);
+                    } catch (error) {
+                      console.error('Error generating preview:', error);
+                      toast.error('Failed to generate preview');
+                    } finally {
+                      setIsGeneratingPreview(false);
+                    }
+                  }}
+                  className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
+                />
+              )}
+            </motion.div>
+
+            {/* Input Field */}
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Enter a topic/word for your quote"
+                value={userPrompt}
+                onChange={(e) => setUserPrompt(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
+              />
+              <div 
+                onClick={handleGenerateQuote}
+                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+              >
+                <Image
+                  src="/Submit_Icon.png"
+                  alt="Submit"
+                  width={20}
+                  height={20}
+                  className="invert brightness-0 object-contain"
+                  unoptimized
+                />
+              </div>
+            </div>
+          </div>
 
           {/* History Page */}
           {showHistory && (
@@ -1993,6 +1998,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                           className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors relative group"
                           onClick={() => {
+                            setIsInitialState(false);
                             setQuote(item.text);
                             setGifUrl(item.gifUrl);
                             setShowHistory(false);
@@ -2069,6 +2075,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                           className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors relative group"
                           onClick={() => {
+                            setIsInitialState(false);
                             setQuote(item.text);
                             setGifUrl(item.gifUrl);
                             setShowFavorites(false);
