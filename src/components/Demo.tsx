@@ -492,6 +492,9 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [isLoadingGif, setIsLoadingGif] = useState(false);
   const [addFrameResult, setAddFrameResult] = useState("");
 
+  // Add this near the other state declarations
+  const [hasSeenSwipeTutorial, setHasSeenSwipeTutorial] = useState(false);
+
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
   // Add this state for navigation
@@ -1788,17 +1791,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                   {/* Quote Display */}
                   <AnimatePresence mode="wait">
                     <motion.div 
-                      key={quote}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ 
-                        duration: 1.2,
-                        ease: [0.4, 0, 0.2, 1]
-                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
                       className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 overflow-y-auto ${
                         isInitialState ? 'min-h-[150px]' : 'min-h-[250px] max-h-[400px]'
-                      }`}
+                      } ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
                       onDoubleClick={handleQuoteDoubleTap}
                       onTouchStart={(e) => {
                         const now = Date.now();
@@ -1807,16 +1806,88 @@ export default function Demo({ title = "Fun Quotes" }) {
                         }
                         setLastTapTime(now);
                       }}
+                      // Add swipe functionality for category quotes
+                      {...(categoryQuotes.length > 0 && {
+                        drag: "x",
+                        dragConstraints: { left: 0, right: 0 },
+                        dragElastic: 0.2,
+                        whileDrag: { 
+                          scale: 0.98,
+                          boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+                        },
+                        dragTransition: { 
+                          bounceStiffness: 600, 
+                          bounceDamping: 20 
+                        },
+                        onDragEnd: (e, { offset, velocity }) => {
+                          const swipe = offset.x;
+                          const threshold = 50;
+                          
+                          if (Math.abs(swipe) > threshold) {
+                            if (swipe > 0) {
+                              // Swipe right - go to previous quote
+                              const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
+                              setCurrentQuoteIndex(newIndex);
+                              const { text, author, source } = categoryQuotes[newIndex];
+                              setQuote(`${text}\n\n- ${author}\n${source}`);
+                              setGifUrl(null);
+                            } else {
+                              // Swipe left - go to next quote
+                              const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
+                              setCurrentQuoteIndex(newIndex);
+                              const { text, author, source } = categoryQuotes[newIndex];
+                              setQuote(`${text}\n\n- ${author}\n${source}`);
+                              setGifUrl(null);
+                            }
+                          }
+                        }
+                      })}
                     >
+                      {/* Swipe Tutorial Overlay - Only for first quote and if not seen */}
+                      {categoryQuotes.length > 0 && currentQuoteIndex === 0 && !hasSeenSwipeTutorial && (
+                        <motion.div 
+                          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 cursor-pointer"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          onClick={() => setHasSeenSwipeTutorial(true)}
+                        >
+                          <motion.div
+                            className="flex flex-col items-center gap-4"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <motion.div
+                              className="flex items-center gap-3 text-white/90"
+                              animate={{
+                                x: [-20, 20, -20],
+                                opacity: [0.5, 1, 0.5]
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <ChevronLeft className="w-6 h-6" />
+                              <div className="w-16 h-1 rounded-full bg-white/60" />
+                              <ChevronRight className="w-6 h-6" />
+                            </motion.div>
+                            <p className="text-white/90 text-sm font-medium">Swipe to navigate quotes</p>
+                            <p className="text-white/60 text-xs">Tap to dismiss</p>
+                          </motion.div>
+                        </motion.div>
+                      )}
+
                       {quote && (
                         <motion.div
-                          initial="hidden"
-                          animate="visible"
-                          variants={{
-                            hidden: { opacity: 0 },
-                            visible: { opacity: 1 }
-                          }}
-                          transition={{ duration: 0.8 }}
+                          initial={{ opacity: 0, x: 0 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 0 }}
+                          transition={{ duration: 0.3 }}
                           className="flex flex-col items-center gap-2 w-full"
                         >
                           {quote.split('\n\n').map((part, index) => {
@@ -1826,14 +1897,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 <motion.p 
                                   key={`author-${index}`}
                                   variants={{
-                                    hidden: { opacity: 0, y: 30 },
+                                    hidden: { opacity: 0 },
                                     visible: { 
-                                      opacity: 1, 
-                                      y: 0,
+                                      opacity: 1,
                                       transition: {
-                                        duration: 1.5,
-                                        delay: index * 0.6,
-                                        ease: [0.4, 0, 0.2, 1]
+                                        duration: 0.3
                                       }
                                     }
                                   }}
@@ -1848,14 +1916,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 <motion.p 
                                   key={`source-${index}`}
                                   variants={{
-                                    hidden: { opacity: 0, y: 30 },
+                                    hidden: { opacity: 0 },
                                     visible: { 
-                                      opacity: 1, 
-                                      y: 0,
+                                      opacity: 1,
                                       transition: {
-                                        duration: 1.5,
-                                        delay: index * 0.6,
-                                        ease: [0.4, 0, 0.2, 1]
+                                        duration: 0.3
                                       }
                                     }
                                   }}
@@ -1870,14 +1935,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 <motion.p 
                                   key={`quote-${index}`}
                                   variants={{
-                                    hidden: { opacity: 0, y: 30 },
+                                    hidden: { opacity: 0 },
                                     visible: { 
-                                      opacity: 1, 
-                                      y: 0,
+                                      opacity: 1,
                                       transition: {
-                                        duration: 1.5,
-                                        delay: index * 0.6,
-                                        ease: [0.4, 0, 0.2, 1]
+                                        duration: 0.3
                                       }
                                     }
                                   }}
@@ -1903,36 +1965,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                           </motion.div>
                         )}
                       </AnimatePresence>
-                      
-                      {/* Add navigation controls for category quotes */}
-                      {categoryQuotes.length > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-4">
-                          <button
-                            onClick={() => {
-                              const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
-                              setCurrentQuoteIndex(newIndex);
-                              const { text, author, source } = categoryQuotes[newIndex];
-                              setQuote(`${text}\n\n- ${author}\n${source}`);
-                              setGifUrl(null);
-                            }}
-                            className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
-                          >
-                            <ChevronLeft className="w-6 h-6 text-white" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
-                              setCurrentQuoteIndex(newIndex);
-                              const { text, author, source } = categoryQuotes[newIndex];
-                              setQuote(`${text}\n\n- ${author}\n${source}`);
-                              setGifUrl(null);
-                            }}
-                            className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
-                          >
-                            <ChevronRight className="w-6 h-6 text-white" />
-                          </button>
-                        </div>
-                      )}
                     </motion.div>
                   </AnimatePresence>
                 </CardContent>
