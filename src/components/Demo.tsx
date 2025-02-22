@@ -1629,91 +1629,93 @@ export default function Demo({ title = "Fun Quotes" }) {
       <div className="relative min-h-screen">
         <main className="pb-16">
           {/* Fixed Navigation */}
-          <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-30 shadow-lg">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-              <div className="flex justify-between items-center">
-                {/* Left side - Logo */}
-                <div className="flex-shrink-0">
-                  <Image
-                    src="/logo.png"
-                    alt="Logo"
-                    width={40}  // Changed from 60 to 40
-                    height={40} // Changed from 60 to 40
-                    priority
-                    className="object-contain"
-                  />
-                </div>
+          {activeSection !== 'categories' && (
+            <nav className="fixed top-0 left-0 w-full bg-transparent/10 backdrop-blur-sm z-30 shadow-lg">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                <div className="flex justify-between items-center">
+                  {/* Left side - Logo */}
+                  <div className="flex-shrink-0">
+                    <Image
+                      src="/logo.png"
+                      alt="Logo"
+                      width={40}  // Changed from 60 to 40
+                      height={40} // Changed from 60 to 40
+                      priority
+                      className="object-contain"
+                    />
+                  </div>
 
-                {/* Right side - Profile Image with Dropdown */}
-                <div className="flex-shrink-0">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div className="cursor-pointer transition-transform hover:scale-105">
-                        <div className="relative w-[35px] h-[35px] rounded-full border-2 border-white shadow-lg overflow-hidden">  {/* Changed from 45px to 35px */}
-                          <Image
-                            src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
-                            alt={context?.user?.displayName || "Profile"}
-                            width={35}  // Changed from 45 to 35
-                            height={35} // Changed from 45 to 35
-                            className="w-full h-full object-cover"
-                            unoptimized
-                            onError={(e) => {
-                              console.error('Failed to load profile image:', context?.user?.pfpUrl);
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/Profile_Image.jpg";
+                  {/* Right side - Profile Image with Dropdown */}
+                  <div className="flex-shrink-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className="cursor-pointer transition-transform hover:scale-105">
+                          <div className="relative w-[35px] h-[35px] rounded-full border-2 border-white shadow-lg overflow-hidden">  {/* Changed from 45px to 35px */}
+                            <Image
+                              src={context?.user?.pfpUrl || "/Profile_Image.jpg"}
+                              alt={context?.user?.displayName || "Profile"}
+                              width={35}  // Changed from 45 to 35
+                              height={35} // Changed from 45 to 35
+                              className="w-full h-full object-cover"
+                              unoptimized
+                              onError={(e) => {
+                                console.error('Failed to load profile image:', context?.user?.pfpUrl);
+                                const target = e.target as HTMLImageElement;
+                                target.src = "/Profile_Image.jpg";
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {context?.user && (
+                          <div 
+                            className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
+                            onClick={() => {
+                              setShowProfile(true);
+                              // Close the dropdown menu
+                              const dropdownTrigger = document.querySelector('[data-state="open"]');
+                              if (dropdownTrigger instanceof HTMLElement) {
+                                dropdownTrigger.click();
+                              }
                             }}
-                          />
-                        </div>
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {context?.user && (
-                        <div 
-                          className="px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
-                          onClick={() => {
-                            setShowProfile(true);
-                            // Close the dropdown menu
-                            const dropdownTrigger = document.querySelector('[data-state="open"]');
-                            if (dropdownTrigger instanceof HTMLElement) {
-                              dropdownTrigger.click();
-                            }
-                          }}
+                          >
+                            <div className="font-medium">{context.user.displayName}</div>
+                            <div className="text-xs text-muted-foreground">@{context.user.username}</div>
+                          </div>
+                        )}
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
+                          onClick={() => setShowPreferences(true)}
                         >
-                          <div className="font-medium">{context.user.displayName}</div>
-                          <div className="text-xs text-muted-foreground">@{context.user.username}</div>
-                        </div>
-                      )}
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2"
-                        onClick={() => setShowPreferences(true)}
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>User Preferences</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2"
-                        onClick={() => setShowThemeMenu(true)}
-                      >
-                        <Palette className="w-4 h-4" />
-                        <span>Theme</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2"
-                        onClick={() => setShowSettings(true)}
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span>Settings</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          <Sparkles className="w-4 h-4" />
+                          <span>User Preferences</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
+                          onClick={() => setShowThemeMenu(true)}
+                        >
+                          <Palette className="w-4 h-4" />
+                          <span>Theme</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
+                          onClick={() => setShowSettings(true)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Settings</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
-            </div>
-          </nav>
+            </nav>
+          )}
 
           {/* Main Content - Centered */}
           <main 
-            className={`min-h-screen w-full flex flex-col items-center p-4 pt-20 relative ${
+            className={`min-h-screen w-full flex flex-col items-center p-4 ${activeSection !== 'categories' ? 'pt-20' : 'pt-4'} relative ${
               bgImage?.includes('gradient') ? '' : ''
             }`}
             style={bgImage?.includes('gradient') ? {
@@ -1763,239 +1765,149 @@ export default function Demo({ title = "Fun Quotes" }) {
 
               {/* Card Component */}
               {categoryQuotes.length > 0 ? (
-                <div className="w-full flex flex-col items-center">
-                  <div className="w-full flex items-center justify-start px-4 mb-4">
-                    <motion.button
-                      onClick={() => {
-                        setShowCategories(true);
-                        setCategoryQuotes([]);
-                        setCurrentQuoteIndex(0);
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-white/80 hover:text-white flex items-center gap-2 transition-colors"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                      <span>Back to Categories</span>
-                    </motion.button>
-                  </div>
-                  <motion.div
-                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32 cursor-grab active:cursor-grabbing`}
-                    drag
-                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    dragElastic={0.3}
-                    whileDrag={{ 
-                      scale: 0.98,
-                      boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
-                    }}
-                    dragTransition={{ 
-                      bounceStiffness: 400, 
-                      bounceDamping: 30,
-                      power: 0.2
-                    }}
-                    onDragEnd={(_, info) => {
-                      const swipe = info.offset.x;
-                      const threshold = 50;
-                      
-                      if (Math.abs(swipe) > threshold) {
-                        if (swipe > 0) {
-                          // Swipe right - go to previous quote
-                          const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
-                          setCurrentQuoteIndex(newIndex);
-                          const { text, author, source } = categoryQuotes[newIndex];
-                          setQuote(`${text}\n\n- ${author}\n${source}`);
-                          setGifUrl(null);
-                        } else {
-                          // Swipe left - go to next quote
-                          const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
-                          setCurrentQuoteIndex(newIndex);
-                          const { text, author, source } = categoryQuotes[newIndex];
-                          setQuote(`${text}\n\n- ${author}\n${source}`);
-                          setGifUrl(null);
+                <>
+                  {/* Back button and quote card */}
+                  <div className="w-full flex flex-col items-center">
+                    <div className="w-full flex items-center justify-start px-4 mb-4">
+                      <motion.button
+                        onClick={() => {
+                          setShowCategories(true);
+                          setCategoryQuotes([]);
+                          setCurrentQuoteIndex(0);
+                        }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="text-white/80 hover:text-white flex items-center gap-2 transition-colors"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                        <span>Back to Categories</span>
+                      </motion.button>
+                    </div>
+
+                    {/* Quote Card */}
+                    <motion.div
+                      className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32"
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={0.7}
+                      onDragEnd={(e, { offset, velocity }) => {
+                        const swipe = offset.x;
+                        if (Math.abs(velocity.x) > 20 || Math.abs(swipe) > 100) {
+                          if (swipe < 0) {
+                            // Swipe left - next quote
+                            const nextIndex = currentQuoteIndex + 1;
+                            const newIndex = nextIndex >= categoryQuotes.length ? 0 : nextIndex;
+                            setCurrentQuoteIndex(newIndex);
+                            const { text, author, source } = categoryQuotes[newIndex];
+                            setQuote(`${text}\n\n- ${author}\n${source}`);
+                          } else {
+                            // Swipe right - previous quote
+                            const prevIndex = currentQuoteIndex - 1;
+                            const newIndex = prevIndex < 0 ? categoryQuotes.length - 1 : prevIndex;
+                            setCurrentQuoteIndex(newIndex);
+                            const { text, author, source } = categoryQuotes[newIndex];
+                            setQuote(`${text}\n\n- ${author}\n${source}`);
+                          }
                         }
-                      }
-                    }}
-                  >
-                    <Card className="w-full h-full bg-transparent shadow-xl shadow-black/30">
-                      <CardContent className="p-6 sm:p-4">
-                        {/* GIF Display */}
-                        <AnimatePresence mode="wait">
-                          {gifUrl && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              className="mb-3 rounded-lg overflow-hidden cursor-pointer relative group"
-                              onClick={handleRegenerateGif}
-                            >
-                              <div className="relative w-full h-[200px] sm:h-[150px]">
-                                <Image
-                                  src={gifUrl}
-                                  alt="Quote-related GIF"
-                                  fill
-                                  unoptimized
-                                  sizes="(max-width: 600px) 100vw, 50vw"
-                                  className={`object-cover rounded-lg transition-opacity duration-200 ${
-                                    isLoading ? 'opacity-50' : 'opacity-100'
-                                  }`}
-                                />
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    Click to regenerate GIF
-                                  </span>
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Quote Display */}
-                        <AnimatePresence mode="wait">
+                      }}
+                    >
+                      <Card className="w-full h-full bg-transparent shadow-xl shadow-black/30">
+                        <CardContent className="p-6 sm:p-4">
+                          {/* Quote content */}
                           <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 overflow-y-auto ${
-                              isInitialState ? 'min-h-[150px]' : 'min-h-[250px] max-h-[400px]'
-                            }`}
-                            onDoubleClick={handleQuoteDoubleTap}
-                            onTouchStart={(e) => {
-                              const now = Date.now();
-                              if (now - lastTapTime < 300) {  // 300ms between taps
-                                handleQuoteDoubleTap();
-                              }
-                              setLastTapTime(now);
-                            }}
+                            className="rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 overflow-y-auto min-h-[250px] max-h-[400px]"
+                            initial={{ opacity: 0, x: 0 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 0 }}
+                            key={currentQuoteIndex}
                           >
-                            {/* Swipe Tutorial Overlay - Only for first quote and if not seen */}
-                            {categoryQuotes.length > 0 && currentQuoteIndex === 0 && !hasSeenSwipeTutorial && (
-                              <motion.div 
-                                className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 cursor-pointer"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                onClick={() => setHasSeenSwipeTutorial(true)}
+                            {quote.split('\n\n').map((part, index) => (
+                              <motion.p 
+                                key={`quote-${index}`}
+                                className="text-center text-white text-2xl font-medium select-none break-words w-full"
                               >
-                                <motion.div
-                                  className="flex flex-col items-center gap-4"
-                                  initial={{ scale: 0.9, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  exit={{ scale: 0.9, opacity: 0 }}
-                                  transition={{ delay: 0.2 }}
-                                >
-                                  <motion.div
-                                    className="flex items-center gap-3 text-white/90"
-                                    animate={{
-                                      x: [-20, 20, -20],
-                                      opacity: [0.5, 1, 0.5]
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      repeat: Infinity,
-                                      ease: "easeInOut"
-                                    }}
-                                  >
-                                    <ChevronLeft className="w-6 h-6" />
-                                    <div className="w-16 h-1 rounded-full bg-white/60" />
-                                    <ChevronRight className="w-6 h-6" />
-                                  </motion.div>
-                                  <p className="text-white/90 text-sm font-medium">Swipe to navigate quotes</p>
-                                  <p className="text-white/60 text-xs">Tap to dismiss</p>
-                                </motion.div>
-                              </motion.div>
-                            )}
-
-                            {quote && (
-                              <motion.div
-                                initial={{ opacity: 0, x: 0 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex flex-col items-center gap-2 w-full"
-                              >
-                                {quote.split('\n\n').map((part, index) => {
-                                  if (part.startsWith('- ')) {
-                                    // This is the author part
-                                    return (
-                                      <motion.p 
-                                        key={`author-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else if (part.includes('\n')) {
-                                    // This is the source part
-                                    return (
-                                      <motion.p 
-                                        key={`source-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else {
-                                    // This is the quote text
-                                    return (
-                                      <motion.p 
-                                        key={`quote-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  }
-                                })}
-                              </motion.div>
-                            )}
-                            <AnimatePresence>
-                              {showHeartAnimation && (
-                                <motion.div
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1.5, opacity: 1 }}
-                                  exit={{ scale: 0.5, opacity: 0 }}
-                                  transition={{ duration: 0.8, ease: "easeOut" }}
-                                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                                >
-                                  <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                                {part}
+                              </motion.p>
+                            ))}
                           </motion.div>
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+
+                    {/* Bottom Action Bar */}
+                    <div className="fixed bottom-16 left-0 right-0 z-30 p-4">
+                      <motion.div 
+                        className="flex justify-center items-center gap-8 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {/* Heart Icon */}
+                        <motion.div
+                          initial={false}
+                          animate={{ 
+                            scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Heart 
+                            onClick={() => {
+                              const quoteItem: QuoteHistoryItem = {
+                                text: quote,
+                                style: 'default',
+                                gifUrl: null,
+                                timestamp: new Date(),
+                                bgColor,
+                                id: Date.now().toString()
+                              };
+                              toggleFavorite(quoteItem);
+                              setShowHeartAnimation(true);
+                              setTimeout(() => setShowHeartAnimation(false), 1000);
+                            }}
+                            className={`w-6 h-6 cursor-pointer hover:scale-125 transition-all duration-300 ${
+                              favorites.some(fav => fav.text === quote)
+                                ? 'fill-pink-500 text-pink-500' 
+                                : 'text-white hover:text-pink-200'
+                            }`}
+                          />
+                        </motion.div>
+
+                        {/* Shuffle Icon */}
+                        <motion.div
+                          whileTap={{ rotate: 360, scale: 0.8 }}
+                        >
+                          <Dice3
+                            onClick={() => {
+                              const newIndex = Math.floor(Math.random() * categoryQuotes.length);
+                              setCurrentQuoteIndex(newIndex);
+                              const { text, author, source } = categoryQuotes[newIndex];
+                              setQuote(`${text}\n\n- ${author}\n${source}`);
+                            }}
+                            className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white"
+                          />
+                        </motion.div>
+
+                        {/* Share Icon */}
+                        <Upload
+                          onClick={async () => {
+                            try {
+                              setIsGeneratingPreview(true);
+                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              setPreviewImage(dataUrl);
+                              setShowPreview(true);
+                            } catch (error) {
+                              console.error('Error generating preview:', error);
+                              toast.error('Failed to generate preview');
+                            } finally {
+                              setIsGeneratingPreview(false);
+                            }
+                          }}
+                          className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
+                        />
+                      </motion.div>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="py-8">
                 </div>
@@ -2004,150 +1916,152 @@ export default function Demo({ title = "Fun Quotes" }) {
           </main>
 
           {/* Fixed Action Buttons and Input */}
-          <div className="fixed bottom-16 left-0 right-0 z-30 p-4 space-y-3">
-            {/* Action Buttons */}
-            <motion.div className="flex justify-center items-center gap-8 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto">
-              {quote && (
-                <motion.div
-                  initial={false}
-                  animate={{ 
-                    scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
-                  }}
-                  transition={{ duration: 0.3 }}
-                  className="relative"
-                >
-                  <Heart 
-                    onClick={() => {
-                      const quoteItem: QuoteHistoryItem = {
-                        text: quote,
-                        style: 'default',
-                        gifUrl,
-                        timestamp: new Date(),
-                        bgColor,
-                        id: ''
-                      };
-                      toggleFavorite(quoteItem);
-                      setShowHeartAnimation(true);
-                      setTimeout(() => setShowHeartAnimation(false), 1000);
+          {activeSection !== 'categories' && (
+            <div className="fixed bottom-16 left-0 right-0 z-30 p-4 space-y-3">
+              {/* Action Buttons */}
+              <motion.div className="flex justify-center items-center gap-8 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto">
+                {quote && (
+                  <motion.div
+                    initial={false}
+                    animate={{ 
+                      scale: favorites.some(fav => fav.text === quote) ? [1, 1.2, 1] : 1
                     }}
-                    className={`w-6 h-6 cursor-pointer hover:scale-125 transition-all duration-300 ${
-                      favorites.some(fav => fav.text === quote)
-                        ? 'fill-pink-500 text-pink-500' 
-                        : 'text-white hover:text-pink-200'
-                    }`}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
+                    <Heart 
+                      onClick={() => {
+                        const quoteItem: QuoteHistoryItem = {
+                          text: quote,
+                          style: 'default',
+                          gifUrl,
+                          timestamp: new Date(),
+                          bgColor,
+                          id: ''
+                        };
+                        toggleFavorite(quoteItem);
+                        setShowHeartAnimation(true);
+                        setTimeout(() => setShowHeartAnimation(false), 1000);
+                      }}
+                      className={`w-6 h-6 cursor-pointer hover:scale-125 transition-all duration-300 ${
+                        favorites.some(fav => fav.text === quote)
+                          ? 'fill-pink-500 text-pink-500' 
+                          : 'text-white hover:text-pink-200'
+                      }`}
+                    />
+                  </motion.div>
+                )}
+                <motion.div
+                  whileTap={{ rotate: 360, scale: 0.8 }}
+                  animate={isGenerating ? {
+                    rotate: [0, 360],
+                    scale: [1, 0.8, 1],
+                    transition: {
+                      rotate: {
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: [0.4, 0, 0.2, 1]
+                      },
+                      scale: {
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }
+                    }
+                  } : undefined}
+                >
+                  <Dice3
+                    onClick={async () => {
+                      setIsGenerating(true);
+                      try {
+                        const response = await fetch('/api/openai', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            userPreferences: {
+                              gender: onboarding.personalInfo.gender,
+                              relationshipStatus: onboarding.personalInfo.relationshipStatus,
+                              areasToImprove: onboarding.personalInfo.areasToImprove,
+                              personalGoals: onboarding.personalInfo.personalGoals,
+                              preferredStyles: onboarding.personalInfo.preferredStyles
+                            }
+                          }),
+                        });
+
+                        if (!response.ok) {
+                          throw new Error('Failed to get AI suggestion');
+                        }
+
+                        const data = await response.json();
+                        if (!data.result) {
+                          throw new Error('No suggestion received');
+                        }
+
+                        setUserPrompt(data.result);
+                        await handleGenerateQuote();
+                        
+                        toast.success('Generated a personalized quote based on AI suggestions!');
+                      } catch (error) {
+                        console.error('Error generating random quote:', error);
+                        const randomPrompt = generateRandomPrompt(favorites);
+                        setUserPrompt(randomPrompt);
+                        await handleGenerateQuote();
+                        toast.success('Generated a quote based on your preferences!');
+                      } finally {
+                        setIsGenerating(false);
+                      }
+                    }}
+                    className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white"
                   />
                 </motion.div>
-              )}
-              <motion.div
-                whileTap={{ rotate: 360, scale: 0.8 }}
-                animate={isGenerating ? {
-                  rotate: [0, 360],
-                  scale: [1, 0.8, 1],
-                  transition: {
-                    rotate: {
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: [0.4, 0, 0.2, 1]
-                    },
-                    scale: {
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }
-                  }
-                } : undefined}
-              >
-                <Dice3
-                  onClick={async () => {
-                    setIsGenerating(true);
-                    try {
-                      const response = await fetch('/api/openai', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                          userPreferences: {
-                            gender: onboarding.personalInfo.gender,
-                            relationshipStatus: onboarding.personalInfo.relationshipStatus,
-                            areasToImprove: onboarding.personalInfo.areasToImprove,
-                            personalGoals: onboarding.personalInfo.personalGoals,
-                            preferredStyles: onboarding.personalInfo.preferredStyles
-                          }
-                        }),
-                      });
-
-                      if (!response.ok) {
-                        throw new Error('Failed to get AI suggestion');
+                {quote && (
+                  <Upload
+                    onClick={async () => {
+                      try {
+                        setIsGeneratingPreview(true);
+                        const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                        setPreviewImage(dataUrl);
+                        setShowPreview(true);
+                      } catch (error) {
+                        console.error('Error generating preview:', error);
+                        toast.error('Failed to generate preview');
+                      } finally {
+                        setIsGeneratingPreview(false);
                       }
-
-                      const data = await response.json();
-                      if (!data.result) {
-                        throw new Error('No suggestion received');
-                      }
-
-                      setUserPrompt(data.result);
-                      await handleGenerateQuote();
-                      
-                      toast.success('Generated a personalized quote based on AI suggestions!');
-                    } catch (error) {
-                      console.error('Error generating random quote:', error);
-                      const randomPrompt = generateRandomPrompt(favorites);
-                      setUserPrompt(randomPrompt);
-                      await handleGenerateQuote();
-                      toast.success('Generated a quote based on your preferences!');
-                    } finally {
-                      setIsGenerating(false);
-                    }
-                  }}
-                  className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white"
-                />
+                    }}
+                    className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
+                  />
+                )}
               </motion.div>
-              {quote && (
-                <Upload
-                  onClick={async () => {
-                    try {
-                      setIsGeneratingPreview(true);
-                      const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                      setPreviewImage(dataUrl);
-                      setShowPreview(true);
-                    } catch (error) {
-                      console.error('Error generating preview:', error);
-                      toast.error('Failed to generate preview');
-                    } finally {
-                      setIsGeneratingPreview(false);
-                    }
-                  }}
-                  className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
-                />
-              )}
-            </motion.div>
 
-            {/* Input Field */}
-            <div className="relative w-full max-w-[500px] mx-auto">
-              <Input
-                type="text"
-                placeholder="Enter a topic/word for your quote"
-                value={userPrompt}
-                onChange={(e) => setUserPrompt(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full text-lg placeholder:text-white/70 text-white bg-black/30 backdrop-blur-sm border-white/20 pr-12"
-              />
-              <div 
-                onClick={handleGenerateQuote}
-                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
-              >
-                <Image
-                  src="/Submit_Icon.png"
-                  alt="Submit"
-                  width={20}
-                  height={20}
-                  className="invert brightness-0 object-contain"
-                  unoptimized
+              {/* Input Field */}
+              <div className="relative w-full max-w-[500px] mx-auto">
+                <Input
+                  type="text"
+                  placeholder="Enter a topic/word for your quote"
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full text-lg placeholder:text-white/70 text-white bg-black/30 backdrop-blur-sm border-white/20 pr-12"
                 />
+                <div 
+                  onClick={handleGenerateQuote}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"
+                >
+                  <Image
+                    src="/Submit_Icon.png"
+                    alt="Submit"
+                    width={20}
+                    height={20}
+                    className="invert brightness-0 object-contain"
+                    unoptimized
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* History Page */}
           {showHistory && (
@@ -3380,6 +3294,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
               fill
               className="object-cover"
               unoptimized
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/Profile_Image.jpg";
+              }}
             />
           </div>
           <div>
