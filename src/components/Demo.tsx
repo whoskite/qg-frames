@@ -476,6 +476,10 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add to state declarations
   const [showProfile, setShowProfile] = useState(false);
 
+  // Add new state for category quotes
+  const [categoryQuotes, setCategoryQuotes] = useState<{text: string; author: string; source: string}[]>([]);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState<number>(0);
+
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
@@ -1899,6 +1903,36 @@ export default function Demo({ title = "Fun Quotes" }) {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                      
+                      {/* Add navigation controls for category quotes */}
+                      {categoryQuotes.length > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-4">
+                          <button
+                            onClick={() => {
+                              const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
+                              setCurrentQuoteIndex(newIndex);
+                              const { text, author, source } = categoryQuotes[newIndex];
+                              setQuote(`${text}\n\n- ${author}\n${source}`);
+                              setGifUrl(null);
+                            }}
+                            className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+                          >
+                            <ChevronLeft className="w-6 h-6 text-white" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
+                              setCurrentQuoteIndex(newIndex);
+                              const { text, author, source } = categoryQuotes[newIndex];
+                              setQuote(`${text}\n\n- ${author}\n${source}`);
+                              setGifUrl(null);
+                            }}
+                            className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+                          >
+                            <ChevronRight className="w-6 h-6 text-white" />
+                          </button>
+                        </div>
+                      )}
                     </motion.div>
                   </AnimatePresence>
                 </CardContent>
@@ -3189,6 +3223,17 @@ export default function Demo({ title = "Fun Quotes" }) {
           <Categories
             onSelectQuote={(text, author, source) => {
               setIsInitialState(false);
+              setQuote(`${text}\n\n- ${author}\n${source}`);
+              setGifUrl(null);
+              setShowCategories(false);
+              setActiveSection('generate');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onSelectCategory={(quotes, initialIndex) => {
+              setCategoryQuotes(quotes);
+              setCurrentQuoteIndex(initialIndex);
+              setIsInitialState(false);
+              const { text, author, source } = quotes[initialIndex];
               setQuote(`${text}\n\n- ${author}\n${source}`);
               setGifUrl(null);
               setShowCategories(false);

@@ -10,7 +10,7 @@ import type { IconType } from 'react-icons';
 
 interface CategoriesProps {
   onSelectQuote: (text: string, author: string, source: string, gifUrl: string | null) => void;
-  onSelectCategory?: (quotes: CategoryQuote[], initialIndex: number) => void;
+  onSelectCategory?: (quotes: { text: string; author: string; source: string }[], initialIndex: number) => void;
 }
 
 const categoryIcons: { [key: string]: IconType } = {
@@ -50,7 +50,14 @@ export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectC
 
     // Only call onSelectCategory if it's provided
     if (onSelectCategory) {
-      onSelectCategory(quotes, initialIndex);
+      onSelectCategory(
+        quotes.map(q => ({
+          text: q.text,
+          author: q.author,
+          source: q.source
+        })),
+        initialIndex
+      );
     }
   };
 
