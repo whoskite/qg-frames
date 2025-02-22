@@ -567,6 +567,14 @@ export default function Demo({ title = "Fun Quotes" }) {
         setShowCategories(false);
         setShowFavorites(false);
         setShowHistory(false);
+        // Clear category quotes and current quote when switching to generate
+        setCategoryQuotes([]);
+        setCurrentQuoteIndex(0);
+        if (activeSection === 'categories') {
+          setQuote('');
+          setGifUrl(null);
+          setIsInitialState(true);
+        }
         break;
       case 'categories':
         setShowCategories(true);
@@ -729,6 +737,9 @@ export default function Demo({ title = "Fun Quotes" }) {
       
       try {
         setGifUrl(null);
+        // Clear category quotes when generating a new quote
+        setCategoryQuotes([]);
+        setCurrentQuoteIndex(0);
         
         // Create a personalized prompt based on user preferences
         let personalizedPrompt = userPrompt;
@@ -805,8 +816,22 @@ export default function Demo({ title = "Fun Quotes" }) {
           setQuote(newQuote);
           
           if (gifEnabled) {
-            const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
-            setGifUrl(gifUrl);
+            try {
+              setIsLoadingGif(true);
+              const gifUrl = await getGifForQuote(quoteResponse.text, quoteResponse.style);
+              if (gifUrl) {
+                setGifUrl(gifUrl);
+              } else {
+                console.warn('No GIF URL returned');
+                toast.error('Could not generate a GIF for this quote');
+              }
+            } catch (gifError) {
+              console.error('Error generating GIF:', gifError);
+              toast.error('Failed to generate GIF');
+              setGifUrl(null);
+            } finally {
+              setIsLoadingGif(false);
+            }
           }
           
           // Add to history
@@ -835,7 +860,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           }
           
           logAnalyticsEvent('quote_generated_success', {
-            prompt: personalizedPrompt || 'empty_prompt',
+            prompt: userPrompt || 'empty_prompt',
             quote_length: quoteResponse.text.length,
             area_of_improvement: onboarding.personalInfo.areasToImprove.join(','),
             relationship_status: onboarding.personalInfo.relationshipStatus,
@@ -845,6 +870,7 @@ export default function Demo({ title = "Fun Quotes" }) {
       } catch (error) {
         console.error('Error:', error);
         setQuote('Failed to generate quote. Please try again.');
+        toast.error('Failed to generate quote');
         logAnalyticsEvent('quote_generated_error', {
           prompt: userPrompt || 'empty_prompt',
           error: error instanceof Error ? error.message : 'Unknown error'
@@ -1755,7 +1781,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Main Content - Centered */}
           <main 
-            className={`min-h-screen w-full flex flex-col items-center p-4 ${activeSection !== 'categories' ? 'pt-20' : 'pt-4'} relative ${
+            className={`min-h-screen w-full flex flex-col items-center p-4 ${activeSection !== 'categories' ? 'pt-10' : 'pt-4'} relative ${
               bgImage?.includes('gradient') ? '' : ''
             }`}
             style={bgImage?.includes('gradient') ? {
@@ -1823,38 +1849,42 @@ export default function Demo({ title = "Fun Quotes" }) {
               </AnimatePresence>
 
               {/* Card Component */}
-              {categoryQuotes.length > 0 ? (
+              {(categoryQuotes.length > 0 || quote) ? (
                 <div className="w-full flex flex-col items-center">
-                  <div className="w-full flex items-center justify-start px-4 mb-4">
-                    <motion.button
-                      onClick={() => {
-                        setShowCategories(true);
-                        setCategoryQuotes([]);
-                        setCurrentQuoteIndex(0);
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-white/80 hover:text-white flex items-center gap-2 transition-colors"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                      <span>Back to Categories</span>
-                    </motion.button>
-                  </div>
+                  {categoryQuotes.length > 0 && (
+                    <div className="w-full flex items-center justify-start px-4 mb-4">
+                      <motion.button
+                        onClick={() => {
+                          setShowCategories(true);
+                          setCategoryQuotes([]);
+                          setCurrentQuoteIndex(0);
+                        }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="text-white/80 hover:text-white flex items-center gap-2 transition-colors"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                        <span>Back to Categories</span>
+                      </motion.button>
+                    </div>
+                  )}
                   <motion.div
-                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32 cursor-grab active:cursor-grabbing`}
-                    drag
-                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    dragElastic={0.3}
-                    whileDrag={{ 
+                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-2 mb-32 ${
+                      categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''
+                    }`}
+                    drag={categoryQuotes.length > 0}
+                    dragConstraints={categoryQuotes.length > 0 ? { left: 0, right: 0, top: 0, bottom: 0 } : undefined}
+                    dragElastic={categoryQuotes.length > 0 ? 0.3 : undefined}
+                    whileDrag={categoryQuotes.length > 0 ? { 
                       scale: 0.98,
                       boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
-                    }}
-                    dragTransition={{ 
+                    } : undefined}
+                    dragTransition={categoryQuotes.length > 0 ? { 
                       bounceStiffness: 400, 
                       bounceDamping: 30,
                       power: 0.2
-                    }}
-                    onDragEnd={(_, info) => {
+                    } : undefined}
+                    onDragEnd={categoryQuotes.length > 0 ? (_, info) => {
                       const swipe = info.offset.x;
                       const threshold = 50;
                       
@@ -1875,18 +1905,27 @@ export default function Demo({ title = "Fun Quotes" }) {
                           setGifUrl(null);
                         }
                       }
-                    }}
+                    } : undefined}
                   >
                     <Card className="w-full h-full bg-transparent shadow-xl shadow-black/30">
-                      <CardContent className="p-6 sm:p-4">
+                      <CardContent className="p-3 sm:p-2">
                         {/* GIF Display */}
                         <AnimatePresence mode="wait">
-                          {gifUrl && (
+                          {isLoadingGif ? (
                             <motion.div
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -20 }}
-                              className="mb-3 rounded-lg overflow-hidden cursor-pointer relative group"
+                              className="mb-2 rounded-lg overflow-hidden flex items-center justify-center h-[200px] sm:h-[150px] bg-white/5"
+                            >
+                              <div className="text-white/60">Loading GIF...</div>
+                            </motion.div>
+                          ) : gifUrl ? (
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              className="mb-2 rounded-lg overflow-hidden cursor-pointer relative group"
                               onClick={handleRegenerateGif}
                             >
                               <div className="relative w-full h-[200px] sm:h-[150px]">
@@ -1895,10 +1934,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                                   alt="Quote-related GIF"
                                   fill
                                   unoptimized
+                                  priority
                                   sizes="(max-width: 600px) 100vw, 50vw"
-                                  className={`object-cover rounded-lg transition-opacity duration-200 ${
-                                    isLoading ? 'opacity-50' : 'opacity-100'
-                                  }`}
+                                  className="object-cover rounded-lg transition-opacity duration-200"
+                                  onError={(e) => {
+                                    console.error('Failed to load GIF:', gifUrl);
+                                    setGifUrl(null);
+                                    toast.error('Failed to load GIF');
+                                  }}
                                 />
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                                   <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -1907,7 +1950,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 </div>
                               </div>
                             </motion.div>
-                          )}
+                          ) : null}
                         </AnimatePresence>
 
                         {/* Quote Display */}
@@ -1968,7 +2011,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                               </motion.div>
                             )}
 
-                            {quote && (
+                            {quote ? (
                               <motion.div
                                 initial={{ opacity: 0, x: 0 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -1976,68 +2019,30 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 transition={{ duration: 0.3 }}
                                 className="flex flex-col items-center gap-2 w-full"
                               >
-                                {quote.split('\n\n').map((part, index) => {
-                                  if (part.startsWith('- ')) {
-                                    // This is the author part
-                                    return (
-                                      <motion.p 
-                                        key={`author-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else if (part.includes('\n')) {
-                                    // This is the source part
-                                    return (
-                                      <motion.p 
-                                        key={`source-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  } else {
-                                    // This is the quote text
-                                    return (
-                                      <motion.p 
-                                        key={`quote-${index}`}
-                                        variants={{
-                                          hidden: { opacity: 0 },
-                                          visible: { 
-                                            opacity: 1,
-                                            transition: {
-                                              duration: 0.3
-                                            }
-                                          }
-                                        }}
-                                        className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                                      >
-                                        {part}
-                                      </motion.p>
-                                    );
-                                  }
-                                })}
+                                <motion.p 
+                                  key="quote-text"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ 
+                                    duration: 0.8,
+                                    delay: 0.2,
+                                    ease: "easeOut"
+                                  }}
+                                  className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                                >
+                                  {quote}
+                                </motion.p>
                               </motion.div>
+                            ) : (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-center text-white/60 text-lg"
+                              >
+                                Click generate to create a quote
+                              </motion.p>
                             )}
+
                             <AnimatePresence>
                               {showHeartAnimation && (
                                 <motion.div
