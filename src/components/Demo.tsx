@@ -495,6 +495,10 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add this near the other state declarations
   const [hasSeenSwipeTutorial, setHasSeenSwipeTutorial] = useState(false);
 
+  // Add new state for tooltips
+  const [showTooltips, setShowTooltips] = useState(false);
+  const [hasSeenTooltips, setHasSeenTooltips] = useState(false);
+
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
   // Add this state for navigation
@@ -513,37 +517,73 @@ export default function Demo({ title = "Fun Quotes" }) {
 
   const [showCategories, setShowCategories] = useState(false);
 
-  const handleNavigation = (section: string) => {
-    // Close all profile menu pages
-    setShowPreferences(false);
-    setShowThemeMenu(false);
-    setShowSettings(false);
-    setShowQuoteStylePage(false);
-    setShowAreasPage(false);
-    setShowGoalsPage(false);
+  useEffect(() => {
+    const initializeTooltips = async () => {
+      // Check if user has seen tooltips before
+      const tooltipsData = localStorage.getItem('hasSeenTooltips');
+      if (!tooltipsData) {
+        // Show tooltips after a short delay on first visit
+        setTimeout(() => setShowTooltips(true), 1000);
+      }
+    };
 
-    // Close all pages and set new section immediately
-    setShowFavorites(false);
-    setShowHistory(false);
-    setShowCategories(false);
+    initializeTooltips();
+  }, []);
 
-    if (section === 'generate') {
-      // Clear category quotes and reset view when switching to generate
-      setCategoryQuotes([]);
-      setCurrentQuoteIndex(0);
-      setQuote('');
-      setGifUrl(null);
-      setIsInitialState(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (section === 'favorites') {
-      setShowFavorites(true);
-    } else if (section === 'history') {
-      setShowHistory(true);
-    } else if (section === 'categories') {
-      setShowCategories(true);
+  // Handle tooltip visibility
+  useEffect(() => {
+    if (showTooltips) {
+      // Hide tooltips after showing all items (2 seconds per item * 4 items + 1 second buffer)
+      const timer = setTimeout(() => {
+        setShowTooltips(false);
+        setHasSeenTooltips(true);
+        localStorage.setItem('hasSeenTooltips', 'true');
+      }, 9000);
+
+      return () => clearTimeout(timer);
     }
-    
+  }, [showTooltips]);
+
+  // Show tooltips after onboarding with a slight delay
+  useEffect(() => {
+    if (onboarding.hasCompletedOnboarding && !hasSeenTooltips) {
+      setTimeout(() => setShowTooltips(true), 500);
+    }
+  }, [onboarding.hasCompletedOnboarding, hasSeenTooltips]);
+
+  // Handle navigation with tooltip management
+  const handleNavigation = (section: string) => {
     setActiveSection(section);
+    
+    // Hide tooltips when user starts navigating
+    if (showTooltips) {
+      setShowTooltips(false);
+      setHasSeenTooltips(true);
+      localStorage.setItem('hasSeenTooltips', 'true');
+    }
+
+    switch (section) {
+      case 'generate':
+        setShowCategories(false);
+        setShowFavorites(false);
+        setShowHistory(false);
+        break;
+      case 'categories':
+        setShowCategories(true);
+        setShowFavorites(false);
+        setShowHistory(false);
+        break;
+      case 'favorites':
+        setShowFavorites(true);
+        setShowCategories(false);
+        setShowHistory(false);
+        break;
+      case 'history':
+        setShowHistory(true);
+        setShowCategories(false);
+        setShowFavorites(false);
+        break;
+    }
   };
 
   // 5. Analytics Functions
@@ -1734,7 +1774,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           >
             {renderBackground()}
             <div className="relative z-10 w-full flex flex-col items-center">
-              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm mb-4">
+              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm mb-12">
                 <AnimatePresence mode="wait">
                   {isInitialState && (
                     <motion.div 
@@ -1742,13 +1782,45 @@ export default function Demo({ title = "Fun Quotes" }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="text-2xl text-white font-medium text-center"
+                      className="text-2xl text-white font-medium text-center mt-8"
                     >
-                      Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                      >
+                        Welcome {context?.user?.username ? `@${context.user.username}` : 'User'}
+                      </motion.div>
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8, duration: 0.5 }}
+                        className="text-base text-white/70 mt-2"
+                      >
+                        Get inspired with amazing quotes
+                      </motion.p>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Loading Skeleton */}
+              <AnimatePresence>
+                {!quote && !isInitialState && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full max-w-md mx-auto"
+                  >
+                    <div className="bg-white/5 rounded-lg p-6 space-y-4">
+                      <div className="h-4 bg-white/10 rounded animate-pulse" />
+                      <div className="h-4 bg-white/10 rounded animate-pulse w-3/4" />
+                      <div className="h-4 bg-white/10 rounded animate-pulse w-1/2" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Card Component */}
               {categoryQuotes.length > 0 ? (
@@ -3300,6 +3372,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           activeSection={activeSection} 
           onNavigate={handleNavigation} 
           className="bg-black shadow-lg"
+          showTooltips={showTooltips}
         />
       </div>
   );
