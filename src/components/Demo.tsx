@@ -7,7 +7,7 @@ import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronD
 import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, FaLeaf } from 'react-icons/fa';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import sdk, {
   AddFrame,
 FrameNotificationDetails,
@@ -62,6 +62,7 @@ import { getGifForQuote } from '../app/utils/giphy';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter as useNavigationRouter } from 'next/navigation';
 import quotesData from '../data/quotes.json';
+import { IconType } from 'react-icons';
 
 // 2. Types and Constants
 interface FarcasterUser {
@@ -77,6 +78,16 @@ interface FarcasterUser {
     } | string;
   };
   verifiedAddresses?: string[];
+}
+
+// After the FarcasterUser interface and before the AnalyticsParams type
+interface CategoryItem {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  count: number;
+  icon: IconType;
 }
 
 type AnalyticsParams = {
@@ -528,6 +539,7 @@ export default function Demo({ title = "Fun Quotes" }) {
     setShowQuoteStylePage(false);
     setShowAreasPage(false);
     setShowGoalsPage(false);
+    setSelectedCategory(null);  // Add this line to close category view
 
     // Close all pages and set new section immediately
     setShowFavorites(false);
@@ -1626,6 +1638,15 @@ export default function Demo({ title = "Fun Quotes" }) {
     setSelectedCategory(slug);
     setCategoryQuotes(quotesData[slug as keyof typeof quotesData] || []);
     setShowCategories(false);
+  };
+
+  // Add this near other imports at the top
+  const chunkedCategories = (categories: CategoryItem[]): CategoryItem[][] => {
+    const result: CategoryItem[][] = [];
+    for (let i = 0; i < categories.length; i += 3) {
+      result.push(categories.slice(i, i + 3));
+    }
+    return result;
   };
 
   return (
@@ -3120,7 +3141,7 @@ export default function Demo({ title = "Fun Quotes" }) {
 
           {/* Categories Page */}
           {showCategories && (
-            <div className="fixed inset-0 bottom-16 bg-black z-40">
+            <div className="fixed inset-0 bottom-16 bg-black/95 z-40">
               <div className="h-full flex flex-col">
                 {/* Header */}
                 <div className="flex items-center p-4 border-b border-white/10">
@@ -3128,101 +3149,33 @@ export default function Demo({ title = "Fun Quotes" }) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                  >
-                    {[
-                      {
-                        id: 1,
-                        name: 'Inspirational',
-                        slug: 'inspirational',
-                        description: 'Uplifting quotes to motivate and inspire',
-                        count: quotesData.inspirational.length,
-                        icon: FaLightbulb
-                      },
-                      {
-                        id: 2,
-                        name: 'Love & Relationships',
-                        slug: 'love',
-                        description: 'Quotes about love, friendship, and connections',
-                        count: quotesData.love.length,
-                        icon: FaHeart
-                      },
-                      {
-                        id: 3,
-                        name: 'Humor',
-                        slug: 'humor',
-                        description: 'Funny and witty quotes to brighten your day',
-                        count: quotesData.humor.length,
-                        icon: FaLaugh
-                      },
-                      {
-                        id: 4,
-                        name: 'Wisdom',
-                        slug: 'wisdom',
-                        description: 'Philosophical and thought-provoking quotes',
-                        count: quotesData.wisdom.length,
-                        icon: FaBook
-                      },
-                      {
-                        id: 5,
-                        name: 'Success',
-                        slug: 'success',
-                        description: 'Quotes about achievement and personal growth',
-                        count: quotesData.success.length,
-                        icon: FaStar
-                      },
-                      {
-                        id: 6,
-                        name: 'Career & Business',
-                        slug: 'career',
-                        description: 'Professional and entrepreneurial insights',
-                        count: quotesData.career.length,
-                        icon: FaBriefcase
-                      },
-                      {
-                        id: 7,
-                        name: 'Leadership',
-                        slug: 'leadership',
-                        description: 'Quotes about leading and influencing others',
-                        count: quotesData.leadership.length,
-                        icon: FaUsers
-                      },
-                      {
-                        id: 8,
-                        name: 'Life & Mindfulness',
-                        slug: 'life',
-                        description: 'Quotes about living mindfully and purposefully',
-                        count: quotesData.life.length,
-                        icon: FaLeaf
-                      }
-                    ].map((category, index) => (
-                      <motion.div
-                        key={category.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="group p-6 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer"
-                        onClick={() => handleCategoryClick(category.slug)}
-                      >
-                        <div className="flex items-center mb-4">
-                          <category.icon className="w-6 h-6 mr-3 text-primary-500" />
-                          <h3 className="text-xl font-semibold text-white">{category.name}</h3>
-                        </div>
-                        <p className="text-gray-400 mb-4">{category.description}</p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-primary-400">{category.count} quotes</span>
-                          <span className="text-sm text-gray-400 group-hover:translate-x-2 transition-transform duration-300">
-                            Browse →
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-4">
+                    {/* All categories in a flex layout */}
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { id: 'inspirational', name: 'Inspirational', icon: FaLightbulb, bgColor: 'bg-blue-500/20 hover:bg-blue-500/30', textColor: 'text-blue-400' },
+                        { id: 'love', name: 'Love', icon: FaHeart, bgColor: 'bg-pink-500/20 hover:bg-pink-500/30', textColor: 'text-pink-400' },
+                        { id: 'success', name: 'Success', icon: FaStar, bgColor: 'bg-yellow-500/20 hover:bg-yellow-500/30', textColor: 'text-yellow-400' },
+                        { id: 'wisdom', name: 'Wisdom', icon: FaBook, bgColor: 'bg-purple-500/20 hover:bg-purple-500/30', textColor: 'text-purple-400' },
+                        { id: 'humor', name: 'Humor', icon: FaLaugh, bgColor: 'bg-green-500/20 hover:bg-green-500/30', textColor: 'text-green-400' },
+                        { id: 'career', name: 'Career', icon: FaBriefcase, bgColor: 'bg-indigo-500/20 hover:bg-indigo-500/30', textColor: 'text-indigo-400' },
+                        { id: 'leadership', name: 'Leadership', icon: FaUsers, bgColor: 'bg-red-500/20 hover:bg-red-500/30', textColor: 'text-red-400' },
+                        { id: 'life', name: 'Life', icon: FaLeaf, bgColor: 'bg-teal-500/20 hover:bg-teal-500/30', textColor: 'text-teal-400' }
+                      ].map((category) => (
+                        <motion.button
+                          key={category.id}
+                          onClick={() => handleCategoryClick(category.id)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`h-8 px-4 py-1 rounded-full flex items-center gap-2 ${category.bgColor} transition-all duration-300`}
+                        >
+                          <category.icon className={`w-3.5 h-3.5 ${category.textColor}`} />
+                          <span className="text-white font-medium whitespace-nowrap">{category.name}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3233,7 +3186,7 @@ export default function Demo({ title = "Fun Quotes" }) {
             <div className="fixed inset-0 bottom-16 bg-black z-40">
               <div className="h-full flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <div className="flex items-center p-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => {
@@ -3251,40 +3204,66 @@ export default function Demo({ title = "Fun Quotes" }) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="grid gap-4"
-                  >
-                    {categoryQuotes.map((quote, index) => (
-                      <motion.div
-                        key={quote.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="bg-white/10 rounded-lg p-4 relative group"
-                      >
-                        <blockquote className="text-xl mb-4">&ldquo;{quote.text}&rdquo;</blockquote>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-gray-400">
-                          <div className="flex flex-col">
-                            <span className="font-medium">— {quote.author}</span>
-                            <span className="text-sm opacity-75">{quote.source}</span>
-                          </div>
-                          <button 
-                            onClick={() => {
-                              setQuote(quote.text);
-                              setSelectedCategory(null);
+                <div className="flex-1 overflow-hidden">
+                  <div className="h-full overflow-y-auto p-4 custom-scrollbar">
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                      className="grid gap-6"
+                    >
+                      {categoryQuotes.map((quote, index) => (
+                        <motion.div
+                          key={quote.id}
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ 
+                            duration: 0.5,
+                            delay: index * 0.1,
+                            type: "spring",
+                            stiffness: 100
+                          }}
+                          className="relative group"
+                        >
+                          <div 
+                            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+                            style={{
+                              backgroundColor: `${COLORS[index % COLORS.length]}15`
                             }}
-                            className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
                           >
-                            <span>Use Quote</span>
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            
+                            <div className="relative p-6">
+                              <blockquote className="text-2xl font-medium mb-6 leading-relaxed text-white">
+                                &ldquo;{quote.text}&rdquo;
+                              </blockquote>
+                              
+                              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-end">
+                                <div className="flex flex-col">
+                                  <span className="text-lg font-semibold text-white">— {quote.author}</span>
+                                  <span className="text-sm text-white/60">{quote.source}</span>
+                                </div>
+                                
+                                <motion.button 
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => {
+                                    setQuote(quote.text);
+                                    setSelectedCategory(null);
+                                    toast.success('Quote selected!');
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white font-medium"
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                  <span>Use Quote</span>
+                                </motion.button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3400,3 +3379,40 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     </motion.div>
   </div>
 );
+
+// Add after the existing interfaces
+interface CategoryItem {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  count: number;
+  icon: IconType;
+}
+
+// Update the chunkedCategories function
+const chunkedCategories = (categories: CategoryItem[]): CategoryItem[][] => {
+  const result: CategoryItem[][] = [];
+  for (let i = 0; i < categories.length; i += 3) {
+    result.push(categories.slice(i, i + 3));
+  }
+  return result;
+};
+
+interface QuoteData {
+  id: string;
+  text: string;
+  author: string;
+  source: string;
+}
+
+interface QuotesDatabase {
+  inspirational: QuoteData[];
+  love: QuoteData[];
+  humor: QuoteData[];
+  wisdom: QuoteData[];
+  success: QuoteData[];
+  career: QuoteData[];
+  leadership: QuoteData[];
+  life: QuoteData[];
+}
