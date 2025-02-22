@@ -1710,6 +1710,30 @@ export default function Demo({ title = "Fun Quotes" }) {
               backgroundRepeat: 'no-repeat'
             } : {}}
           >
+            {/* Music Indicator */}
+            {isMusicEnabled && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-[72px] right-4 flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full z-20"
+              >
+                <span className="text-white/90 text-sm font-medium">Forest Music</span>
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    opacity: [1, 0.7, 1]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="w-2 h-2 bg-green-400 rounded-full"
+                />
+              </motion.div>
+            )}
+
             {bgImage.includes('TheMrSazon') && (
               <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0" style={{ 
@@ -1740,7 +1764,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               </div>
 
               {/* Card Component */}
-              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent">
+              <Card className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32">
                 <CardContent className="p-6 sm:p-4">
                   {/* GIF Display */}
                   <AnimatePresence mode="wait">
@@ -1784,8 +1808,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                         duration: 1.2,
                         ease: [0.4, 0, 0.2, 1]
                       }}
-                      className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 ${
-                        isInitialState ? 'min-h-[150px]' : 'min-h-[250px]'
+                      className={`rounded-lg p-6 flex flex-col items-center justify-center relative transition-all duration-700 overflow-y-auto ${
+                        isInitialState ? 'min-h-[150px]' : 'min-h-[250px] max-h-[400px]'
                       }`}
                       onDoubleClick={handleQuoteDoubleTap}
                       onTouchStart={(e) => {
@@ -1805,7 +1829,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                             visible: { opacity: 1 }
                           }}
                           transition={{ duration: 0.8 }}
-                          className="flex flex-col items-center gap-2"
+                          className="flex flex-col items-center gap-2 w-full"
                         >
                           {quote.split(/(?<=[.!?])\s+/).map((line, index) => (
                             <motion.p 
@@ -1822,7 +1846,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                                   }
                                 }
                               }}
-                              className="text-center text-white text-2xl font-medium select-none"
+                              className="text-center text-white text-2xl font-medium select-none break-words w-full"
                             >
                               {line}
                             </motion.p>
@@ -1850,9 +1874,9 @@ export default function Demo({ title = "Fun Quotes" }) {
           </main>
 
           {/* Fixed Action Buttons and Input */}
-          <div className="fixed bottom-16 left-0 right-0 z-30 p-4 space-y-4">
+          <div className="fixed bottom-16 left-0 right-0 z-30 p-4 space-y-3">
             {/* Action Buttons */}
-            <motion.div className="flex justify-center items-center gap-8">
+            <motion.div className="flex justify-center items-center gap-8 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto">
               {quote && (
                 <motion.div
                   initial={false}
@@ -1970,14 +1994,14 @@ export default function Demo({ title = "Fun Quotes" }) {
             </motion.div>
 
             {/* Input Field */}
-            <div className="relative">
+            <div className="relative w-full max-w-[500px] mx-auto">
               <Input
                 type="text"
                 placeholder="Enter a topic/word for your quote"
                 value={userPrompt}
                 onChange={(e) => setUserPrompt(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full text-lg placeholder:text-white/70 text-white bg-transparent border-white/20 pr-12"
+                className="w-full text-lg placeholder:text-white/70 text-white bg-black/30 backdrop-blur-sm border-white/20 pr-12"
               />
               <div 
                 onClick={handleGenerateQuote}
