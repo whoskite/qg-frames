@@ -1848,6 +1848,61 @@ export default function Demo({ title = "Fun Quotes" }) {
                 )}
               </AnimatePresence>
 
+              {/* Quote Display */}
+              <AnimatePresence>
+                {quote && !isInitialState && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-md mx-auto bg-black/20 backdrop-blur-sm rounded-lg p-6"
+                  >
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      {quote.split('\n\n').map((part, index) => {
+                        if (part.startsWith('- ')) {
+                          return (
+                            <motion.p 
+                              key={`author-${index}`}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.3 }}
+                              className="text-center text-white text-xl font-medium select-none break-words w-full"
+                            >
+                              {part}
+                            </motion.p>
+                          );
+                        } else if (part.includes('\n')) {
+                          return (
+                            <motion.p 
+                              key={`source-${index}`}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.4 }}
+                              className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
+                            >
+                              {part}
+                            </motion.p>
+                          );
+                        } else {
+                          return (
+                            <motion.p 
+                              key={`quote-${index}`}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.2 }}
+                              className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                            >
+                              {part}
+                            </motion.p>
+                          );
+                        }
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Card Component */}
               {categoryQuotes.length > 0 ? (
                 <div className="w-full flex flex-col items-center">
@@ -1935,75 +1990,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                             </motion.div>
                           )}
                         </AnimatePresence>
-
-                        {/* Quote Text */}
-                        {quote && (
-                          <motion.div
-                            initial={{ opacity: 0, x: 0 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex flex-col items-center gap-2 w-full"
-                          >
-                            {quote.split('\n\n').map((part, index) => {
-                              if (part.startsWith('- ')) {
-                                return (
-                                  <motion.p 
-                                    key={`author-${index}`}
-                                    variants={{
-                                      hidden: { opacity: 0 },
-                                      visible: { 
-                                        opacity: 1,
-                                        transition: {
-                                          duration: 0.3
-                                        }
-                                      }
-                                    }}
-                                    className="text-center text-white text-xl font-medium select-none break-words w-full"
-                                  >
-                                    {part}
-                                  </motion.p>
-                                );
-                              } else if (part.includes('\n')) {
-                                return (
-                                  <motion.p 
-                                    key={`source-${index}`}
-                                    variants={{
-                                      hidden: { opacity: 0 },
-                                      visible: { 
-                                        opacity: 1,
-                                        transition: {
-                                          duration: 0.3
-                                        }
-                                      }
-                                    }}
-                                    className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                                  >
-                                    {part}
-                                  </motion.p>
-                                );
-                              } else {
-                                return (
-                                  <motion.p 
-                                    key={`quote-${index}`}
-                                    variants={{
-                                      hidden: { opacity: 0 },
-                                      visible: { 
-                                        opacity: 1,
-                                        transition: {
-                                          duration: 0.3
-                                        }
-                                      }
-                                    }}
-                                    className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                                  >
-                                    {part}
-                                  </motion.p>
-                                );
-                              }
-                            })}
-                          </motion.div>
-                        )}
 
                         {/* Interactive Buttons */}
                         {categoryQuotes.length > 0 && (
