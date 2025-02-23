@@ -1995,80 +1995,82 @@ export default function Demo({ title = "Fun Quotes" }) {
                             </motion.div>
                           )}
                         </AnimatePresence>
-
-                        {/* Interactive Buttons */}
-                        {categoryQuotes.length > 0 && (
-                          <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex justify-center items-center gap-6 mt-6 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto"
-                          >
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => {
-                                const quoteItem: QuoteHistoryItem = {
-                                  text: quote,
-                                  style: 'default',
-                                  gifUrl,
-                                  timestamp: new Date(),
-                                  bgColor,
-                                  id: Date.now().toString()
-                                };
-                                toggleFavorite(quoteItem);
-                                setShowHeartAnimation(true);
-                                setTimeout(() => setShowHeartAnimation(false), 1000);
-                              }}
-                              className="relative"
-                            >
-                              <Heart 
-                                className={`w-6 h-6 cursor-pointer transition-all duration-300 ${
-                                  favorites.some(fav => fav.text === quote)
-                                    ? 'fill-pink-500 text-pink-500' 
-                                    : 'text-white hover:text-pink-200'
-                                }`}
-                              />
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={async () => {
-                                try {
-                                  setIsGeneratingPreview(true);
-                                  const dataUrl = await generateQuoteImage(quote, bgImage, context);
-                                  setPreviewImage(dataUrl);
-                                  setShowPreview(true);
-                                } catch (error) {
-                                  console.error('Error generating preview:', error);
-                                  toast.error('Failed to generate preview');
-                                } finally {
-                                  setIsGeneratingPreview(false);
-                                }
-                              }}
-                              className="relative"
-                            >
-                              <Share2 className="w-6 h-6 text-white hover:text-blue-200 cursor-pointer transition-all duration-300" />
-                            </motion.button>
-                          </motion.div>
-                        )}
-
-                        {/* Heart Animation */}
-                        <AnimatePresence>
-                          {showHeartAnimation && (
-                            <motion.div
-                              initial={{ scale: 0, opacity: 0 }}
-                              animate={{ scale: 1.5, opacity: 1 }}
-                              exit={{ scale: 0.5, opacity: 0 }}
-                              transition={{ duration: 0.8, ease: "easeOut" }}
-                              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                            >
-                              <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                       </CardContent>
                     </Card>
                   </motion.div>
+
+                  {/* Interactive Buttons - Now fixed at bottom */}
+                  {categoryQuotes.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="fixed bottom-[72px] left-0 right-0 z-30 flex justify-center items-center p-4"
+                    >
+                      <div className="flex justify-center items-center gap-6 bg-black/30 backdrop-blur-sm py-2 px-6 rounded-full">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            const quoteItem: QuoteHistoryItem = {
+                              text: quote,
+                              style: 'default',
+                              gifUrl,
+                              timestamp: new Date(),
+                              bgColor,
+                              id: Date.now().toString()
+                            };
+                            toggleFavorite(quoteItem);
+                            setShowHeartAnimation(true);
+                            setTimeout(() => setShowHeartAnimation(false), 1000);
+                          }}
+                          className="relative"
+                        >
+                          <Heart 
+                            className={`w-6 h-6 cursor-pointer transition-all duration-300 ${
+                              favorites.some(fav => fav.text === quote)
+                                ? 'fill-pink-500 text-pink-500' 
+                                : 'text-white hover:text-pink-200'
+                            }`}
+                          />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={async () => {
+                            try {
+                              setIsGeneratingPreview(true);
+                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              setPreviewImage(dataUrl);
+                              setShowPreview(true);
+                            } catch (error) {
+                              console.error('Error generating preview:', error);
+                              toast.error('Failed to generate preview');
+                            } finally {
+                              setIsGeneratingPreview(false);
+                            }
+                          }}
+                          className="relative"
+                        >
+                          <Share2 className="w-6 h-6 text-white hover:text-blue-200 cursor-pointer transition-all duration-300" />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Heart Animation */}
+                  <AnimatePresence>
+                    {showHeartAnimation && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1.5, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      >
+                        <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <div className="py-8" />
