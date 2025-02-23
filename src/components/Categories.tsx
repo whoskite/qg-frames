@@ -32,7 +32,7 @@ const categoryIcons: { [key: string]: IconType } = {
   'Poetry': FaFeather
 };
 
-export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectCategory, onToggleFavorite, onShare, favorites }) => {
+export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectCategory }) => {
   const data = quotesData as QuotesData;
   const [searchQuery, setSearchQuery] = useState('');
 

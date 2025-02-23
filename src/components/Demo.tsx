@@ -9,9 +9,9 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import sdk, {
   AddFrame,
-FrameNotificationDetails,
-SignIn as SignInCore,
-type Context,
+  FrameNotificationDetails,
+  SignIn as SignInCore,
+  type Context,
 } from "@farcaster/frame-sdk";
 import type { FrameContext } from "@farcaster/frame-core";
 
@@ -46,7 +46,7 @@ import {
 import type { OnboardingState } from '../types/onboarding';
 import { OnboardingFlow } from './OnboardingFlow';
 import { useOnboarding } from '../hooks/useOnboarding';
-import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
+import type { QuoteHistoryItem, FavoriteQuote, CategoryQuote } from '../types/quotes';
 import { logAnalyticsEvent, logUserAction, setAnalyticsUser } from '../lib/analytics';
 import { BottomNav } from './BottomNav';
 import { Categories } from './Categories';
