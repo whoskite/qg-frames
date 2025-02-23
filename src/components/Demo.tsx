@@ -1344,13 +1344,13 @@ export default function Demo({ title = "Fun Quotes" }) {
             context.fillStyle = 'rgba(0, 0, 0, 0.3)';
             context.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Continue with text and profile rendering
+            // Continue with text rendering
             addTextAndProfile();
           };
           return; // Return early as we'll resolve in the addTextAndProfile function
         }
 
-        // If we didn't return early (for image backgrounds), add text and profile immediately
+        // If we didn't return early (for image backgrounds), add text immediately
         addTextAndProfile();
 
         function addTextAndProfile() {
@@ -1359,13 +1359,19 @@ export default function Demo({ title = "Fun Quotes" }) {
             return;
           }
           
+          // Extract quote text and author if available
+          const parts = quote.split('\n\n');
+          const quoteText = parts[0];
+          const authorInfo = parts[1] ? parts[1].replace('- ', '') : '';
+          const sourceInfo = parts[2] || '';
+          
           // Add quote text
           context.fillStyle = 'white';
           context.textAlign = 'center';
           context.font = 'bold 32px Inter, sans-serif';
           
           // Word wrap the text
-          const words = quote.split(' ');
+          const words = quoteText.split(' ');
           const lines = [];
           let currentLine = '';
           const maxWidth = canvas.width - 100;
@@ -1391,53 +1397,21 @@ export default function Demo({ title = "Fun Quotes" }) {
             context.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
           });
 
-          // Create profile image element
-          const profileImg = document.createElement('img');
-          profileImg.crossOrigin = 'anonymous';
-          profileImg.src = userContext?.user?.pfpUrl || "/Profile_Image.jpg";
-
-          profileImg.onload = () => {
-            // Draw profile section
-            const profileSize = 40;
-            const profileY = canvas.height - 70;
-            const username = `@${userContext?.user?.username || 'user'}`;
-            
+          // Add author attribution at the bottom
+          if (authorInfo) {
             context.font = '20px Inter, sans-serif';
-            const textMetrics = context.measureText(username);
-            const totalWidth = profileSize + 15 + textMetrics.width;
-            const startX = (canvas.width - totalWidth) / 2;
-            const profileX = startX;
-            const usernameX = startX + profileSize + 15;
-
-            // Draw circular profile image
-            context.save();
-            context.beginPath();
-            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2, 0, Math.PI * 2, true);
-            context.closePath();
-            context.clip();
-
-            context.drawImage(profileImg, profileX, profileY, profileSize, profileSize);
-            context.restore();
-
-            // Draw white border around profile image
-            context.strokeStyle = 'white';
-            context.lineWidth = 2;
-            context.beginPath();
-            context.arc(profileX + profileSize / 2, profileY + profileSize / 2, profileSize / 2 + 1, 0, Math.PI * 2, true);
-            context.stroke();
-
-            // Add username
             context.fillStyle = 'white';
-            context.textAlign = 'left';
-            context.fillText(username, usernameX, profileY + (profileSize / 2) + 7);
+            context.textAlign = 'center';
+            context.fillText(`- ${authorInfo}`, canvas.width / 2, canvas.height - 40);
+            
+            if (sourceInfo) {
+              context.font = '16px Inter, sans-serif';
+              context.fillStyle = 'rgba(255, 255, 255, 0.7)';
+              context.fillText(sourceInfo, canvas.width / 2, canvas.height - 20);
+            }
+          }
 
-            resolve(canvas.toDataURL('image/png'));
-          };
-
-          // Handle profile image load error
-          profileImg.onerror = () => {
-            profileImg.src = "/Profile_Image.jpg";
-          };
+          resolve(canvas.toDataURL('image/png'));
         }
 
       } catch (error) {
@@ -2058,7 +2032,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           onClick={async () => {
                             try {
                               setIsGeneratingPreview(true);
-                              const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                              const dataUrl = await generateQuoteImage(quote, bgImage);
                               setPreviewImage(dataUrl);
                               setShowPreview(true);
                             } catch (error) {
@@ -2201,7 +2175,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     onClick={async () => {
                       try {
                         setIsGeneratingPreview(true);
-                        const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                        const dataUrl = await generateQuoteImage(quote, bgImage);
                         setPreviewImage(dataUrl);
                         setShowPreview(true);
                       } catch (error) {
@@ -2789,7 +2763,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         onClick={async () => {
                           try {
                             setIsGeneratingPreview(true);
-                            const dataUrl = await generateQuoteImage(quote, bgImage, context);
+                            const dataUrl = await generateQuoteImage(quote, bgImage);
                             setPreviewImage(dataUrl);
                             setIsCasting(true);
 
