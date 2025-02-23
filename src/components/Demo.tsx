@@ -1855,53 +1855,127 @@ export default function Demo({ title = "Fun Quotes" }) {
               <AnimatePresence>
                 {quote && !isInitialState && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md mx-auto bg-black/20 backdrop-blur-sm rounded-lg p-6"
-                  >
-                    <div className="flex flex-col items-center gap-2 w-full">
-                      {quote.split('\n\n').map((part, index) => {
-                        if (part.startsWith('- ')) {
-                          return (
-                            <motion.p 
-                              key={`author-${index}`}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.3 }}
-                              className="text-center text-white text-xl font-medium select-none break-words w-full"
-                            >
-                              {part}
-                            </motion.p>
-                          );
-                        } else if (part.includes('\n')) {
-                          return (
-                            <motion.p 
-                              key={`source-${index}`}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.4 }}
-                              className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                            >
-                              {part}
-                            </motion.p>
-                          );
-                        } else {
-                          return (
-                            <motion.p 
-                              key={`quote-${index}`}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.2 }}
-                              className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                            >
-                              {part}
-                            </motion.p>
-                          );
+                    className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 mt-20 mb-32"
+                    {...(categoryQuotes.length > 0 ? {
+                      drag: "x",
+                      dragConstraints: { left: 0, right: 0 },
+                      dragElastic: 0.3,
+                      whileDrag: { 
+                        scale: 0.98,
+                        boxShadow: "0 20px 40px rgba(255,255,255,0.2)"
+                      },
+                      dragTransition: { 
+                        bounceStiffness: 400, 
+                        bounceDamping: 30,
+                        power: 0.2
+                      },
+                      onDragEnd: (_, info) => {
+                        const swipe = info.offset.x;
+                        const threshold = 50;
+                        
+                        if (Math.abs(swipe) > threshold) {
+                          if (swipe > 0) {
+                            // Swipe right - go to previous quote
+                            const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
+                            setCurrentQuoteIndex(newIndex);
+                            const { text, author, source } = categoryQuotes[newIndex];
+                            setQuote(`${text}\n\n- ${author}\n${source}`);
+                            setGifUrl(null);
+                          } else {
+                            // Swipe left - go to next quote
+                            const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
+                            setCurrentQuoteIndex(newIndex);
+                            const { text, author, source } = categoryQuotes[newIndex];
+                            setQuote(`${text}\n\n- ${author}\n${source}`);
+                            setGifUrl(null);
+                          }
                         }
-                      })}
-                    </div>
+                      },
+                      className: "cursor-grab active:cursor-grabbing"
+                    } : {})}
+                  >
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-full max-w-md mx-auto rounded-lg p-6 shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-sm"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        backdropFilter: 'blur(4px)',
+                        WebkitBackdropFilter: 'blur(4px)',
+                        border: '1px solid rgba(255, 255, 255, 0.18)'
+                      }}
+                    >
+                      <div className="flex flex-col items-center gap-2 w-full">
+                        {quote.split('\n\n').map((part, index) => {
+                          if (part.startsWith('- ')) {
+                            return (
+                              <motion.p 
+                                key={`author-${index}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="text-center text-white text-xl font-medium select-none break-words w-full"
+                              >
+                                {part}
+                              </motion.p>
+                            );
+                          } else if (part.includes('\n')) {
+                            return (
+                              <motion.p 
+                                key={`source-${index}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
+                              >
+                                {part}
+                              </motion.p>
+                            );
+                          } else {
+                            return (
+                              <motion.p 
+                                key={`quote-${index}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                              >
+                                {part}
+                              </motion.p>
+                            );
+                          }
+                        })}
+                      </div>
+
+                      {/* GIF Display */}
+                      <AnimatePresence mode="wait">
+                        {gifUrl && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="mt-4 rounded-lg overflow-hidden cursor-pointer relative"
+                            onClick={handleRegenerateGif}
+                          >
+                            <div className="relative w-full h-[200px] sm:h-[150px]">
+                              <Image
+                                src={gifUrl}
+                                alt="Quote-related GIF"
+                                fill
+                                unoptimized
+                                sizes="(max-width: 600px) 100vw, 50vw"
+                                className={`object-cover rounded-lg transition-opacity duration-200 ${
+                                  isLoading ? 'opacity-50' : 'opacity-100'
+                                }`}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1926,78 +2000,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                       </motion.button>
                     </div>
                   </div>
-                  <motion.div
-                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-20 mb-32 cursor-grab active:cursor-grabbing`}
-                    drag
-                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    dragElastic={0.3}
-                    whileDrag={{ 
-                      scale: 0.98,
-                      boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
-                    }}
-                    dragTransition={{ 
-                      bounceStiffness: 400, 
-                      bounceDamping: 30,
-                      power: 0.2
-                    }}
-                    onDragEnd={(_, info) => {
-                      const swipe = info.offset.x;
-                      const threshold = 50;
-                      
-                      if (Math.abs(swipe) > threshold) {
-                        if (swipe > 0) {
-                          // Swipe right - go to previous quote
-                          const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
-                          setCurrentQuoteIndex(newIndex);
-                          const { text, author, source } = categoryQuotes[newIndex];
-                          setQuote(`${text}\n\n- ${author}\n${source}`);
-                          setGifUrl(null);
-                        } else {
-                          // Swipe left - go to next quote
-                          const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
-                          setCurrentQuoteIndex(newIndex);
-                          const { text, author, source } = categoryQuotes[newIndex];
-                          setQuote(`${text}\n\n- ${author}\n${source}`);
-                          setGifUrl(null);
-                        }
-                      }
-                    }}
-                  >
-                    <Card className="w-full h-full bg-transparent shadow-xl shadow-black/30">
-                      <CardContent className="p-6 sm:p-4">
-                        {/* GIF Display */}
-                        <AnimatePresence mode="wait">
-                          {gifUrl && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              className="mb-3 rounded-lg overflow-hidden cursor-pointer relative group"
-                              onClick={handleRegenerateGif}
-                            >
-                              <div className="relative w-full h-[200px] sm:h-[150px]">
-                                <Image
-                                  src={gifUrl}
-                                  alt="Quote-related GIF"
-                                  fill
-                                  unoptimized
-                                  sizes="(max-width: 600px) 100vw, 50vw"
-                                  className={`object-cover rounded-lg transition-opacity duration-200 ${
-                                    isLoading ? 'opacity-50' : 'opacity-100'
-                                  }`}
-                                />
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    Click to regenerate GIF
-                                  </span>
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
 
                   {/* Interactive Buttons - Now fixed at bottom */}
                   {categoryQuotes.length > 0 && (
@@ -2072,9 +2074,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     )}
                   </AnimatePresence>
                 </div>
-              ) : (
-                <div className="py-8" />
-              )}
+              ) : null}
             </div>
           </main>
 
