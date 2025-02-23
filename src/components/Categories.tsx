@@ -8,9 +8,18 @@ import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, Fa
 import { GiMeditation } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
 
+interface CategoryQuote {
+  text: string;
+  author: string;
+  source: string;
+}
+
 interface CategoriesProps {
   onSelectQuote: (text: string, author: string, source: string, gifUrl: string | null) => void;
-  onSelectCategory?: (quotes: { text: string; author: string; source: string }[], initialIndex: number) => void;
+  onSelectCategory: (quotes: CategoryQuote[], initialIndex: number) => void;
+  onToggleFavorite: (quote: CategoryQuote) => void;
+  onShare: (quote: CategoryQuote) => void;
+  favorites: QuoteHistoryItem[];
 }
 
 const categoryIcons: { [key: string]: IconType } = {
@@ -28,7 +37,7 @@ const categoryIcons: { [key: string]: IconType } = {
   'Poetry': FaFeather
 };
 
-export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectCategory }) => {
+export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectCategory, onToggleFavorite, onShare, favorites }) => {
   const data = quotesData as QuotesData;
   const [searchQuery, setSearchQuery] = useState('');
 

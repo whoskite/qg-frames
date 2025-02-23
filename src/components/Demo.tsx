@@ -3383,7 +3383,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               setCategoryQuotes(quotes);
               setCurrentQuoteIndex(initialIndex);
             }}
-            onToggleFavorite={(quote) => {
+            onToggleFavorite={(quote: CategoryQuote) => {
               const quoteItem: QuoteHistoryItem = {
                 text: `${quote.text}\n\n- ${quote.author}\n${quote.source}`,
                 style: 'default',
@@ -3396,7 +3396,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               setShowHeartAnimation(true);
               setTimeout(() => setShowHeartAnimation(false), 1000);
             }}
-            onShare={(quote) => {
+            onShare={(quote: CategoryQuote) => {
               setIsInitialState(false);
               setQuote(`${quote.text}\n\n- ${quote.author}\n${quote.source}`);
               setGifUrl(null);
