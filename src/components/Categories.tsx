@@ -7,12 +7,7 @@ import quotesData from '../data/quotes.json';
 import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, FaLeaf, FaBrain, FaPaintBrush, FaFeather } from 'react-icons/fa';
 import { GiMeditation } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
-
-interface CategoryQuote {
-  text: string;
-  author: string;
-  source: string;
-}
+import type { QuoteHistoryItem } from '../types/quotes';
 
 interface CategoriesProps {
   onSelectQuote: (text: string, author: string, source: string, gifUrl: string | null) => void;
@@ -53,20 +48,20 @@ export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectC
     onSelectQuote(
       selectedQuote.text,
       selectedQuote.author,
-      selectedQuote.source,
+      selectedQuote.source || '',
       null
     );
 
     // Only call onSelectCategory if it's provided
     if (onSelectCategory) {
-      onSelectCategory(
-        quotes.map(q => ({
-          text: q.text,
-          author: q.author,
-          source: q.source
-        })),
-        initialIndex
-      );
+      onSelectCategory(quotes.map(quote => ({
+        id: quote.id,
+        text: quote.text,
+        author: quote.author,
+        source: quote.source,
+        topics: quote.topics,
+        year: quote.year
+      })), initialIndex);
     }
   };
 
