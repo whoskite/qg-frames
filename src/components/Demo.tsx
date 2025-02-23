@@ -2001,7 +2001,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           <motion.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex justify-center items-center gap-6 mt-6"
+                            className="flex justify-center items-center gap-6 mt-6 bg-black/30 backdrop-blur-sm py-2 px-4 rounded-full w-fit mx-auto"
                           >
                             <motion.button
                               whileHover={{ scale: 1.1 }}
@@ -2022,7 +2022,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                               className="relative"
                             >
                               <Heart 
-                                className={`w-7 h-7 cursor-pointer transition-all duration-300 ${
+                                className={`w-6 h-6 cursor-pointer transition-all duration-300 ${
                                   favorites.some(fav => fav.text === quote)
                                     ? 'fill-pink-500 text-pink-500' 
                                     : 'text-white hover:text-pink-200'
@@ -2047,7 +2047,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                               }}
                               className="relative"
                             >
-                              <Share2 className="w-7 h-7 text-white hover:text-blue-200 cursor-pointer transition-all duration-300" />
+                              <Share2 className="w-6 h-6 text-white hover:text-blue-200 cursor-pointer transition-all duration-300" />
                             </motion.button>
                           </motion.div>
                         )}
