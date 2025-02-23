@@ -499,6 +499,12 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [showTooltips, setShowTooltips] = useState(false);
   const [hasSeenTooltips, setHasSeenTooltips] = useState(false);
 
+  // First, add this state to track the animation
+  const [isQuoteTransitioning, setIsQuoteTransitioning] = useState(false);
+
+  // Add new state for swipe direction
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+
   const { onboarding, setOnboarding } = useOnboarding(context, isFirebaseInitialized, setBgImage);
 
   // Add this state for navigation
@@ -1857,13 +1863,8 @@ export default function Demo({ title = "Fun Quotes" }) {
                 {quote && !isInitialState && (
                   <motion.div
                     className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 ${
-                      // Adjust margin based on whether we're in categories or generate section
                       categoryQuotes.length > 0 ? 'mt-20' : 'mt-4'
-                    } mb-32`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.8 }}
+                    } mb-32 ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
                     {...(categoryQuotes.length > 0 ? {
                       drag: "x",
                       dragConstraints: { left: 0, right: 0 },
@@ -1877,36 +1878,55 @@ export default function Demo({ title = "Fun Quotes" }) {
                         bounceDamping: 30,
                         power: 0.2
                       },
-                      onDragEnd: (_, info) => {
+                      onDragEnd: async (_, info) => {
                         const swipe = info.offset.x;
                         const threshold = 50;
                         
                         if (Math.abs(swipe) > threshold) {
-                          if (swipe > 0) {
-                            // Swipe right - go to previous quote
-                            const newIndex = (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length;
-                            setCurrentQuoteIndex(newIndex);
-                            const { text, author, source } = categoryQuotes[newIndex];
-                            setQuote(`${text}\n\n- ${author}\n${source}`);
-                            setGifUrl(null);
-                          } else {
-                            // Swipe left - go to next quote
-                            const newIndex = (currentQuoteIndex + 1) % categoryQuotes.length;
-                            setCurrentQuoteIndex(newIndex);
-                            const { text, author, source } = categoryQuotes[newIndex];
-                            setQuote(`${text}\n\n- ${author}\n${source}`);
-                            setGifUrl(null);
-                          }
+                          setIsQuoteTransitioning(true);
+                          setSwipeDirection(swipe > 0 ? 'right' : 'left');
+                          
+                          // Calculate new index
+                          const newIndex = swipe > 0
+                            ? (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length
+                            : (currentQuoteIndex + 1) % categoryQuotes.length;
+                          
+                          // Get new quote data
+                          const { text, author, source } = categoryQuotes[newIndex];
+                          const newQuote = `${text}\n\n- ${author}\n${source}`;
+                          
+                          // Update everything at once
+                          setCurrentQuoteIndex(newIndex);
+                          setQuote(newQuote);
+                          setGifUrl(null);
+                          
+                          // Reset animation states after transition
+                          setTimeout(() => {
+                            setIsQuoteTransitioning(false);
+                            setSwipeDirection(null);
+                          }, 8000); // Increased to match the new longest animation duration (8s)
                         }
-                      },
-                      className: "cursor-grab active:cursor-grabbing"
+                      }
                     } : {})}
                   >
                     <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 1.2 }} // Increased container duration
+                      key={`${quote}-${currentQuoteIndex}`}
+                      initial={{ 
+                        opacity: 0, 
+                        x: isQuoteTransitioning ? (swipeDirection === 'right' ? 50 : -50) : 0 
+                      }}
+                      animate={{ 
+                        opacity: 1, 
+                        x: 0
+                      }}
+                      exit={{ 
+                        opacity: 0, 
+                        x: isQuoteTransitioning ? (swipeDirection === 'right' ? -50 : 50) : 0
+                      }}
+                      transition={{ 
+                        duration: 0.8,
+                        ease: "easeInOut"
+                      }}
                       className="w-full max-w-md mx-auto rounded-lg p-6 shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-sm"
                       style={{
                         background: 'rgba(255, 255, 255, 0.05)',
@@ -1921,12 +1941,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                           if (part.startsWith('- ')) {
                             return (
                               <motion.p 
-                                key={`author-${index}`}
+                                key={`author-${index}-${currentQuoteIndex}`}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                                 transition={{ 
-                                  duration: 1.5,
-                                  delay: 1.2 // Increased delay for author
+                                  duration: 8.0,  // Increased from 4.0 to 8.0 seconds
+                                  delay: 1.0,     // Kept same delay
+                                  ease: "easeInOut"
                                 }}
                                 className="text-center text-white text-xl font-medium select-none break-words w-full"
                               >
@@ -1936,12 +1958,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                           } else if (part.includes('\n')) {
                             return (
                               <motion.p 
-                                key={`source-${index}`}
+                                key={`source-${index}-${currentQuoteIndex}`}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                                 transition={{ 
-                                  duration: 1.5,
-                                  delay: 1.5 // Increased delay for source
+                                  duration: 2.0, // Increased from 1.2
+                                  delay: 1.4,    // Adjusted delay
+                                  ease: "easeInOut"
                                 }}
                                 className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
                               >
@@ -1951,12 +1975,14 @@ export default function Demo({ title = "Fun Quotes" }) {
                           } else {
                             return (
                               <motion.p 
-                                key={`quote-${index}`}
+                                key={`quote-${index}-${currentQuoteIndex}`}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                                 transition={{ 
-                                  duration: 1.5,
-                                  delay: 0.8 // Increased delay for main quote
+                                  duration: 5.0, // Increased from 1.0 to 5.0 seconds
+                                  delay: 0.4,    // Kept same delay
+                                  ease: "easeInOut"
                                 }}
                                 className="text-center text-white text-2xl font-medium select-none break-words w-full"
                               >
@@ -1966,36 +1992,6 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }
                         })}
                       </div>
-
-                      {/* GIF Display */}
-                      <AnimatePresence mode="wait">
-                        {gifUrl && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ 
-                              duration: 1.2,
-                              delay: 1.8 // Increased delay for GIF
-                            }}
-                            className="mt-4 rounded-lg overflow-hidden cursor-pointer relative"
-                            onClick={handleRegenerateGif}
-                          >
-                            <div className="relative w-full h-[200px] sm:h-[150px]">
-                              <Image
-                                src={gifUrl}
-                                alt="Quote-related GIF"
-                                fill
-                                unoptimized
-                                sizes="(max-width: 600px) 100vw, 50vw"
-                                className={`object-cover rounded-lg transition-opacity duration-200 ${
-                                  isLoading ? 'opacity-50' : 'opacity-100'
-                                }`}
-                              />
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </motion.div>
                   </motion.div>
                 )}

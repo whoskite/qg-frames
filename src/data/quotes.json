@@ -124,6 +124,286 @@
           "source": "Turning the Thing Around",
           "topics": ["excellence", "effort", "achievement"],
           "year": 1994
+        },
+        {
+          "id": "mot16",
+          "text": "The only impossible journey is the one you never begin.",
+          "author": "Tony Robbins",
+          "source": "Unlimited Power",
+          "topics": ["action", "beginning", "journey"],
+          "year": 1986
+        },
+        {
+          "id": "mot17",
+          "text": "Life is 10% what happens to you and 90% how you react to it.",
+          "author": "Charles R. Swindoll",
+          "source": "Strengthening Your Grip",
+          "topics": ["attitude", "reaction", "perspective"],
+          "year": 1982
+        },
+        {
+          "id": "mot18",
+          "text": "The way to get started is to quit talking and begin doing.",
+          "author": "Walt Disney",
+          "source": "Business Philosophy",
+          "topics": ["action", "initiative", "beginning"],
+          "year": 1957
+        },
+        {
+          "id": "mot19",
+          "text": "Don't let yesterday take up too much of today.",
+          "author": "Will Rogers",
+          "source": "Daily Telegrams",
+          "topics": ["present", "focus", "moving forward"],
+          "year": 1930
+        },
+        {
+          "id": "mot20",
+          "text": "You are never too old to set another goal or to dream a new dream.",
+          "author": "C.S. Lewis",
+          "source": "Letters to Children",
+          "topics": ["dreams", "goals", "age"],
+          "year": 1950
+        },
+        {
+          "id": "mot21",
+          "text": "The secret of getting ahead is getting started.",
+          "author": "Mark Twain",
+          "source": "Public Speeches",
+          "topics": ["initiative", "progress", "beginning"],
+          "year": 1900
+        },
+        {
+          "id": "mot22",
+          "text": "Believe you can and you're halfway there.",
+          "author": "Theodore Roosevelt",
+          "source": "Presidential Speeches",
+          "topics": ["belief", "confidence", "achievement"],
+          "year": 1910
+        },
+        {
+          "id": "mot23",
+          "text": "The past cannot be changed. The future is yet in your power.",
+          "author": "Mary Pickford",
+          "source": "Sunshine and Shadow",
+          "topics": ["future", "power", "change"],
+          "year": 1955
+        },
+        {
+          "id": "mot24",
+          "text": "Start where you are. Use what you have. Do what you can.",
+          "author": "Arthur Ashe",
+          "source": "Days of Grace: A Memoir",
+          "topics": ["beginning", "resources", "action"],
+          "year": 1993
+        },
+        {
+          "id": "mot25",
+          "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+          "author": "Winston Churchill",
+          "source": "War Speeches",
+          "topics": ["success", "failure", "perseverance"],
+          "year": 1942
+        },
+        {
+          "id": "mot26",
+          "text": "The only way to achieve the impossible is to believe it is possible.",
+          "author": "Charles Kingsleigh",
+          "source": "Alice in Wonderland",
+          "topics": ["belief", "possibility", "achievement"],
+          "year": 2010
+        },
+        {
+          "id": "mot27",
+          "text": "What you lack in talent can be made up with desire, hustle and giving 110% all the time.",
+          "author": "Don Zimmer",
+          "source": "Baseball Philosophy",
+          "topics": ["effort", "dedication", "perseverance"],
+          "year": 1989
+        },
+        {
+          "id": "mot28",
+          "text": "The difference between ordinary and extraordinary is that little extra.",
+          "author": "Jimmy Johnson",
+          "source": "Turning the Thing Around",
+          "topics": ["effort", "excellence", "dedication"],
+          "year": 1994
+        },
+        {
+          "id": "mot29",
+          "text": "The harder you work for something, the greater you'll feel when you achieve it.",
+          "author": "Anonymous",
+          "source": "Common Wisdom",
+          "topics": ["hard work", "achievement", "satisfaction"],
+          "year": null
+        },
+        {
+          "id": "mot30",
+          "text": "Don't count the days, make the days count.",
+          "author": "Muhammad Ali",
+          "source": "Sports Interviews",
+          "topics": ["action", "time", "purpose"],
+          "year": 1975
+        },
+        {
+          "id": "mot31",
+          "text": "The future depends on what you do today.",
+          "author": "Mahatma Gandhi",
+          "source": "Collected Works",
+          "topics": ["action", "future", "responsibility"],
+          "year": 1925
+        },
+        {
+          "id": "mot32",
+          "text": "The only place where success comes before work is in the dictionary.",
+          "author": "Vidal Sassoon",
+          "source": "Business Philosophy",
+          "topics": ["success", "work", "effort"],
+          "year": 1985
+        },
+        {
+          "id": "mot33",
+          "text": "Your talent determines what you can do. Your motivation determines how much you're willing to do. Your attitude determines how well you do it.",
+          "author": "Lou Holtz",
+          "source": "Winning Every Day",
+          "topics": ["talent", "motivation", "attitude"],
+          "year": 1998
+        },
+        {
+          "id": "mot34",
+          "text": "The expert in anything was once a beginner.",
+          "author": "Helen Hayes",
+          "source": "On Reflection",
+          "topics": ["learning", "growth", "beginnings"],
+          "year": 1968
+        },
+        {
+          "id": "mot35",
+          "text": "The only person you should try to be better than is the person you were yesterday.",
+          "author": "Anonymous",
+          "source": "Modern Wisdom",
+          "topics": ["self-improvement", "growth", "competition"],
+          "year": null
+        },
+        {
+          "id": "mot36",
+          "text": "Success isn't always about greatness. It's about consistency. Consistent hard work leads to success. Greatness will come.",
+          "author": "Dwayne Johnson",
+          "source": "Social Media Posts",
+          "topics": ["consistency", "hard work", "success"],
+          "year": 2016
+        },
+        {
+          "id": "mot37",
+          "text": "The path to success is to take massive, determined action.",
+          "author": "Tony Robbins",
+          "source": "Awaken the Giant Within",
+          "topics": ["action", "determination", "success"],
+          "year": 1991
+        },
+        {
+          "id": "mot38",
+          "text": "Small daily improvements are the key to staggering long-term results.",
+          "author": "Anonymous",
+          "source": "Fitness Philosophy",
+          "topics": ["improvement", "consistency", "growth"],
+          "year": null
+        },
+        {
+          "id": "mot39",
+          "text": "The biggest adventure you can take is to live the life of your dreams.",
+          "author": "Oprah Winfrey",
+          "source": "Public Speeches",
+          "topics": ["dreams", "adventure", "life"],
+          "year": 2004
+        },
+        {
+          "id": "mot40",
+          "text": "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.",
+          "author": "Albert Schweitzer",
+          "source": "Philosophy of Civilization",
+          "topics": ["happiness", "success", "passion"],
+          "year": 1923
+        },
+        {
+          "id": "mot41",
+          "text": "The only limit to our realization of tomorrow will be our doubts of today.",
+          "author": "Franklin D. Roosevelt",
+          "source": "Public Papers",
+          "topics": ["doubt", "future", "potential"],
+          "year": 1940
+        },
+        {
+          "id": "mot42",
+          "text": "Do what you have to do until you can do what you want to do.",
+          "author": "Oprah Winfrey",
+          "source": "Life Lessons",
+          "topics": ["perseverance", "goals", "dedication"],
+          "year": 2000
+        },
+        {
+          "id": "mot43",
+          "text": "The difference between who you are and who you want to be is what you do.",
+          "author": "Anonymous",
+          "source": "Modern Wisdom",
+          "topics": ["action", "change", "self-improvement"],
+          "year": null
+        },
+        {
+          "id": "mot44",
+          "text": "Your time is limited, don't waste it living someone else's life.",
+          "author": "Steve Jobs",
+          "source": "Stanford Commencement Speech",
+          "topics": ["time", "authenticity", "life"],
+          "year": 2005
+        },
+        {
+          "id": "mot45",
+          "text": "The best revenge is massive success.",
+          "author": "Frank Sinatra",
+          "source": "Personal Interviews",
+          "topics": ["success", "motivation", "achievement"],
+          "year": 1965
+        },
+        {
+          "id": "mot46",
+          "text": "Champions keep playing until they get it right.",
+          "author": "Billie Jean King",
+          "source": "Sports Philosophy",
+          "topics": ["persistence", "practice", "success"],
+          "year": 1980
+        },
+        {
+          "id": "mot47",
+          "text": "The harder the battle, the sweeter the victory.",
+          "author": "Les Brown",
+          "source": "Live Your Dreams",
+          "topics": ["struggle", "victory", "perseverance"],
+          "year": 1992
+        },
+        {
+          "id": "mot48",
+          "text": "Life begins at the end of your comfort zone.",
+          "author": "Neale Donald Walsch",
+          "source": "Conversations with God",
+          "topics": ["growth", "comfort zone", "challenge"],
+          "year": 1995
+        },
+        {
+          "id": "mot49",
+          "text": "The best time to plant a tree was 20 years ago. The second best time is now.",
+          "author": "Chinese Proverb",
+          "source": "Ancient Wisdom",
+          "topics": ["action", "timing", "beginning"],
+          "year": null
+        },
+        {
+          "id": "mot50",
+          "text": "Success is not about the destination, it's about the journey.",
+          "author": "Zig Ziglar",
+          "source": "See You at the Top",
+          "topics": ["journey", "success", "process"],
+          "year": 1975
         }
       ]
     },
