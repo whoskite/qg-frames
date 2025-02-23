@@ -1803,9 +1803,10 @@ export default function Demo({ title = "Fun Quotes" }) {
           >
             {renderBackground()}
             <div className="relative z-10 w-full flex flex-col items-center">
-              <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm mb-12">
-                <AnimatePresence mode="wait">
-                  {isInitialState && (
+              {/* Welcome Message */}
+              {isInitialState && (
+                <div className="flex flex-col items-center gap-4 w-full max-w-[95%] sm:max-w-sm mb-12">
+                  <AnimatePresence mode="wait">
                     <motion.div 
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1829,9 +1830,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                         Get inspired with amazing quotes
                       </motion.p>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Loading Skeleton */}
               <AnimatePresence>
@@ -1852,10 +1853,17 @@ export default function Demo({ title = "Fun Quotes" }) {
               </AnimatePresence>
 
               {/* Quote Display */}
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {quote && !isInitialState && (
                   <motion.div
-                    className="w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 mt-20 mb-32"
+                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 ${
+                      // Adjust margin based on whether we're in categories or generate section
+                      categoryQuotes.length > 0 ? 'mt-20' : 'mt-4'
+                    } mb-32`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
                     {...(categoryQuotes.length > 0 ? {
                       drag: "x",
                       dragConstraints: { left: 0, right: 0 },
@@ -1898,7 +1906,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.5 }}
+                      transition={{ duration: 1.2 }} // Increased container duration
                       className="w-full max-w-md mx-auto rounded-lg p-6 shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-sm"
                       style={{
                         background: 'rgba(255, 255, 255, 0.05)',
@@ -1916,7 +1924,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 key={`author-${index}`}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ delay: 0.3 }}
+                                transition={{ 
+                                  duration: 1.5,
+                                  delay: 1.2 // Increased delay for author
+                                }}
                                 className="text-center text-white text-xl font-medium select-none break-words w-full"
                               >
                                 {part}
@@ -1928,7 +1939,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 key={`source-${index}`}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ delay: 0.4 }}
+                                transition={{ 
+                                  duration: 1.5,
+                                  delay: 1.5 // Increased delay for source
+                                }}
                                 className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
                               >
                                 {part}
@@ -1940,7 +1954,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                                 key={`quote-${index}`}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ delay: 0.2 }}
+                                transition={{ 
+                                  duration: 1.5,
+                                  delay: 0.8 // Increased delay for main quote
+                                }}
                                 className="text-center text-white text-2xl font-medium select-none break-words w-full"
                               >
                                 {part}
@@ -1957,6 +1974,10 @@ export default function Demo({ title = "Fun Quotes" }) {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
+                            transition={{ 
+                              duration: 1.2,
+                              delay: 1.8 // Increased delay for GIF
+                            }}
                             className="mt-4 rounded-lg overflow-hidden cursor-pointer relative"
                             onClick={handleRegenerateGif}
                           >
