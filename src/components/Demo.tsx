@@ -951,9 +951,12 @@ export default function Demo({ title = "Fun Quotes" }) {
     setQuote(item.text);
     if (item.gifUrl) {
       setGifUrl(item.gifUrl);
+    } else {
+      setGifUrl(null);
     }
     setShowHistory(false);
     setShowFavorites(false);
+    handleNavigation('generate');
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Show success notification
@@ -1906,23 +1909,25 @@ export default function Demo({ title = "Fun Quotes" }) {
               {/* Card Component */}
               {categoryQuotes.length > 0 ? (
                 <div className="w-full flex flex-col items-center">
-                  <div className="w-full flex items-center justify-start px-4 mb-4">
-                    <motion.button
-                      onClick={() => {
-                        setShowCategories(true);
-                        setCategoryQuotes([]);
-                        setCurrentQuoteIndex(0);
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-white/80 hover:text-white flex items-center gap-2 transition-colors"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                      <span>Back to Categories</span>
-                    </motion.button>
+                  <div className="fixed top-[3px] left-0 right-0 z-30 backdrop-blur-sm border-b border-white/10">
+                    <div className="max-w-7xl mx-auto px-4">
+                      <motion.button
+                        onClick={() => {
+                          setShowCategories(true);
+                          setCategoryQuotes([]);
+                          setCurrentQuoteIndex(0);
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="text-white flex items-center gap-2 py-3"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                        <span>Back to Categories</span>
+                      </motion.button>
+                    </div>
                   </div>
                   <motion.div
-                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-4 mb-32 cursor-grab active:cursor-grabbing`}
+                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 bg-transparent mt-20 mb-32 cursor-grab active:cursor-grabbing`}
                     drag
                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                     dragElastic={0.3}
@@ -2248,12 +2253,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                           className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition-colors relative group"
-                          onClick={() => {
-                            setIsInitialState(false);
-                            setQuote(item.text);
-                            setGifUrl(item.gifUrl);
-                            setShowHistory(false);
-                          }}
+                          onClick={() => handleReuseQuote(item)}
                         >
                           {item.gifUrl ? (
                             <div className="flex gap-4">
