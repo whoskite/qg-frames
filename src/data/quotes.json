@@ -1,0 +1,1279 @@
+{
+  "categories": [
+    {
+      "id": "motivation",
+      "name": "Motivation",
+      "description": "Inspiring quotes to boost your drive and determination",
+      "quotes": [
+        {
+          "id": "mot1",
+          "text": "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle.",
+          "author": "Steve Jobs",
+          "source": "Stanford Commencement Speech",
+          "topics": ["passion", "work", "purpose"],
+          "year": 2005
+        },
+        {
+          "id": "mot2",
+          "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+          "author": "Winston Churchill",
+          "source": "Public Speech",
+          "topics": ["success", "perseverance", "courage"],
+          "year": 1940
+        },
+        {
+          "id": "mot3",
+          "text": "It does not matter how slowly you go as long as you do not stop.",
+          "author": "Confucius",
+          "source": "The Analects",
+          "topics": ["progress", "persistence", "determination"],
+          "year": null
+        },
+        {
+          "id": "mot4",
+          "text": "Everything you've ever wanted is on the other side of fear.",
+          "author": "George Addair",
+          "source": "Personal Development Seminar",
+          "topics": ["fear", "growth", "courage"],
+          "year": null
+        },
+        {
+          "id": "mot5",
+          "text": "The future belongs to those who believe in the beauty of their dreams.",
+          "author": "Eleanor Roosevelt",
+          "source": "You Learn by Living",
+          "topics": ["dreams", "future", "belief"],
+          "year": 1960
+        },
+        {
+          "id": "mot6",
+          "text": "Don't watch the clock; do what it does. Keep going.",
+          "author": "Sam Levenson",
+          "source": "In One Era & Out the Other",
+          "topics": ["persistence", "action", "determination"],
+          "year": 1973
+        },
+        {
+          "id": "mot7",
+          "text": "The only limit to our realization of tomorrow will be our doubts of today.",
+          "author": "Franklin D. Roosevelt",
+          "source": "First Inaugural Address",
+          "topics": ["belief", "future", "potential"],
+          "year": 1933
+        },
+        {
+          "id": "mot8",
+          "text": "What you get by achieving your goals is not as important as what you become by achieving your goals.",
+          "author": "Zig Ziglar",
+          "source": "See You at the Top",
+          "topics": ["growth", "achievement", "personal development"],
+          "year": 1975
+        },
+        {
+          "id": "mot9",
+          "text": "The harder you work for something, the greater you'll feel when you achieve it.",
+          "author": "Anonymous",
+          "source": "Common Wisdom",
+          "topics": ["hard work", "achievement", "satisfaction"],
+          "year": null
+        },
+        {
+          "id": "mot10",
+          "text": "Your time is limited, don't waste it living someone else's life.",
+          "author": "Steve Jobs",
+          "source": "Stanford Commencement Speech",
+          "topics": ["authenticity", "time", "purpose"],
+          "year": 2005
+        },
+        {
+          "id": "mot11",
+          "text": "The best way to predict the future is to create it.",
+          "author": "Peter Drucker",
+          "source": "Management Concepts",
+          "topics": ["action", "future", "creation"],
+          "year": null
+        },
+        {
+          "id": "mot12",
+          "text": "You are never too old to set another goal or to dream a new dream.",
+          "author": "C.S. Lewis",
+          "source": "Letters to Children",
+          "topics": ["dreams", "goals", "age"],
+          "year": null
+        },
+        {
+          "id": "mot13",
+          "text": "The only person you are destined to become is the person you decide to be.",
+          "author": "Ralph Waldo Emerson",
+          "source": "Self-Reliance",
+          "topics": ["destiny", "choice", "self-determination"],
+          "year": 1841
+        },
+        {
+          "id": "mot14",
+          "text": "Success is walking from failure to failure with no loss of enthusiasm.",
+          "author": "Winston Churchill",
+          "source": "Collected Speeches",
+          "topics": ["success", "failure", "persistence"],
+          "year": null
+        },
+        {
+          "id": "mot15",
+          "text": "The difference between ordinary and extraordinary is that little extra.",
+          "author": "Jimmy Johnson",
+          "source": "Turning the Thing Around",
+          "topics": ["excellence", "effort", "achievement"],
+          "year": 1994
+        },
+        {
+          "id": "mot16",
+          "text": "The only impossible journey is the one you never begin.",
+          "author": "Tony Robbins",
+          "source": "Unlimited Power",
+          "topics": ["action", "beginning", "journey"],
+          "year": 1986
+        },
+        {
+          "id": "mot17",
+          "text": "Life is 10% what happens to you and 90% how you react to it.",
+          "author": "Charles R. Swindoll",
+          "source": "Strengthening Your Grip",
+          "topics": ["attitude", "reaction", "perspective"],
+          "year": 1982
+        },
+        {
+          "id": "mot18",
+          "text": "The way to get started is to quit talking and begin doing.",
+          "author": "Walt Disney",
+          "source": "Business Philosophy",
+          "topics": ["action", "initiative", "beginning"],
+          "year": 1957
+        },
+        {
+          "id": "mot19",
+          "text": "Don't let yesterday take up too much of today.",
+          "author": "Will Rogers",
+          "source": "Daily Telegrams",
+          "topics": ["present", "focus", "moving forward"],
+          "year": 1930
+        },
+        {
+          "id": "mot20",
+          "text": "You are never too old to set another goal or to dream a new dream.",
+          "author": "C.S. Lewis",
+          "source": "Letters to Children",
+          "topics": ["dreams", "goals", "age"],
+          "year": 1950
+        },
+        {
+          "id": "mot21",
+          "text": "The secret of getting ahead is getting started.",
+          "author": "Mark Twain",
+          "source": "Public Speeches",
+          "topics": ["initiative", "progress", "beginning"],
+          "year": 1900
+        },
+        {
+          "id": "mot22",
+          "text": "Believe you can and you're halfway there.",
+          "author": "Theodore Roosevelt",
+          "source": "Presidential Speeches",
+          "topics": ["belief", "confidence", "achievement"],
+          "year": 1910
+        },
+        {
+          "id": "mot23",
+          "text": "The past cannot be changed. The future is yet in your power.",
+          "author": "Mary Pickford",
+          "source": "Sunshine and Shadow",
+          "topics": ["future", "power", "change"],
+          "year": 1955
+        },
+        {
+          "id": "mot24",
+          "text": "Start where you are. Use what you have. Do what you can.",
+          "author": "Arthur Ashe",
+          "source": "Days of Grace: A Memoir",
+          "topics": ["beginning", "resources", "action"],
+          "year": 1993
+        },
+        {
+          "id": "mot25",
+          "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+          "author": "Winston Churchill",
+          "source": "War Speeches",
+          "topics": ["success", "failure", "perseverance"],
+          "year": 1942
+        },
+        {
+          "id": "mot26",
+          "text": "The only way to achieve the impossible is to believe it is possible.",
+          "author": "Charles Kingsleigh",
+          "source": "Alice in Wonderland",
+          "topics": ["belief", "possibility", "achievement"],
+          "year": 2010
+        },
+        {
+          "id": "mot27",
+          "text": "What you lack in talent can be made up with desire, hustle and giving 110% all the time.",
+          "author": "Don Zimmer",
+          "source": "Baseball Philosophy",
+          "topics": ["effort", "dedication", "perseverance"],
+          "year": 1989
+        },
+        {
+          "id": "mot28",
+          "text": "The difference between ordinary and extraordinary is that little extra.",
+          "author": "Jimmy Johnson",
+          "source": "Turning the Thing Around",
+          "topics": ["effort", "excellence", "dedication"],
+          "year": 1994
+        },
+        {
+          "id": "mot29",
+          "text": "The harder you work for something, the greater you'll feel when you achieve it.",
+          "author": "Anonymous",
+          "source": "Common Wisdom",
+          "topics": ["hard work", "achievement", "satisfaction"],
+          "year": null
+        },
+        {
+          "id": "mot30",
+          "text": "Don't count the days, make the days count.",
+          "author": "Muhammad Ali",
+          "source": "Sports Interviews",
+          "topics": ["action", "time", "purpose"],
+          "year": 1975
+        },
+        {
+          "id": "mot31",
+          "text": "The future depends on what you do today.",
+          "author": "Mahatma Gandhi",
+          "source": "Collected Works",
+          "topics": ["action", "future", "responsibility"],
+          "year": 1925
+        },
+        {
+          "id": "mot32",
+          "text": "The only place where success comes before work is in the dictionary.",
+          "author": "Vidal Sassoon",
+          "source": "Business Philosophy",
+          "topics": ["success", "work", "effort"],
+          "year": 1985
+        },
+        {
+          "id": "mot33",
+          "text": "Your talent determines what you can do. Your motivation determines how much you're willing to do. Your attitude determines how well you do it.",
+          "author": "Lou Holtz",
+          "source": "Winning Every Day",
+          "topics": ["talent", "motivation", "attitude"],
+          "year": 1998
+        },
+        {
+          "id": "mot34",
+          "text": "The expert in anything was once a beginner.",
+          "author": "Helen Hayes",
+          "source": "On Reflection",
+          "topics": ["learning", "growth", "beginnings"],
+          "year": 1968
+        },
+        {
+          "id": "mot35",
+          "text": "The only person you should try to be better than is the person you were yesterday.",
+          "author": "Anonymous",
+          "source": "Modern Wisdom",
+          "topics": ["self-improvement", "growth", "competition"],
+          "year": null
+        },
+        {
+          "id": "mot36",
+          "text": "Success isn't always about greatness. It's about consistency. Consistent hard work leads to success. Greatness will come.",
+          "author": "Dwayne Johnson",
+          "source": "Social Media Posts",
+          "topics": ["consistency", "hard work", "success"],
+          "year": 2016
+        },
+        {
+          "id": "mot37",
+          "text": "The path to success is to take massive, determined action.",
+          "author": "Tony Robbins",
+          "source": "Awaken the Giant Within",
+          "topics": ["action", "determination", "success"],
+          "year": 1991
+        },
+        {
+          "id": "mot38",
+          "text": "Small daily improvements are the key to staggering long-term results.",
+          "author": "Anonymous",
+          "source": "Fitness Philosophy",
+          "topics": ["improvement", "consistency", "growth"],
+          "year": null
+        },
+        {
+          "id": "mot39",
+          "text": "The biggest adventure you can take is to live the life of your dreams.",
+          "author": "Oprah Winfrey",
+          "source": "Public Speeches",
+          "topics": ["dreams", "adventure", "life"],
+          "year": 2004
+        },
+        {
+          "id": "mot40",
+          "text": "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.",
+          "author": "Albert Schweitzer",
+          "source": "Philosophy of Civilization",
+          "topics": ["happiness", "success", "passion"],
+          "year": 1923
+        },
+        {
+          "id": "mot41",
+          "text": "The only limit to our realization of tomorrow will be our doubts of today.",
+          "author": "Franklin D. Roosevelt",
+          "source": "Public Papers",
+          "topics": ["doubt", "future", "potential"],
+          "year": 1940
+        },
+        {
+          "id": "mot42",
+          "text": "Do what you have to do until you can do what you want to do.",
+          "author": "Oprah Winfrey",
+          "source": "Life Lessons",
+          "topics": ["perseverance", "goals", "dedication"],
+          "year": 2000
+        },
+        {
+          "id": "mot43",
+          "text": "The difference between who you are and who you want to be is what you do.",
+          "author": "Anonymous",
+          "source": "Modern Wisdom",
+          "topics": ["action", "change", "self-improvement"],
+          "year": null
+        },
+        {
+          "id": "mot44",
+          "text": "Your time is limited, don't waste it living someone else's life.",
+          "author": "Steve Jobs",
+          "source": "Stanford Commencement Speech",
+          "topics": ["time", "authenticity", "life"],
+          "year": 2005
+        },
+        {
+          "id": "mot45",
+          "text": "The best revenge is massive success.",
+          "author": "Frank Sinatra",
+          "source": "Personal Interviews",
+          "topics": ["success", "motivation", "achievement"],
+          "year": 1965
+        },
+        {
+          "id": "mot46",
+          "text": "Champions keep playing until they get it right.",
+          "author": "Billie Jean King",
+          "source": "Sports Philosophy",
+          "topics": ["persistence", "practice", "success"],
+          "year": 1980
+        },
+        {
+          "id": "mot47",
+          "text": "The harder the battle, the sweeter the victory.",
+          "author": "Les Brown",
+          "source": "Live Your Dreams",
+          "topics": ["struggle", "victory", "perseverance"],
+          "year": 1992
+        },
+        {
+          "id": "mot48",
+          "text": "Life begins at the end of your comfort zone.",
+          "author": "Neale Donald Walsch",
+          "source": "Conversations with God",
+          "topics": ["growth", "comfort zone", "challenge"],
+          "year": 1995
+        },
+        {
+          "id": "mot49",
+          "text": "The best time to plant a tree was 20 years ago. The second best time is now.",
+          "author": "Chinese Proverb",
+          "source": "Ancient Wisdom",
+          "topics": ["action", "timing", "beginning"],
+          "year": null
+        },
+        {
+          "id": "mot50",
+          "text": "Success is not about the destination, it's about the journey.",
+          "author": "Zig Ziglar",
+          "source": "See You at the Top",
+          "topics": ["journey", "success", "process"],
+          "year": 1975
+        }
+      ]
+    },
+    {
+      "id": "wisdom",
+      "name": "Wisdom",
+      "description": "Timeless insights and profound thoughts about life",
+      "quotes": [
+        {
+          "id": "wis1",
+          "text": "The unexamined life is not worth living.",
+          "author": "Socrates",
+          "source": "Plato's Apology",
+          "topics": ["reflection", "philosophy", "life"],
+          "year": null
+        },
+        {
+          "id": "wis2",
+          "text": "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+          "author": "Aristotle",
+          "source": "Nicomachean Ethics",
+          "topics": ["habits", "excellence", "character"],
+          "year": null
+        },
+        {
+          "id": "wis3",
+          "text": "The journey of a thousand miles begins with one step.",
+          "author": "Lao Tzu",
+          "source": "Tao Te Ching",
+          "topics": ["beginnings", "journey", "action"],
+          "year": null
+        },
+        {
+          "id": "wis4",
+          "text": "Life is really simple, but we insist on making it complicated.",
+          "author": "Confucius",
+          "source": "The Analects",
+          "topics": ["simplicity", "life", "wisdom"],
+          "year": null
+        },
+        {
+          "id": "wis5",
+          "text": "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.",
+          "author": "Rumi",
+          "source": "Persian Poetry",
+          "topics": ["change", "wisdom", "self-improvement"],
+          "year": null
+        },
+        {
+          "id": "wis6",
+          "text": "The more I learn, the more I realize how much I don't know.",
+          "author": "Albert Einstein",
+          "source": "Personal Letters",
+          "topics": ["learning", "humility", "knowledge"],
+          "year": null
+        },
+        {
+          "id": "wis7",
+          "text": "The only true wisdom is in knowing you know nothing.",
+          "author": "Socrates",
+          "source": "Plato's Dialogues",
+          "topics": ["knowledge", "humility", "wisdom"],
+          "year": null
+        },
+        {
+          "id": "wis8",
+          "text": "It is the mark of an educated mind to be able to entertain a thought without accepting it.",
+          "author": "Aristotle",
+          "source": "Metaphysics",
+          "topics": ["thinking", "education", "open-mindedness"],
+          "year": null
+        },
+        {
+          "id": "wis9",
+          "text": "The fool doth think he is wise, but the wise man knows himself to be a fool.",
+          "author": "William Shakespeare",
+          "source": "As You Like It",
+          "topics": ["wisdom", "self-awareness", "humility"],
+          "year": 1599
+        },
+        {
+          "id": "wis10",
+          "text": "By three methods we may learn wisdom: by reflection, which is noblest; by imitation, which is easiest; and by experience, which is the bitterest.",
+          "author": "Confucius",
+          "source": "The Analects",
+          "topics": ["learning", "experience", "reflection"],
+          "year": null
+        },
+        {
+          "id": "wis11",
+          "text": "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+          "author": "Nelson Mandela",
+          "source": "Long Walk to Freedom",
+          "topics": ["resilience", "perseverance", "life"],
+          "year": 1994
+        },
+        {
+          "id": "wis12",
+          "text": "Everything that irritates us about others can lead us to an understanding of ourselves.",
+          "author": "Carl Jung",
+          "source": "Memories, Dreams, Reflections",
+          "topics": ["self-awareness", "psychology", "relationships"],
+          "year": 1963
+        },
+        {
+          "id": "wis13",
+          "text": "The secret of life, though, is to fall seven times and to get up eight times.",
+          "author": "Paulo Coelho",
+          "source": "The Alchemist",
+          "topics": ["resilience", "perseverance", "life"],
+          "year": 1988
+        },
+        {
+          "id": "wis14",
+          "text": "What lies behind us and what lies before us are tiny matters compared to what lies within us.",
+          "author": "Ralph Waldo Emerson",
+          "source": "Essays",
+          "topics": ["potential", "self-discovery", "inner-strength"],
+          "year": 1841
+        },
+        {
+          "id": "wis15",
+          "text": "The quieter you become, the more you can hear.",
+          "author": "Ram Dass",
+          "source": "Be Here Now",
+          "topics": ["silence", "listening", "mindfulness"],
+          "year": 1971
+        },
+        {
+          "id": "wis16",
+          "text": "The world is a book and those who do not travel read only one page.",
+          "author": "Saint Augustine",
+          "source": "Confessions",
+          "topics": ["travel", "experience", "perspective"],
+          "year": null
+        },
+        {
+          "id": "wis17",
+          "text": "The measure of intelligence is the ability to change.",
+          "author": "Albert Einstein",
+          "source": "Collected Papers",
+          "topics": ["adaptability", "intelligence", "change"],
+          "year": null
+        },
+        {
+          "id": "wis18",
+          "text": "The purpose of life is not to be happy. It is to be useful, to be honorable, to be compassionate, to have it make some difference that you have lived and lived well.",
+          "author": "Ralph Waldo Emerson",
+          "source": "Essays and Lectures",
+          "topics": ["purpose", "life", "service"],
+          "year": 1844
+        },
+        {
+          "id": "wis19",
+          "text": "The greatest wealth is to live content with little.",
+          "author": "Plato",
+          "source": "The Republic",
+          "topics": ["contentment", "simplicity", "happiness"],
+          "year": null
+        },
+        {
+          "id": "wis20",
+          "text": "The only way to do great work is to love what you do.",
+          "author": "Aristotle",
+          "source": "Nicomachean Ethics",
+          "topics": ["passion", "work", "excellence"],
+          "year": null
+        },
+        {
+          "id": "wis21",
+          "text": "Knowledge speaks, but wisdom listens.",
+          "author": "Jimi Hendrix",
+          "source": "Interviews",
+          "topics": ["wisdom", "listening", "knowledge"],
+          "year": 1967
+        },
+        {
+          "id": "wis22",
+          "text": "The more you know yourself, the more patience you have for what you see in others.",
+          "author": "Erik Erikson",
+          "source": "Identity and the Life Cycle",
+          "topics": ["self-awareness", "patience", "understanding"],
+          "year": 1959
+        },
+        {
+          "id": "wis23",
+          "text": "The wise man doesn't give the right answers, he poses the right questions.",
+          "author": "Claude Levi-Strauss",
+          "source": "The Raw and the Cooked",
+          "topics": ["questions", "wisdom", "thinking"],
+          "year": 1964
+        },
+        {
+          "id": "wis24",
+          "text": "Life is not a problem to be solved, but a reality to be experienced.",
+          "author": "Søren Kierkegaard",
+          "source": "Either/Or",
+          "topics": ["life", "experience", "philosophy"],
+          "year": 1843
+        },
+        {
+          "id": "wis25",
+          "text": "The beginning of wisdom is the definition of terms.",
+          "author": "Socrates",
+          "source": "Plato's Dialogues",
+          "topics": ["wisdom", "understanding", "knowledge"],
+          "year": null
+        }
+      ]
+    },
+    {
+      "id": "leadership",
+      "name": "Leadership",
+      "description": "Quotes about leading, inspiring, and empowering others",
+      "quotes": [
+        {
+          "id": "lead1",
+          "text": "A leader is one who knows the way, goes the way, and shows the way.",
+          "author": "John C. Maxwell",
+          "source": "The 21 Irrefutable Laws of Leadership",
+          "topics": ["guidance", "example", "leadership"],
+          "year": 1998
+        },
+        {
+          "id": "lead2",
+          "text": "Leadership is not about being in charge. It's about taking care of those in your charge.",
+          "author": "Simon Sinek",
+          "source": "Leaders Eat Last",
+          "topics": ["responsibility", "care", "service"],
+          "year": 2014
+        },
+        {
+          "id": "lead3",
+          "text": "The greatest leader is not necessarily the one who does the greatest things. He is the one that gets people to do the greatest things.",
+          "author": "Ronald Reagan",
+          "source": "Presidential Speeches",
+          "topics": ["empowerment", "inspiration", "achievement"],
+          "year": 1985
+        },
+        {
+          "id": "lead4",
+          "text": "Before you are a leader, success is all about growing yourself. When you become a leader, success is all about growing others.",
+          "author": "Jack Welch",
+          "source": "Winning",
+          "topics": ["growth", "development", "success"],
+          "year": 2005
+        },
+        {
+          "id": "lead5",
+          "text": "The function of leadership is to produce more leaders, not more followers.",
+          "author": "Ralph Nader",
+          "source": "Public Speech",
+          "topics": ["empowerment", "development", "leadership"],
+          "year": 1970
+        },
+        {
+          "id": "lead6",
+          "text": "The best leader is the one who has sense enough to pick good men to do what he wants done, and self-restraint enough to keep from meddling with them while they do it.",
+          "author": "Theodore Roosevelt",
+          "source": "Autobiography",
+          "topics": ["delegation", "trust", "management"],
+          "year": 1913
+        },
+        {
+          "id": "lead7",
+          "text": "A genuine leader is not a searcher for consensus but a molder of consensus.",
+          "author": "Martin Luther King Jr.",
+          "source": "Civil Rights Speeches",
+          "topics": ["influence", "vision", "consensus"],
+          "year": 1963
+        },
+        {
+          "id": "lead8",
+          "text": "Leadership and learning are indispensable to each other.",
+          "author": "John F. Kennedy",
+          "source": "Undelivered Speech",
+          "topics": ["learning", "growth", "leadership"],
+          "year": 1963
+        },
+        {
+          "id": "lead9",
+          "text": "The key to successful leadership is influence, not authority.",
+          "author": "Kenneth H. Blanchard",
+          "source": "The One Minute Manager",
+          "topics": ["influence", "authority", "leadership"],
+          "year": 1982
+        },
+        {
+          "id": "lead10",
+          "text": "A leader takes people where they want to go. A great leader takes people where they don't necessarily want to go, but ought to be.",
+          "author": "Rosalynn Carter",
+          "source": "First Lady Memoirs",
+          "topics": ["vision", "guidance", "change"],
+          "year": 1984
+        },
+        {
+          "id": "lead11",
+          "text": "The greatest good you can do for another is not just to share your riches but to reveal to him his own.",
+          "author": "Benjamin Disraeli",
+          "source": "Political Speeches",
+          "topics": ["empowerment", "potential", "development"],
+          "year": 1867
+        },
+        {
+          "id": "lead12",
+          "text": "Innovation distinguishes between a leader and a follower.",
+          "author": "Steve Jobs",
+          "source": "Business Week Interview",
+          "topics": ["innovation", "creativity", "distinction"],
+          "year": 2004
+        },
+        {
+          "id": "lead13",
+          "text": "The supreme quality of leadership is integrity.",
+          "author": "Dwight D. Eisenhower",
+          "source": "Military Leadership Manual",
+          "topics": ["integrity", "character", "values"],
+          "year": 1948
+        },
+        {
+          "id": "lead14",
+          "text": "A leader is best when people barely know he exists. When his work is done, his aim fulfilled, they will say: we did it ourselves.",
+          "author": "Lao Tzu",
+          "source": "Tao Te Ching",
+          "topics": ["humility", "empowerment", "effectiveness"],
+          "year": null
+        },
+        {
+          "id": "lead15",
+          "text": "The task of leadership is not to put greatness into humanity, but to elicit it, for the greatness is already there.",
+          "author": "John Buchan",
+          "source": "Leadership Essays",
+          "topics": ["potential", "inspiration", "empowerment"],
+          "year": 1930
+        },
+        {
+          "id": "lead16",
+          "text": "Leadership is the capacity to translate vision into reality.",
+          "author": "Warren Bennis",
+          "source": "On Becoming a Leader",
+          "topics": ["vision", "execution", "achievement"],
+          "year": 1989
+        },
+        {
+          "id": "lead17",
+          "text": "The art of leadership is saying no, not saying yes. It is very easy to say yes.",
+          "author": "Tony Blair",
+          "source": "Leadership Memoirs",
+          "topics": ["decision-making", "discipline", "focus"],
+          "year": 2010
+        },
+        {
+          "id": "lead18",
+          "text": "True leadership lies in guiding others to success. In ensuring that everyone is performing at their best, doing the work they are pledged to do and doing it well.",
+          "author": "Bill Owens",
+          "source": "Leadership Principles",
+          "topics": ["guidance", "performance", "success"],
+          "year": 2002
+        },
+        {
+          "id": "lead19",
+          "text": "The most powerful leadership tool you have is your own personal example.",
+          "author": "John Wooden",
+          "source": "Wooden on Leadership",
+          "topics": ["example", "influence", "character"],
+          "year": 2005
+        },
+        {
+          "id": "lead20",
+          "text": "Leadership is not about titles, positions, or flowcharts. It is about one life influencing another.",
+          "author": "John C. Maxwell",
+          "source": "The 5 Levels of Leadership",
+          "topics": ["influence", "relationships", "impact"],
+          "year": 2011
+        },
+        {
+          "id": "lead21",
+          "text": "The challenge of leadership is to be strong, but not rude; be kind, but not weak; be bold, but not bully; be thoughtful, but not lazy; be humble, but not timid; be proud, but not arrogant.",
+          "author": "Jim Rohn",
+          "source": "The Art of Exceptional Living",
+          "topics": ["balance", "character", "strength"],
+          "year": 1994
+        },
+        {
+          "id": "lead22",
+          "text": "Great leaders don't set out to be a leader. They set out to make a difference.",
+          "author": "Lisa Haisha",
+          "source": "Leadership Seminars",
+          "topics": ["purpose", "impact", "motivation"],
+          "year": 2015
+        },
+        {
+          "id": "lead23",
+          "text": "Leadership is unlocking people's potential to become better.",
+          "author": "Bill Bradley",
+          "source": "Values of the Game",
+          "topics": ["potential", "development", "growth"],
+          "year": 1998
+        },
+        {
+          "id": "lead24",
+          "text": "A true leader has the confidence to stand alone, the courage to make tough decisions, and the compassion to listen to the needs of others.",
+          "author": "Douglas MacArthur",
+          "source": "Military Memoirs",
+          "topics": ["confidence", "courage", "compassion"],
+          "year": 1964
+        },
+        {
+          "id": "lead25",
+          "text": "The role of leadership is to transform the complex situation into small pieces and prioritize them.",
+          "author": "Carlos Ghosn",
+          "source": "Business Leadership Principles",
+          "topics": ["strategy", "simplification", "prioritization"],
+          "year": 2005
+        }
+      ]
+    },
+    {
+      "id": "mindfulness",
+      "name": "Mindfulness",
+      "description": "Quotes about presence, awareness, and inner peace",
+      "quotes": [
+        {
+          "id": "mind1",
+          "text": "The present moment is filled with joy and happiness. If you are attentive, you will see it.",
+          "author": "Thich Nhat Hanh",
+          "source": "Peace Is Every Step",
+          "topics": ["presence", "happiness", "awareness"],
+          "year": 1991
+        },
+        {
+          "id": "mind2",
+          "text": "The thing about meditation is: you become more and more you.",
+          "author": "David Lynch",
+          "source": "Catching the Big Fish",
+          "topics": ["meditation", "self-discovery", "awareness"],
+          "year": 2006
+        },
+        {
+          "id": "mind3",
+          "text": "Wherever you are, be there totally. If you find your here and now intolerable and it makes you unhappy, you have three options: remove yourself from the situation, change it, or accept it totally.",
+          "author": "Eckhart Tolle",
+          "source": "The Power of Now",
+          "topics": ["presence", "acceptance", "choice"],
+          "year": 1997
+        },
+        {
+          "id": "mind4",
+          "text": "You can't stop the waves, but you can learn to surf.",
+          "author": "Jon Kabat-Zinn",
+          "source": "Wherever You Go, There You Are",
+          "topics": ["adaptation", "resilience", "mindfulness"],
+          "year": 1994
+        },
+        {
+          "id": "mind5",
+          "text": "Between stimulus and response there is a space. In that space is our power to choose our response. In our response lies our growth and our freedom.",
+          "author": "Viktor E. Frankl",
+          "source": "Man's Search for Meaning",
+          "topics": ["choice", "awareness", "freedom"],
+          "year": 1946
+        },
+        {
+          "id": "mind6",
+          "text": "Mindfulness isn't difficult, we just need to remember to do it.",
+          "author": "Sharon Salzberg",
+          "source": "Real Happiness",
+          "topics": ["practice", "remembrance", "mindfulness"],
+          "year": 2010
+        },
+        {
+          "id": "mind7",
+          "text": "The most precious gift we can offer others is our presence.",
+          "author": "Thich Nhat Hanh",
+          "source": "Being Peace",
+          "topics": ["presence", "relationships", "attention"],
+          "year": 1987
+        },
+        {
+          "id": "mind8",
+          "text": "Life is not lost by dying; life is lost minute by minute, day by dragging day, in all the thousand small uncaring ways.",
+          "author": "Stephen Vincent Benét",
+          "source": "Literary Works",
+          "topics": ["presence", "awareness", "living"],
+          "year": 1937
+        },
+        {
+          "id": "mind9",
+          "text": "Do every act of your life as though it were the last act of your life.",
+          "author": "Marcus Aurelius",
+          "source": "Meditations",
+          "topics": ["presence", "intention", "mindfulness"],
+          "year": null
+        },
+        {
+          "id": "mind10",
+          "text": "The mind is everything. What you think you become.",
+          "author": "Buddha",
+          "source": "Buddhist Teachings",
+          "topics": ["thoughts", "consciousness", "mindfulness"],
+          "year": null
+        },
+        {
+          "id": "mind11",
+          "text": "In today's rush, we all think too much, seek too much, want too much and forget about the joy of just being.",
+          "author": "Eckhart Tolle",
+          "source": "A New Earth",
+          "topics": ["being", "simplicity", "presence"],
+          "year": 2005
+        },
+        {
+          "id": "mind12",
+          "text": "Mindfulness is simply being aware of what is happening right now without wishing it were different.",
+          "author": "James Baraz",
+          "source": "Awakening Joy",
+          "topics": ["acceptance", "awareness", "present moment"],
+          "year": 2010
+        },
+        {
+          "id": "mind13",
+          "text": "The best way to capture moments is to pay attention. This is how we cultivate mindfulness.",
+          "author": "Jon Kabat-Zinn",
+          "source": "Full Catastrophe Living",
+          "topics": ["attention", "presence", "awareness"],
+          "year": 1990
+        },
+        {
+          "id": "mind14",
+          "text": "Be happy in the moment, that's enough. Each moment is all we need, not more.",
+          "author": "Mother Teresa",
+          "source": "A Simple Path",
+          "topics": ["happiness", "presence", "contentment"],
+          "year": 1995
+        },
+        {
+          "id": "mind15",
+          "text": "Walk as if you are kissing the Earth with your feet.",
+          "author": "Thich Nhat Hanh",
+          "source": "Peace Is Every Step",
+          "topics": ["mindful walking", "presence", "connection"],
+          "year": 1991
+        },
+        {
+          "id": "mind16",
+          "text": "Looking at beauty in the world is the first step of purifying the mind.",
+          "author": "Amit Ray",
+          "source": "Meditation: Insights and Inspirations",
+          "topics": ["beauty", "awareness", "mindfulness"],
+          "year": 2010
+        },
+        {
+          "id": "mind17",
+          "text": "Drink your tea slowly and reverently, as if it is the axis on which the world earth revolves.",
+          "author": "Thich Nhat Hanh",
+          "source": "The Miracle of Mindfulness",
+          "topics": ["mindful eating", "reverence", "presence"],
+          "year": 1975
+        },
+        {
+          "id": "mind18",
+          "text": "The past is already gone, the future is not yet here. If we do not go back to ourselves in the present moment, we cannot be in touch with life.",
+          "author": "Thich Nhat Hanh",
+          "source": "Living Buddha, Living Christ",
+          "topics": ["present moment", "awareness", "life"],
+          "year": 1995
+        },
+        {
+          "id": "mind19",
+          "text": "Mindfulness practice means that we commit fully in each moment to be present; inviting ourselves to interface with this moment in full awareness.",
+          "author": "Pema Chödrön",
+          "source": "When Things Fall Apart",
+          "topics": ["practice", "presence", "awareness"],
+          "year": 1996
+        },
+        {
+          "id": "mind20",
+          "text": "The only way to live is by accepting each minute as an unrepeatable miracle.",
+          "author": "Tara Brach",
+          "source": "Radical Acceptance",
+          "topics": ["acceptance", "presence", "gratitude"],
+          "year": 2003
+        },
+        {
+          "id": "mind21",
+          "text": "Awareness is like the sun. When it shines on things, they are transformed.",
+          "author": "Thich Nhat Hanh",
+          "source": "Understanding Our Mind",
+          "topics": ["awareness", "transformation", "consciousness"],
+          "year": 2006
+        },
+        {
+          "id": "mind22",
+          "text": "To think in terms of either pessimism or optimism oversimplifies the truth. The problem is to see reality as it is.",
+          "author": "Thich Nhat Hanh",
+          "source": "The Heart of Understanding",
+          "topics": ["reality", "perception", "awareness"],
+          "year": 1988
+        },
+        {
+          "id": "mind23",
+          "text": "When we get too caught up in the busyness of the world, we lose connection with one another – and ourselves.",
+          "author": "Jack Kornfield",
+          "source": "A Path with Heart",
+          "topics": ["connection", "presence", "self-awareness"],
+          "year": 1993
+        },
+        {
+          "id": "mind24",
+          "text": "The real meditation is how you live your life.",
+          "author": "Jon Kabat-Zinn",
+          "source": "Wherever You Go, There You Are",
+          "topics": ["meditation", "lifestyle", "mindfulness"],
+          "year": 1994
+        },
+        {
+          "id": "mind25",
+          "text": "Meditation is not about trying to get anywhere else. It is about allowing yourself to be exactly where you are.",
+          "author": "Pema Chödrön",
+          "source": "Start Where You Are",
+          "topics": ["meditation", "acceptance", "presence"],
+          "year": 1994
+        }
+      ]
+    },
+    {
+      "id": "creativity",
+      "name": "Creativity",
+      "description": "Quotes about imagination, innovation, and artistic expression",
+      "quotes": [
+        {
+          "id": "cre1",
+          "text": "Creativity is intelligence having fun.",
+          "author": "Albert Einstein",
+          "source": "Collected Works",
+          "topics": ["intelligence", "fun", "creativity"],
+          "year": null
+        },
+        {
+          "id": "cre2",
+          "text": "Every child is an artist. The problem is how to remain an artist once we grow up.",
+          "author": "Pablo Picasso",
+          "source": "Art Interviews",
+          "topics": ["art", "childhood", "growth"],
+          "year": null
+        },
+        {
+          "id": "cre3",
+          "text": "You can't use up creativity. The more you use, the more you have.",
+          "author": "Maya Angelou",
+          "source": "Conversations with Maya Angelou",
+          "topics": ["creativity", "abundance", "inspiration"],
+          "year": 1989
+        },
+        {
+          "id": "cre4",
+          "text": "The worst enemy to creativity is self-doubt.",
+          "author": "Sylvia Plath",
+          "source": "The Unabridged Journals",
+          "topics": ["self-doubt", "creativity", "confidence"],
+          "year": 1982
+        },
+        {
+          "id": "cre5",
+          "text": "Creativity takes courage.",
+          "author": "Henri Matisse",
+          "source": "Art Essays",
+          "topics": ["courage", "creativity", "art"],
+          "year": 1947
+        },
+        {
+          "id": "cre6",
+          "text": "I don't listen to what art critics say. I don't know anybody who needs a critic to find out what art is.",
+          "author": "Jean-Michel Basquiat",
+          "source": "Interview with Tamra Davis",
+          "topics": ["art", "authenticity", "criticism"],
+          "year": 1985
+        },
+        {
+          "id": "cre7",
+          "text": "I'm not a real person. I'm a legend.",
+          "author": "Jean-Michel Basquiat",
+          "source": "Art Documentary",
+          "topics": ["identity", "art", "legacy"],
+          "year": 1983
+        },
+        {
+          "id": "cre8",
+          "text": "Art is not what you see, but what you make others see.",
+          "author": "Edgar Degas",
+          "source": "Letters on Art",
+          "topics": ["perception", "art", "vision"],
+          "year": null
+        },
+        {
+          "id": "cre9",
+          "text": "Don't think about making art, just get it done. Let everyone else decide if it's good or bad, whether they love it or hate it. While they are deciding, make even more art.",
+          "author": "Andy Warhol",
+          "source": "The Philosophy of Andy Warhol",
+          "topics": ["creation", "productivity", "art"],
+          "year": 1975
+        },
+        {
+          "id": "cre10",
+          "text": "Creativity is allowing yourself to make mistakes. Art is knowing which ones to keep.",
+          "author": "Scott Adams",
+          "source": "The Dilbert Principle",
+          "topics": ["mistakes", "art", "creativity"],
+          "year": 1996
+        },
+        {
+          "id": "cre11",
+          "text": "Art should comfort the disturbed and disturb the comfortable.",
+          "author": "Banksy",
+          "source": "Wall and Piece",
+          "topics": ["art", "society", "impact"],
+          "year": 2005
+        },
+        {
+          "id": "cre12",
+          "text": "The artist's task is to save the soul of mankind.",
+          "author": "Wassily Kandinsky",
+          "source": "Concerning the Spiritual in Art",
+          "topics": ["art", "purpose", "humanity"],
+          "year": 1911
+        },
+        {
+          "id": "cre13",
+          "text": "If you hear a voice within you say 'you cannot paint,' then by all means paint, and that voice will be silenced.",
+          "author": "Vincent van Gogh",
+          "source": "Letters to Theo",
+          "topics": ["self-doubt", "perseverance", "art"],
+          "year": 1884
+        },
+        {
+          "id": "cre14",
+          "text": "I found I could say things with color and shapes that I couldn't say any other way - things I had no words for.",
+          "author": "Georgia O'Keeffe",
+          "source": "Artist Statements",
+          "topics": ["expression", "color", "art"],
+          "year": 1976
+        },
+        {
+          "id": "cre15",
+          "text": "The main thing is to be moved, to love, to hope, to tremble, to live.",
+          "author": "Auguste Rodin",
+          "source": "Art Conversations",
+          "topics": ["emotion", "art", "life"],
+          "year": 1911
+        },
+        {
+          "id": "cre16",
+          "text": "Art is not a thing; it is a way.",
+          "author": "Elbert Hubbard",
+          "source": "Creative Essays",
+          "topics": ["process", "art", "perspective"],
+          "year": 1908
+        },
+        {
+          "id": "cre17",
+          "text": "I paint self-portraits because I am so often alone, because I am the person I know best.",
+          "author": "Frida Kahlo",
+          "source": "Personal Diaries",
+          "topics": ["self-expression", "art", "identity"],
+          "year": 1939
+        },
+        {
+          "id": "cre18",
+          "text": "The creative adult is the child who survived.",
+          "author": "Ursula K. Le Guin",
+          "source": "The Language of the Night",
+          "topics": ["creativity", "childhood", "survival"],
+          "year": 1979
+        },
+        {
+          "id": "cre19",
+          "text": "Art enables us to find ourselves and lose ourselves at the same time.",
+          "author": "Thomas Merton",
+          "source": "No Man Is an Island",
+          "topics": ["self-discovery", "art", "transcendence"],
+          "year": 1955
+        },
+        {
+          "id": "cre20",
+          "text": "I dream my painting and I paint my dream.",
+          "author": "Vincent van Gogh",
+          "source": "Letters to Theo",
+          "topics": ["dreams", "art", "vision"],
+          "year": 1888
+        },
+        {
+          "id": "cre21",
+          "text": "Art is the lie that enables us to realize the truth.",
+          "author": "Pablo Picasso",
+          "source": "Conversations with Artists",
+          "topics": ["truth", "art", "perception"],
+          "year": 1923
+        },
+        {
+          "id": "cre22",
+          "text": "The role of the artist is to ask questions, not answer them.",
+          "author": "Anton Chekhov",
+          "source": "Letters on Writing",
+          "topics": ["purpose", "art", "inquiry"],
+          "year": 1888
+        },
+        {
+          "id": "cre23",
+          "text": "I am seeking. I am striving. I am in it with all my heart.",
+          "author": "Vincent van Gogh",
+          "source": "Personal Letters",
+          "topics": ["passion", "dedication", "art"],
+          "year": 1885
+        },
+        {
+          "id": "cre24",
+          "text": "Art is the most intense mode of individualism that the world has known.",
+          "author": "Oscar Wilde",
+          "source": "The Soul of Man Under Socialism",
+          "topics": ["individuality", "art", "expression"],
+          "year": 1891
+        },
+        {
+          "id": "cre25",
+          "text": "I start a picture and I finish it. I don't think about art while I work. I try to think about life.",
+          "author": "Jean-Michel Basquiat",
+          "source": "SoHo Weekly News Interview",
+          "topics": ["process", "life", "art"],
+          "year": 1981
+        },
+        {
+          "id": "cre26",
+          "text": "To create one's own world takes courage.",
+          "author": "Georgia O'Keeffe",
+          "source": "Some Memories of Drawings",
+          "topics": ["courage", "creativity", "vision"],
+          "year": 1974
+        },
+        {
+          "id": "cre27",
+          "text": "The aim of art is to represent not the outward appearance of things, but their inward significance.",
+          "author": "Aristotle",
+          "source": "Poetics",
+          "topics": ["meaning", "art", "essence"],
+          "year": null
+        },
+        {
+          "id": "cre28",
+          "text": "Art is what you can get away with.",
+          "author": "Andy Warhol",
+          "source": "The Philosophy of Andy Warhol",
+          "topics": ["boundaries", "art", "innovation"],
+          "year": 1975
+        },
+        {
+          "id": "cre29",
+          "text": "I paint what I want to see, not what they want me to paint.",
+          "author": "Jean-Michel Basquiat",
+          "source": "The Radiant Child Documentary",
+          "topics": ["authenticity", "vision", "independence"],
+          "year": 1984
+        },
+        {
+          "id": "cre30",
+          "text": "The only thing I know is that I paint because I need to.",
+          "author": "Frida Kahlo",
+          "source": "Letters of Frida Kahlo",
+          "topics": ["necessity", "art", "passion"],
+          "year": 1945
+        }
+      ]
+    }
+  ]
+} 
