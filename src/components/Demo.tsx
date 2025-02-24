@@ -2837,6 +2837,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                             // Upload and get URL
                             const uploadTask = await uploadBytes(storageRef, blob, metadata);
                             const imageUrl = await getDownloadURL(uploadTask.ref);
+                            console.log('Original Firebase URL:', imageUrl);
 
                             // Create the share text and URL to Compose Message in Farcaster
                             const quoteParts = quote.split('\n\n');
@@ -2847,28 +2848,19 @@ export default function Demo({ title = "Fun Quotes" }) {
                             const params = new URLSearchParams();
                             params.append('text', shareText);
 
-                            // Handle the Firebase Storage URL
-                            try {
-                              // Get the base URL and token
-                              const urlParts = imageUrl.split('?');
-                              const baseUrl = urlParts[0];
-                              const token = new URLSearchParams(urlParts[1]).get('token');
-                              
-                              // Keep the token in the URL to maintain access rights
-                              const directUrl = `${baseUrl}?alt=media&token=${token}`;
-                              
-                              // Add the embeds in the correct order
-                              params.append('embeds[]', directUrl); // Image URL first
-                              params.append('embeds[]', 'https://qg-frames.vercel.app'); // Website URL second
-                            } catch (error) {
-                              console.error('Error processing URL:', error);
-                              // Fallback to original URL if parsing fails
-                              params.append('embeds[]', imageUrl);
-                              params.append('embeds[]', 'https://qg-frames.vercel.app');
-                            }
+                            // Clean and encode the Firebase URL
+                            const cleanFirebaseUrl = imageUrl
+                              .replace(/%2F/g, '/') // Replace encoded forward slashes
+                              .replace(/%20/g, ' '); // Replace encoded spaces
+
+                            // Add the embeds in the correct order
+                            params.append('embeds[]', cleanFirebaseUrl);
+                            params.append('embeds[]', 'https://qg-frames.vercel.app');
 
                             const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                            await sdk.actions.openUrl(url);
+                            console.log('Final Warpcast URL:', url);
+
+                            sdk.actions.openUrl(url);
                             
                             logAnalyticsEvent('cast_created', {
                               quote: quote,
