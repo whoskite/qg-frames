@@ -1242,73 +1242,69 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add these functions inside the Demo component
   const generateQuoteImage = async (
     quote: string, 
-    bgImage: string, 
-    userContext?: FrameContext  // Update this type
+    bgImage: string,
+    isFromCategories: boolean = false // New parameter to differentiate the source
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
-        // Create canvas
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('Could not get canvas context');
         
-        // Ensure ctx is treated as CanvasRenderingContext2D
-        const context = ctx as CanvasRenderingContext2D;
-
-        // Set canvas size
+        // Set canvas size - smaller for categories
         canvas.width = 800;
-        canvas.height = 400;
+        canvas.height = isFromCategories ? 400 : 500; // Different height based on source
 
         // Handle gradient backgrounds
         if (bgImage?.includes('gradient')) {
           let gradient;
           switch (bgImage) {
             case 'gradient-pink':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(192, 132, 252)');
               gradient.addColorStop(0.5, 'rgb(244, 114, 182)');
               gradient.addColorStop(1, 'rgb(239, 68, 68)');
               break;
             case 'gradient-black':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(17, 24, 39)');
               gradient.addColorStop(0.5, 'rgb(55, 65, 81)');
               gradient.addColorStop(1, 'rgb(31, 41, 55)');
               break;
             case 'gradient-yellow':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(251, 191, 36)');
               gradient.addColorStop(0.5, 'rgb(249, 115, 22)');
               gradient.addColorStop(1, 'rgb(239, 68, 68)');
               break;
             case 'gradient-green':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, 'rgb(52, 211, 153)');
               gradient.addColorStop(0.5, 'rgb(16, 185, 129)');
               gradient.addColorStop(1, 'rgb(20, 184, 166)');
               break;
             case 'gradient-purple':
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, '#472A91');
               gradient.addColorStop(0.5, 'rgb(147, 51, 234)');
               gradient.addColorStop(1, 'rgb(107, 33, 168)');
               break;
             default:
-              gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+              gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
               gradient.addColorStop(0, '#9b5de5');
               gradient.addColorStop(0.5, '#f15bb5');
               gradient.addColorStop(1, '#ff6b6b');
           }
-          context.fillStyle = gradient;
-          context.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
         } else if (bgImage === 'none') {
           // Create default gradient background
-          const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
           gradient.addColorStop(0, '#9b5de5');
           gradient.addColorStop(0.5, '#f15bb5');
           gradient.addColorStop(1, '#ff6b6b');
-          context.fillStyle = gradient;
-          context.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
         } else {
           // Handle image backgrounds
           const img = document.createElement('img');
@@ -1334,15 +1330,15 @@ export default function Demo({ title = "Fun Quotes" }) {
             }
 
             // Fill background with black
-            context.fillStyle = '#000000';
-            context.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Draw background image centered
-            context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
             
             // Add semi-transparent overlay
-            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            context.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Continue with text rendering
             addTextAndProfile();
@@ -1354,64 +1350,103 @@ export default function Demo({ title = "Fun Quotes" }) {
         addTextAndProfile();
 
         function addTextAndProfile() {
-          if (!context) {
+          if (!ctx) {
             reject(new Error('Could not get canvas context'));
             return;
           }
           
-          // Extract quote text and author if available
+          // Extract quote text, author, and source
           const parts = quote.split('\n\n');
           const quoteText = parts[0];
-          const authorInfo = parts[1] ? parts[1].replace('- ', '') : '';
-          const sourceInfo = parts[2] || '';
+          const authorText = parts[1] ? parts[1].replace('- ', '') : '';
+          const sourceText = parts[2] || '';
           
-          // Add quote text
-          context.fillStyle = 'white';
-          context.textAlign = 'center';
-          context.font = 'bold 32px Inter, sans-serif';
-          
-          // Word wrap the text
-          const words = quoteText.split(' ');
-          const lines = [];
-          let currentLine = '';
-          const maxWidth = canvas.width - 100;
+          // Only add profile if NOT from categories
+          if (!isFromCategories && context?.user?.pfpUrl) {
+            // Create circular clipping path for profile image
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(50, 50, 25, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
 
-          words.forEach(word => {
-            const testLine = currentLine + word + ' ';
-            const metrics = context.measureText(testLine);
-            if (metrics.width > maxWidth) {
-              lines.push(currentLine);
-              currentLine = word + ' ';
-            } else {
-              currentLine = testLine;
-            }
-          });
-          lines.push(currentLine);
+            // Load and draw profile image
+            const profileImg = document.createElement('img');
+            profileImg.crossOrigin = 'anonymous';
+            profileImg.src = context.user.pfpUrl;
+            profileImg.onload = () => {
+              ctx.drawImage(profileImg, 25, 25, 50, 50);
+              ctx.restore();
 
-          // Draw the wrapped text
-          const lineHeight = 40;
-          const totalHeight = lines.length * lineHeight;
-          const startY = (canvas.height - totalHeight) / 2 - 20;
+              // Add username
+              ctx.fillStyle = 'white';
+              ctx.font = '16px Inter, sans-serif';
+              ctx.textAlign = 'left';
+              ctx.fillText(`@${context.user.username}`, 90, 55);
 
-          lines.forEach((line, index) => {
-            context.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
-          });
-
-          // Add author attribution at the bottom
-          if (authorInfo) {
-            context.font = '20px Inter, sans-serif';
-            context.fillStyle = 'white';
-            context.textAlign = 'center';
-            context.fillText(`- ${authorInfo}`, canvas.width / 2, canvas.height - 40);
-            
-            if (sourceInfo) {
-              context.font = '16px Inter, sans-serif';
-              context.fillStyle = 'rgba(255, 255, 255, 0.7)';
-              context.fillText(sourceInfo, canvas.width / 2, canvas.height - 20);
-            }
+              // Continue with quote text
+              addQuoteText();
+            };
+            profileImg.onerror = () => {
+              ctx.restore();
+              addQuoteText();
+            };
+          } else {
+            addQuoteText();
           }
 
-          resolve(canvas.toDataURL('image/png'));
+          function addQuoteText() {
+            if (!ctx) return;  // Early return if ctx is null
+            
+            // Now TypeScript knows ctx is not null
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 32px Inter, sans-serif';
+            
+            // Word wrap the quote text
+            const words = quoteText.split(' ');
+            const lines = [];
+            let currentLine = '';
+            const maxWidth = canvas.width - 100;
+
+            words.forEach(word => {
+              const testLine = currentLine + word + ' ';
+              const metrics = ctx.measureText(testLine);
+              if (metrics.width > maxWidth) {
+                lines.push(currentLine);
+                currentLine = word + ' ';
+              } else {
+                currentLine = testLine;
+              }
+            });
+            lines.push(currentLine);
+
+            // Draw the wrapped text
+            const lineHeight = 40;
+            const totalHeight = lines.length * lineHeight;
+            const startY = (canvas.height - totalHeight) / 2;
+
+            lines.forEach((line, index) => {
+              ctx.fillText(line.trim(), canvas.width / 2, startY + (index * lineHeight));
+            });
+
+            // Add author attribution
+            if (authorText) {
+              ctx.font = '24px Inter, sans-serif';
+              ctx.fillStyle = 'white';
+              ctx.textAlign = 'center';
+              ctx.fillText(`- ${authorText}`, canvas.width / 2, canvas.height - 60);
+              
+              // Add source if available
+              if (sourceText) {
+                ctx.font = '18px Inter, sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillText(sourceText, canvas.width / 2, canvas.height - 30);
+              }
+            }
+
+            resolve(canvas.toDataURL('image/png'));
+          }
         }
 
       } catch (error) {
@@ -2032,7 +2067,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           onClick={async () => {
                             try {
                               setIsGeneratingPreview(true);
-                              const dataUrl = await generateQuoteImage(quote, bgImage);
+                              const dataUrl = await generateQuoteImage(quote, bgImage, true);
                               setPreviewImage(dataUrl);
                               setShowPreview(true);
                             } catch (error) {
@@ -2175,7 +2210,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                     onClick={async () => {
                       try {
                         setIsGeneratingPreview(true);
-                        const dataUrl = await generateQuoteImage(quote, bgImage);
+                        const dataUrl = await generateQuoteImage(quote, bgImage, true);
                         setPreviewImage(dataUrl);
                         setShowPreview(true);
                       } catch (error) {
@@ -2716,7 +2751,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       <Button
                         onClick={async () => {
                           try {
-                            const shareText = `"${quote}" - Created by @kite /thepod :)`;
+                            const shareText = `"${quote.split('\n\n')[0]}" - Created by @kite /thepod :)`;
                             const shareUrl = 'https://qg-frames.vercel.app';
                             
                             const params = new URLSearchParams();
@@ -2763,11 +2798,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                         onClick={async () => {
                           try {
                             setIsGeneratingPreview(true);
-                            const dataUrl = await generateQuoteImage(quote, bgImage);
+                            const dataUrl = await generateQuoteImage(quote, bgImage, true);
                             setPreviewImage(dataUrl);
                             setIsCasting(true);
 
-                            // Convert data URL to blob more reliably
+                            // Convert data URL to blob
                             const base64Data = dataUrl.split(',')[1];
                             const byteCharacters = atob(base64Data);
                             const byteArrays = [];
@@ -2784,88 +2819,73 @@ export default function Demo({ title = "Fun Quotes" }) {
                             
                             const blob = new Blob(byteArrays, { type: 'image/png' });
 
-                            // Upload to Firebase Storage with proper metadata
+                            // Upload to Firebase Storage
                             const storage = getStorage();
                             const fileName = `quotes/${Date.now()}-${context?.user?.username || 'user'}.png`;
                             const storageRef = ref(storage, fileName);
                             
-                            // Set proper metadata for public access
                             const metadata = {
                               contentType: 'image/png',
                               cacheControl: 'public, max-age=31536000',
+                              customMetadata: {
+                                'Access-Control-Allow-Origin': '*',
+                                'Access-Control-Allow-Methods': 'GET',
+                                'Cache-Control': 'public, max-age=31536000'
+                              }
                             };
 
+                            // Upload and get URL
+                            const uploadTask = await uploadBytes(storageRef, blob, metadata);
+                            const imageUrl = await getDownloadURL(uploadTask.ref);
+
+                            // Create the share text and URL to Compose Message in Farcaster
+                            const quoteParts = quote.split('\n\n');
+                            const quoteText = quoteParts[0];
+                            const shareText = `${quoteText}\n\nCreated by @kite /thepod`;
+
+                            // Build Warpcast URL with both embeds
+                            const params = new URLSearchParams();
+                            params.append('text', shareText);
+
+                            // Handle the Firebase Storage URL
                             try {
-                              // Upload with metadata
-                              const uploadTask = await uploadBytes(storageRef, blob, metadata);
-                              // Get the download URL
-                              const imageUrl = await getDownloadURL(uploadTask.ref);
-
-                              // Verify the image URL is accessible
-                              try {
-                                // Use no-cors mode to avoid CORS issues during verification
-                                const checkResponse = await fetch(imageUrl, { 
-                                  method: 'HEAD',
-                                  mode: 'no-cors'
-                                });
-                                
-                                console.log('Image URL verified:', imageUrl);
-                              } catch (error) {
-                                console.error('Image verification failed:', error);
-                                throw new Error('Image verification failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
-                              }
-
-                              // Create the share text
-                              const shareText = `"${quote}" - Created by @kite /thepod`;
+                              // Get the base URL and token
+                              const urlParts = imageUrl.split('?');
+                              const baseUrl = urlParts[0];
+                              const token = new URLSearchParams(urlParts[1]).get('token');
                               
-                              // Try using the direct Warpcast API format
-                              const castData = {
-                                text: shareText,
-                                embeds: [imageUrl]  // Only include the image URL
-                              };
-
-                              // Construct URL manually to avoid encoding issues
-                              const baseUrl = 'https://warpcast.com/~/compose';
-                              const textParam = `text=${encodeURIComponent(shareText)}`;
-                              const embedsParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
-                              const url = `${baseUrl}?${textParam}&${embedsParam}`;
+                              // Keep the token in the URL to maintain access rights
+                              const directUrl = `${baseUrl}?alt=media&token=${token}`;
                               
-                              // Log for debugging
-                              console.log('Share URL:', url);
-                              console.log('Raw Image URL:', imageUrl);
-                              console.log('Cast Data:', castData);
-                              
-                              // Use the SDK to open the URL
-                              await sdk.actions.openUrl(url);
-                              
-                              logAnalyticsEvent('cast_created', {
-                                quote: quote,
-                                hasMedia: true,
-                                mediaType: 'canvas',
-                                platform: 'mobile'
-                              });
-                            } catch (uploadError) {
-                              console.error('Upload/Share error:', uploadError);
-                              // If image sharing fails, fall back to text-only share
-                              const shareText = `"${quote}" - Created by @kite /thepod`;
-                              const shareUrl = 'https://qg-frames.vercel.app';
-                              const params = new URLSearchParams();
-                              params.append('text', shareText);
-                              params.append('embeds[]', shareUrl);
-                              
-                              const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                              sdk.actions.openUrl(url);
-                              toast.error('Could not upload image, sharing quote text only');
+                              // Add the embeds in the correct order
+                              params.append('embeds[]', directUrl); // Image URL first
+                              params.append('embeds[]', 'https://qg-frames.vercel.app'); // Website URL second
+                            } catch (error) {
+                              console.error('Error processing URL:', error);
+                              // Fallback to original URL if parsing fails
+                              params.append('embeds[]', imageUrl);
+                              params.append('embeds[]', 'https://qg-frames.vercel.app');
                             }
+
+                            const url = `https://warpcast.com/~/compose?${params.toString()}`;
+                            await sdk.actions.openUrl(url);
+                            
+                            logAnalyticsEvent('cast_created', {
+                              quote: quote,
+                              hasMedia: true,
+                              mediaType: 'canvas'
+                            });
                             
                             setShowPreview(false);
                             setPreviewImage(null);
+                            setIsCasting(false);
+                            
                           } catch (error) {
                             console.error('Error in share process:', error);
                             toast.error('Failed to share. Please try again.');
+                            setIsCasting(false);
                           } finally {
                             setIsGeneratingPreview(false);
-                            setIsCasting(false);
                           }
                         }}
                         disabled={isCasting}
