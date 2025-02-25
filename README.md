@@ -1,4 +1,4 @@
-# 🎯 FunQuotes
+# ☺ FunQuotes
 
 ![image](https://github.com/user-attachments/assets/02cae4a3-68d9-4449-8283-739336deeb8f)
 
@@ -118,6 +118,8 @@ src/
 
 ## 📱 Mobile Support
 The application is fully responsive and optimized for mobile devices, providing a seamless experience across all screen sizes.
+
+We currently do not support Desktop.
 
 ## 🔒 Security
 - Secure authentication through Farcaster
