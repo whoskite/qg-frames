@@ -2751,17 +2751,21 @@ export default function Demo({ title = "Fun Quotes" }) {
                       <Button
                         onClick={async () => {
                           try {
-                            const shareText = `"${quote.split('\n\n')[0]}" - Created by @kite /thepod :)`;
-                            const shareUrl = 'https://qg-frames.vercel.app';
+                            const shareText = `"${quote}" - Created by @kite /thepod`;
                             
-                            const params = new URLSearchParams();
-                            params.append('text', shareText);
-                            params.append('embeds[]', shareUrl);
+                            const baseUrl = 'https://warpcast.com/~/compose';
+                            const textParam = `text=${encodeURIComponent(shareText)}`;
+                            const appParam = `embeds[]=${encodeURIComponent('https://qg-frames.vercel.app')}`;
+                            
+                            // Build the URL based on GIF URL
+                            let url;
                             if (gifUrl) {
-                              params.append('embeds[]', gifUrl);
+                              const gifParam = `embeds[]=${encodeURIComponent(gifUrl)}`;
+                              url = `${baseUrl}?${textParam}&${gifParam}&${appParam}`;
+                            } else {
+                              url = `${baseUrl}?${textParam}&${appParam}`;
                             }
                             
-                            const url = `https://warpcast.com/~/compose?${params.toString()}`;
                             sdk.actions.openUrl(url);
                             
                             logAnalyticsEvent('cast_created', {
@@ -2829,16 +2833,50 @@ export default function Demo({ title = "Fun Quotes" }) {
                               cacheControl: 'public, max-age=31536000',
                               customMetadata: {
                                 'Access-Control-Allow-Origin': '*',
-                                'Access-Control-Allow-Methods': 'GET',
+                                'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+                                'Access-Control-Allow-Headers': 'Content-Type',
+                                'Access-Control-Expose-Headers': 'Content-Length, Content-Type',
                                 'Cache-Control': 'public, max-age=31536000'
                               }
                             };
 
                             // Upload and get URL
                             const uploadTask = await uploadBytes(storageRef, blob, metadata);
+                            
+                            // Get a clean, properly formatted download URL
+                            // Setting custom authorization null will return a URL that doesn't require auth
                             const imageUrl = await getDownloadURL(uploadTask.ref);
                             console.log('Original Firebase URL:', imageUrl);
-
+                            
+                            // Generate a tokenless URL for maximum compatibility with Warpcast
+                            // Firebase URLs typically follow this format: https://firebasestorage.googleapis.com/v0/b/[PROJECT_ID].appspot.com/o/[FILE_PATH]?[TOKEN_PARAMS]
+                            // We'll strip query parameters for cleaner embedding
+                            // Generate a tokenless URL for maximum compatibility
+                            // This can help avoid issues with social media platforms that might strip tokens
+                            // The Firebase Storage URL format may vary, but this helps ensure it's clean
+                            const firebaseStorageBaseUrl = imageUrl.split('?')[0]; // Remove any query params
+                            console.log('Clean Firebase URL (no tokens):', firebaseStorageBaseUrl);
+                            
+                            // IMPORTANT: Keep the full Firebase URL with token for Warpcast
+                            // Previous attempt to clean the URL was incorrect - we need the token
+                            const warpcastOptimizedUrl = imageUrl; // Use the complete URL with token
+                            
+                            // Test direct image URL access - this helps diagnose issues
+                            console.log('Testing direct image URL access...');
+                            try {
+                              // Create a test image element to verify the URL works
+                              const testImg = document.createElement('img');
+                              testImg.onload = () => console.log('✅ Image URL loads successfully');
+                              testImg.onerror = () => console.error('❌ Image URL failed to load');
+                              testImg.src = imageUrl;
+                              
+                              // Also log a direct access link for testing
+                              console.log('Direct image access link (for testing):', 
+                                `<a href="${imageUrl}" target="_blank">Test Direct Image Access</a>`);
+                            } catch (imgTestErr) {
+                              console.error('Image test error:', imgTestErr);
+                            }
+                            
                             // Create the share text and URL to Compose Message in Farcaster
                             const quoteParts = quote.split('\n\n');
                             const quoteText = quoteParts[0];
@@ -2848,19 +2886,63 @@ export default function Demo({ title = "Fun Quotes" }) {
                             const params = new URLSearchParams();
                             params.append('text', shareText);
 
-                            // Clean and encode the Firebase URL
-                            const cleanFirebaseUrl = imageUrl
-                              .replace(/%2F/g, '/') // Replace encoded forward slashes
-                              .replace(/%20/g, ' '); // Replace encoded spaces
-
-                            // Add the embeds in the correct order
-                            params.append('embeds[]', cleanFirebaseUrl);
-                            params.append('embeds[]', 'https://qg-frames.vercel.app');
-
-                            const url = `https://warpcast.com/~/compose?${params.toString()}`;
-                            console.log('Final Warpcast URL:', url);
-
-                            sdk.actions.openUrl(url);
+                            try {
+                              // Simplest possible approach - minimal encoding
+                              const baseUrl = 'https://warpcast.com/~/compose';
+                              const textParam = `text=${encodeURIComponent(shareText)}`;
+                              
+                              // IMPORTANT: We need the full Firebase URL with the token for it to work
+                              // The path part of the Firebase URL must keep its encoding (e.g., %2F instead of /)
+                              
+                              // Firebase URL problem: Warpcast is decoding %2F to / in the compose page
+                              console.log('Original Firebase URL (for embedding):', imageUrl);
+                              
+                              // Solution: Extract URL parts and double-encode just the path segment
+                              let encodedUrl = '';
+                              try {
+                                // Step 1: Extract the path portion that needs special handling
+                                const urlParts = imageUrl.split('/o/');
+                                if (urlParts.length === 2) {
+                                  const basePart = urlParts[0]; // e.g., https://firebasestorage...
+                                  const pathAndQuery = urlParts[1]; // e.g., quotes%2F123.png?alt=media&token=abc
+                                  
+                                  // Step 2: Split path from query
+                                  const pathQueryParts = pathAndQuery.split('?');
+                                  if (pathQueryParts.length >= 1) {
+                                    const path = pathQueryParts[0];
+                                    const query = pathQueryParts.length > 1 ? '?' + pathQueryParts[1] : '';
+                                    
+                                    // Step 3: Double-encode the path part to protect %2F from being decoded
+                                    const doubleEncodedPath = encodeURIComponent(path);
+                                    
+                                    // Step 4: Reassemble the URL with special handling for the path
+                                    encodedUrl = `${basePart}/o/${doubleEncodedPath}${query}`;
+                                    console.log('Special processed URL:', encodedUrl);
+                                  }
+                                }
+                              } catch (err) {
+                                console.warn('Error processing URL:', err);
+                              }
+                              
+                              // Use the processed URL if available, otherwise fall back to the original
+                              const finalUrl = encodedUrl || imageUrl;
+                              const imageParam = `embeds[]=${encodeURIComponent(finalUrl)}`;
+                              const appParam = `embeds[]=${encodeURIComponent('https://qg-frames.vercel.app')}`;
+                              
+                              // Construct the URL with minimal manipulation
+                              const url = `${baseUrl}?${textParam}&${imageParam}&${appParam}`;
+                              console.log('Final Warpcast URL:', url);
+                              
+                              // Use the simplest approach
+                              sdk.actions.openUrl(url);
+                              
+                              // For troubleshooting, log URLs for comparison
+                              console.log('Original Firebase URL:', imageUrl);
+                              console.log('Specially processed URL:', finalUrl);
+                            } catch (error) {
+                              console.error('Error creating share URL:', error);
+                              toast.error('Error creating share URL. Please try again.');
+                            }
                             
                             logAnalyticsEvent('cast_created', {
                               quote: quote,
