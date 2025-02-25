@@ -1,5 +1,8 @@
 # 🎯 FunQuotes
 
+![image](https://github.com/user-attachments/assets/02cae4a3-68d9-4449-8283-739336deeb8f)
+
+
 A modern web application that generates personalized quotes with GIF integration, powered by AI and enhanced with social sharing capabilities. Create, customize, and share inspiring quotes with matching GIFs on Farcaster.
 
 ## ✨ Features
