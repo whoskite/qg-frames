@@ -2894,51 +2894,34 @@ export default function Demo({ title = "Fun Quotes" }) {
                               // IMPORTANT: We need the full Firebase URL with the token for it to work
                               // The path part of the Firebase URL must keep its encoding (e.g., %2F instead of /)
                               
-                              // Firebase URL problem: Warpcast is decoding %2F to / in the compose page
-                              console.log('Original Firebase URL (for embedding):', imageUrl);
+                              // Mobile vs Desktop Compatibility Issue:
+                              // - Desktop processes URLs one way
+                              // - Mobile app processes URLs differently (giving 404 errors)
+                              console.log('Original Firebase URL:', imageUrl);
                               
-                              // Solution: Extract URL parts and double-encode just the path segment
-                              let encodedUrl = '';
-                              try {
-                                // Step 1: Extract the path portion that needs special handling
-                                const urlParts = imageUrl.split('/o/');
-                                if (urlParts.length === 2) {
-                                  const basePart = urlParts[0]; // e.g., https://firebasestorage...
-                                  const pathAndQuery = urlParts[1]; // e.g., quotes%2F123.png?alt=media&token=abc
-                                  
-                                  // Step 2: Split path from query
-                                  const pathQueryParts = pathAndQuery.split('?');
-                                  if (pathQueryParts.length >= 1) {
-                                    const path = pathQueryParts[0];
-                                    const query = pathQueryParts.length > 1 ? '?' + pathQueryParts[1] : '';
-                                    
-                                    // Step 3: Double-encode the path part to protect %2F from being decoded
-                                    const doubleEncodedPath = encodeURIComponent(path);
-                                    
-                                    // Step 4: Reassemble the URL with special handling for the path
-                                    encodedUrl = `${basePart}/o/${doubleEncodedPath}${query}`;
-                                    console.log('Special processed URL:', encodedUrl);
-                                  }
-                                }
-                              } catch (err) {
-                                console.warn('Error processing URL:', err);
-                              }
+                              // Multi-platform compatibility solution:
+                              // 1. Parse the URL to understand its parts
+                              // 2. Create a version that's resilient to different platform handling
                               
-                              // Use the processed URL if available, otherwise fall back to the original
-                              const finalUrl = encodedUrl || imageUrl;
-                              const imageParam = `embeds[]=${encodeURIComponent(finalUrl)}`;
+                              // BREAKTHROUGH: The GIF sharing works perfectly on both platforms!
+                              // Let's simplify this to match the working GIF approach
+                              
+                              // The GIF approach just uses simple encodeURIComponent - nothing fancy
+                              console.log('Original Firebase URL:', imageUrl);
+                              
+                              // Simple approach - just like the working GIF code
+                              const imageParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
                               const appParam = `embeds[]=${encodeURIComponent('https://qg-frames.vercel.app')}`;
                               
-                              // Construct the URL with minimal manipulation
+                              // Construct a simple URL just like the GIF version
                               const url = `${baseUrl}?${textParam}&${imageParam}&${appParam}`;
-                              console.log('Final Warpcast URL:', url);
+                              console.log('Final Warpcast URL (simple approach):', url);
                               
-                              // Use the simplest approach
                               sdk.actions.openUrl(url);
                               
                               // For troubleshooting, log URLs for comparison
                               console.log('Original Firebase URL:', imageUrl);
-                              console.log('Specially processed URL:', finalUrl);
+                              console.log('Final URL sent to Warpcast:', url);
                             } catch (error) {
                               console.error('Error creating share URL:', error);
                               toast.error('Error creating share URL. Please try again.');
