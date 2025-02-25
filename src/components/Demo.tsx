@@ -2903,85 +2903,25 @@ export default function Demo({ title = "Fun Quotes" }) {
                               // 1. Parse the URL to understand its parts
                               // 2. Create a version that's resilient to different platform handling
                               
-                              // Step 1: Create a function to make Firebase URLs work reliably across platforms
-                              const createWarpcastCompatibleUrl = (url: string): string => {
-                                try {
-                                  // First check if it's a Firebase Storage URL
-                                  if (!url.includes('firebasestorage.googleapis.com')) {
-                                    return url; // Not a Firebase URL, return as is
-                                  }
-                                  
-                                  // Detect if we're likely on mobile
-                                  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                                  console.log('Device detection:', isMobileDevice ? 'MOBILE' : 'DESKTOP');
-                                  
-                                  if (!isMobileDevice) {
-                                    // On desktop, use the original URL - this is known to work on desktop
-                                    console.log('Using original URL format for desktop');
-                                    return url;
-                                  }
-                                  
-                                  // For mobile only: apply special path encoding
-                                  // Step 1: Parse the URL into its constituent parts
-                                  const parsedUrl = new URL(url);
-                                  
-                                  // Step 2: Extract the path and ensure it's correct
-                                  // The critical part is after /o/ in the path
-                                  const pathParts = parsedUrl.pathname.split('/o/');
-                                  
-                                  if (pathParts.length !== 2) {
-                                    return url; // Not the expected format, return original
-                                  }
-                                  
-                                  // Step 3: Ensure the path part is properly encoded
-                                  // We'll decode and then encode properly to handle any potential issues
-                                  const filePath = decodeURIComponent(pathParts[1]);
-                                  // Re-encode the path with special handling for slashes
-                                  const encodedPath = filePath.split('/').map(encodeURIComponent).join('%2F');
-                                  
-                                  // Step 4: Reconstruct the URL with the properly encoded path
-                                  // First build the pathname
-                                  const newPathname = `${pathParts[0]}/o/${encodedPath}`;
-                                  
-                                  // Then create a new URL with this path and the original search parameters
-                                  const newUrl = new URL(url);
-                                  newUrl.pathname = newPathname;
-                                  
-                                  console.log('Using specially encoded URL format for mobile');
-                                  return newUrl.toString();
-                                } catch (e) {
-                                  console.error('Error processing URL for cross-platform compatibility:', e);
-                                  return url; // Return original URL as fallback
-                                }
-                              };
+                              // BREAKTHROUGH: The GIF sharing works perfectly on both platforms!
+                              // Let's simplify this to match the working GIF approach
                               
-                              // Apply our cross-platform compatibility processing
-                              const platformCompatibleUrl = createWarpcastCompatibleUrl(imageUrl);
-                              console.log('Platform-compatible URL:', platformCompatibleUrl);
+                              // The GIF approach just uses simple encodeURIComponent - nothing fancy
+                              console.log('Original Firebase URL:', imageUrl);
                               
-                              // Universal compatibility solution:
-                              // Instead of trying to detect platforms perfectly, we'll include BOTH URL formats
-                              // This ensures at least one will always work regardless of platform
-                              
-                              // Original format (works on desktop in most cases)
-                              const originalImageParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
-                              
-                              // Special format (works on mobile)
-                              const specialImageParam = `embeds[]=${encodeURIComponent(platformCompatibleUrl)}`;
-                              
-                              // App URL is always the same
+                              // Simple approach - just like the working GIF code
+                              const imageParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
                               const appParam = `embeds[]=${encodeURIComponent('https://qg-frames.vercel.app')}`;
                               
-                              // Construct the URL with BOTH image formats
-                              // At least one will work regardless of platform
-                              const url = `${baseUrl}?${textParam}&${originalImageParam}&${specialImageParam}&${appParam}`;
-                              console.log('Final Warpcast URL with dual formats:', url);
+                              // Construct a simple URL just like the GIF version
+                              const url = `${baseUrl}?${textParam}&${imageParam}&${appParam}`;
+                              console.log('Final Warpcast URL (simple approach):', url);
                               
                               sdk.actions.openUrl(url);
                               
                               // For troubleshooting, log URLs for comparison
                               console.log('Original Firebase URL:', imageUrl);
-                              console.log('Specially processed URL:', platformCompatibleUrl);
+                              console.log('Final URL sent to Warpcast:', url);
                             } catch (error) {
                               console.error('Error creating share URL:', error);
                               toast.error('Error creating share URL. Please try again.');
