@@ -13,6 +13,11 @@ A modern web application that generates personalized quotes with GIF integration
   - Context-aware generation based on time of day
   - Custom prompt support
 
+- **Real Quotes (Categories)**
+  - Curated, authentic quotes from notable figures, authors, and thinkers
+  - Organized by themes for easy exploration
+  - Users can browse and favorite their favorite quotes
+  
 - **Rich Media Integration**
   - Automatic GIF matching with GIPHY
   - GIF regeneration capability
