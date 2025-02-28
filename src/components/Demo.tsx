@@ -2751,7 +2751,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                       <Button
                         onClick={async () => {
                           try {
-                            const shareText = `"${quote}" - Created by @kite /thepod`;
+                            const shareText = `"${quote}" - Join the Farcaster community /funquotes`;
                             
                             const baseUrl = 'https://warpcast.com/~/compose';
                             const textParam = `text=${encodeURIComponent(shareText)}`;
@@ -2880,7 +2880,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                             // Create the share text and URL to Compose Message in Farcaster
                             const quoteParts = quote.split('\n\n');
                             const quoteText = quoteParts[0];
-                            const shareText = `${quoteText}\n\nCreated by @kite /thepod`;
+                            const shareText = `${quoteText}\n\nJoin the Farcaster community /funquotes`;
 
                             // Build Warpcast URL with both embeds
                             const params = new URLSearchParams();
