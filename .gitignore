@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentation markdown files
+web3-daily-login-ideas.md
+additional-web3-features.md
+base-integration-features.md
+*.md.backup
