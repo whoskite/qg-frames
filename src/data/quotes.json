@@ -1319,6 +1319,86 @@
           "source": "Les Misérables",
           "topics": ["acceptance", "happiness", "unconditional"],
           "year": 1862
+        },
+        {
+          "id": "love6",
+          "text": "To love and be loved is to feel the sun from both sides.",
+          "author": "David Viscott",
+          "source": "Finding Your Strength in Difficult Times",
+          "topics": ["reciprocity", "warmth", "fulfillment"],
+          "year": 1993
+        },
+        {
+          "id": "love7",
+          "text": "Love is not about how many days, months, or years you have been together. Love is about how much you love each other every single day.",
+          "author": "Unknown",
+          "source": "Modern Wisdom",
+          "topics": ["commitment", "daily love", "consistency"],
+          "year": null
+        },
+        {
+          "id": "love8",
+          "text": "You know you're in love when you can't fall asleep because reality is finally better than your dreams.",
+          "author": "Dr. Seuss",
+          "source": "Literary Works",
+          "topics": ["dreams", "reality", "happiness"],
+          "year": null
+        },
+        {
+          "id": "love9",
+          "text": "Love is like the wind, you can't see it but you can feel it.",
+          "author": "Nicholas Sparks",
+          "source": "A Walk to Remember",
+          "topics": ["feeling", "invisible", "presence"],
+          "year": 1999
+        },
+        {
+          "id": "love10",
+          "text": "The giving of love is an education in itself.",
+          "author": "Eleanor Roosevelt",
+          "source": "You Learn by Living",
+          "topics": ["giving", "education", "growth"],
+          "year": 1960
+        },
+        {
+          "id": "love11",
+          "text": "Love recognizes no barriers. It jumps hurdles, leaps fences, penetrates walls to arrive at its destination full of hope.",
+          "author": "Maya Angelou",
+          "source": "Wouldn't Take Nothing for My Journey Now",
+          "topics": ["barriers", "hope", "perseverance"],
+          "year": 1993
+        },
+        {
+          "id": "love12",
+          "text": "Love is an untamed force. When we try to control it, it destroys us. When we try to imprison it, it enslaves us. When we try to understand it, it leaves us feeling lost and confused.",
+          "author": "Paulo Coelho",
+          "source": "The Zahir",
+          "topics": ["force", "control", "mystery"],
+          "year": 2005
+        },
+        {
+          "id": "love13",
+          "text": "Love is the only force capable of transforming an enemy into a friend.",
+          "author": "Martin Luther King Jr.",
+          "source": "Strength to Love",
+          "topics": ["transformation", "enemies", "friendship"],
+          "year": 1963
+        },
+        {
+          "id": "love14",
+          "text": "Love is friendship that has caught fire. It is quiet understanding, mutual confidence, sharing and forgiving.",
+          "author": "Ann Landers",
+          "source": "Syndicated Column",
+          "topics": ["friendship", "understanding", "forgiveness"],
+          "year": 1975
+        },
+        {
+          "id": "love15",
+          "text": "The art of love is largely the art of persistence.",
+          "author": "Albert Ellis",
+          "source": "Rational Emotive Behavior Therapy",
+          "topics": ["persistence", "art", "commitment"],
+          "year": 1988
         }
       ]
     },
