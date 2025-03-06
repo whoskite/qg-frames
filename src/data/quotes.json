@@ -1274,6 +1274,288 @@
           "year": 1945
         }
       ]
+    },
+    {
+      "id": "love",
+      "name": "Love",
+      "description": "Heartfelt quotes about love, relationships, and affection",
+      "quotes": [
+        {
+          "id": "love1",
+          "text": "The best thing to hold onto in life is each other.",
+          "author": "Audrey Hepburn",
+          "source": "Interview",
+          "topics": ["relationships", "connection", "support"],
+          "year": 1954
+        },
+        {
+          "id": "love2",
+          "text": "Love is composed of a single soul inhabiting two bodies.",
+          "author": "Aristotle",
+          "source": "Philosophical Works",
+          "topics": ["soulmates", "connection", "unity"],
+          "year": null
+        },
+        {
+          "id": "love3",
+          "text": "Being deeply loved by someone gives you strength, while loving someone deeply gives you courage.",
+          "author": "Lao Tzu",
+          "source": "Tao Te Ching",
+          "topics": ["strength", "courage", "reciprocity"],
+          "year": null
+        },
+        {
+          "id": "love4",
+          "text": "Love doesn't make the world go 'round. Love is what makes the ride worthwhile.",
+          "author": "Franklin P. Jones",
+          "source": "Essays",
+          "topics": ["meaning", "journey", "purpose"],
+          "year": 1960
+        },
+        {
+          "id": "love5",
+          "text": "The greatest happiness of life is the conviction that we are loved; loved for ourselves, or rather, loved in spite of ourselves.",
+          "author": "Victor Hugo",
+          "source": "Les Misérables",
+          "topics": ["acceptance", "happiness", "unconditional"],
+          "year": 1862
+        }
+      ]
+    },
+    {
+      "id": "success",
+      "name": "Success",
+      "description": "Quotes about achievement, excellence, and reaching your goals",
+      "quotes": [
+        {
+          "id": "success1",
+          "text": "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.",
+          "author": "Albert Schweitzer",
+          "source": "Humanitarian Speeches",
+          "topics": ["happiness", "passion", "fulfillment"],
+          "year": 1952
+        },
+        {
+          "id": "success2",
+          "text": "Success is walking from failure to failure with no loss of enthusiasm.",
+          "author": "Winston Churchill",
+          "source": "Political Speeches",
+          "topics": ["perseverance", "attitude", "resilience"],
+          "year": 1941
+        },
+        {
+          "id": "success3",
+          "text": "The road to success and the road to failure are almost exactly the same.",
+          "author": "Colin R. Davis",
+          "source": "Interviews",
+          "topics": ["perspective", "journey", "choices"],
+          "year": 1990
+        },
+        {
+          "id": "success4",
+          "text": "Success usually comes to those who are too busy to be looking for it.",
+          "author": "Henry David Thoreau",
+          "source": "Walden",
+          "topics": ["focus", "work", "dedication"],
+          "year": 1854
+        },
+        {
+          "id": "success5",
+          "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+          "author": "Winston Churchill",
+          "source": "War Speeches",
+          "topics": ["courage", "perseverance", "resilience"],
+          "year": 1942
+        }
+      ]
+    },
+    {
+      "id": "achievement",
+      "name": "Achievement",
+      "description": "Quotes about accomplishment, milestones, and personal victories",
+      "quotes": [
+        {
+          "id": "achieve1",
+          "text": "The only limit to the height of your achievements is the reach of your dreams and your willingness to work for them.",
+          "author": "Michelle Obama",
+          "source": "Becoming",
+          "topics": ["dreams", "work ethic", "potential"],
+          "year": 2018
+        },
+        {
+          "id": "achieve2",
+          "text": "Some people want it to happen, some wish it would happen, others make it happen.",
+          "author": "Michael Jordan",
+          "source": "Sports Interview",
+          "topics": ["action", "initiative", "determination"],
+          "year": 1992
+        },
+        {
+          "id": "achieve3",
+          "text": "Great achievement is usually born of great sacrifice, and is never the result of selfishness.",
+          "author": "Napoleon Hill",
+          "source": "Think and Grow Rich",
+          "topics": ["sacrifice", "dedication", "selflessness"],
+          "year": 1937
+        },
+        {
+          "id": "achieve4",
+          "text": "Achievement is talent plus preparation.",
+          "author": "Malcolm Gladwell",
+          "source": "Outliers",
+          "topics": ["preparation", "talent", "practice"],
+          "year": 2008
+        },
+        {
+          "id": "achieve5",
+          "text": "The distance between your dreams and reality is called action.",
+          "author": "Unknown",
+          "source": "Common Wisdom",
+          "topics": ["action", "dreams", "reality"],
+          "year": null
+        }
+      ]
+    },
+    {
+      "id": "funny",
+      "name": "Funny",
+      "description": "Humorous quotes to brighten your day and make you smile",
+      "quotes": [
+        {
+          "id": "funny1",
+          "text": "I'm not lazy, I'm on energy-saving mode.",
+          "author": "Unknown",
+          "source": "Internet Humor",
+          "topics": ["laziness", "humor", "energy"],
+          "year": null
+        },
+        {
+          "id": "funny2",
+          "text": "I used to think I was indecisive, but now I'm not so sure.",
+          "author": "Unknown",
+          "source": "Comedy Circuit",
+          "topics": ["indecision", "irony", "self-awareness"],
+          "year": null
+        },
+        {
+          "id": "funny3",
+          "text": "I'm on a seafood diet. I see food and I eat it.",
+          "author": "Unknown",
+          "source": "Dad Jokes Collection",
+          "topics": ["food", "wordplay", "diet"],
+          "year": null
+        },
+        {
+          "id": "funny4",
+          "text": "I told my wife she was drawing her eyebrows too high. She looked surprised.",
+          "author": "Unknown",
+          "source": "Stand-up Comedy",
+          "topics": ["appearance", "wordplay", "surprise"],
+          "year": null
+        },
+        {
+          "id": "funny5",
+          "text": "I'm not arguing, I'm just explaining why I'm right.",
+          "author": "Unknown",
+          "source": "Internet Memes",
+          "topics": ["arguments", "self-awareness", "humor"],
+          "year": null
+        }
+      ]
+    },
+    {
+      "id": "peace",
+      "name": "Peace",
+      "description": "Quotes about tranquility, harmony, and inner calm",
+      "quotes": [
+        {
+          "id": "peace1",
+          "text": "Peace begins with a smile.",
+          "author": "Mother Teresa",
+          "source": "Humanitarian Speeches",
+          "topics": ["kindness", "beginnings", "simplicity"],
+          "year": 1979
+        },
+        {
+          "id": "peace2",
+          "text": "Peace is not absence of conflict, it is the ability to handle conflict by peaceful means.",
+          "author": "Ronald Reagan",
+          "source": "Presidential Address",
+          "topics": ["conflict resolution", "ability", "handling"],
+          "year": 1982
+        },
+        {
+          "id": "peace3",
+          "text": "Nobody can bring you peace but yourself.",
+          "author": "Ralph Waldo Emerson",
+          "source": "Essays",
+          "topics": ["self-reliance", "inner peace", "responsibility"],
+          "year": 1841
+        },
+        {
+          "id": "peace4",
+          "text": "Peace is a daily, a weekly, a monthly process, gradually changing opinions, slowly eroding old barriers, quietly building new structures.",
+          "author": "John F. Kennedy",
+          "source": "American University Speech",
+          "topics": ["process", "change", "gradual"],
+          "year": 1963
+        },
+        {
+          "id": "peace5",
+          "text": "When you make peace with yourself, you make peace with the world.",
+          "author": "Maha Ghosananda",
+          "source": "Step by Step",
+          "topics": ["self-acceptance", "inner peace", "world peace"],
+          "year": 1992
+        }
+      ]
+    },
+    {
+      "id": "compassion",
+      "name": "Compassion",
+      "description": "Quotes about kindness, empathy, and caring for others",
+      "quotes": [
+        {
+          "id": "comp1",
+          "text": "If you want others to be happy, practice compassion. If you want to be happy, practice compassion.",
+          "author": "Dalai Lama",
+          "source": "The Art of Happiness",
+          "topics": ["happiness", "practice", "reciprocity"],
+          "year": 1998
+        },
+        {
+          "id": "comp2",
+          "text": "Compassion is the radicalism of our time.",
+          "author": "Dalai Lama",
+          "source": "Public Address",
+          "topics": ["radicalism", "change", "modern times"],
+          "year": 2010
+        },
+        {
+          "id": "comp3",
+          "text": "The purpose of human life is to serve, and to show compassion and the will to help others.",
+          "author": "Albert Schweitzer",
+          "source": "Humanitarian Writings",
+          "topics": ["purpose", "service", "helping"],
+          "year": 1952
+        },
+        {
+          "id": "comp4",
+          "text": "Compassion is not a relationship between the healer and the wounded. It's a relationship between equals.",
+          "author": "Pema Chödrön",
+          "source": "When Things Fall Apart",
+          "topics": ["equality", "relationship", "healing"],
+          "year": 1996
+        },
+        {
+          "id": "comp5",
+          "text": "Love and compassion are necessities, not luxuries. Without them, humanity cannot survive.",
+          "author": "Dalai Lama",
+          "source": "The Compassionate Life",
+          "topics": ["necessity", "survival", "humanity"],
+          "year": 2001
+        }
+      ]
     }
   ]
 } 
