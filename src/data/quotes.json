@@ -1399,6 +1399,86 @@
           "source": "Rational Emotive Behavior Therapy",
           "topics": ["persistence", "art", "commitment"],
           "year": 1988
+        },
+        {
+          "id": "love16",
+          "text": "Where there is love there is life.",
+          "author": "Mahatma Gandhi",
+          "source": "Collected Works",
+          "topics": ["life", "vitality", "existence"],
+          "year": 1931
+        },
+        {
+          "id": "love17",
+          "text": "At the touch of love everyone becomes a poet.",
+          "author": "Plato",
+          "source": "Symposium",
+          "topics": ["inspiration", "creativity", "expression"],
+          "year": null
+        },
+        {
+          "id": "love18",
+          "text": "We are most alive when we're in love.",
+          "author": "John Updike",
+          "source": "Literary Essays",
+          "topics": ["aliveness", "vitality", "presence"],
+          "year": 1989
+        },
+        {
+          "id": "love19",
+          "text": "Love is a canvas furnished by nature and embroidered by imagination.",
+          "author": "Voltaire",
+          "source": "Philosophical Dictionary",
+          "topics": ["imagination", "nature", "creativity"],
+          "year": 1764
+        },
+        {
+          "id": "love20",
+          "text": "Love does not consist in gazing at each other, but in looking outward together in the same direction.",
+          "author": "Antoine de Saint-Exupéry",
+          "source": "Wind, Sand and Stars",
+          "topics": ["partnership", "shared vision", "purpose"],
+          "year": 1939
+        },
+        {
+          "id": "love21",
+          "text": "The greatest thing you'll ever learn is just to love and be loved in return.",
+          "author": "Eden Ahbez",
+          "source": "Nature Boy",
+          "topics": ["learning", "reciprocity", "simplicity"],
+          "year": 1947
+        },
+        {
+          "id": "love22",
+          "text": "Love is the voice under all silences, the hope which has no opposite in fear; the strength so strong mere force is feebleness: the truth more first than sun, more last than star.",
+          "author": "E.E. Cummings",
+          "source": "95 Poems",
+          "topics": ["strength", "truth", "hope"],
+          "year": 1958
+        },
+        {
+          "id": "love23",
+          "text": "Love is like a beautiful flower which I may not touch, but whose fragrance makes the garden a place of delight just the same.",
+          "author": "Helen Keller",
+          "source": "The Story of My Life",
+          "topics": ["beauty", "appreciation", "distance"],
+          "year": 1903
+        },
+        {
+          "id": "love24",
+          "text": "Love is the expansion of two natures in such fashion that each includes the other, each is enriched by the other.",
+          "author": "Felix Adler",
+          "source": "An Ethical Philosophy of Life",
+          "topics": ["growth", "enrichment", "expansion"],
+          "year": 1918
+        },
+        {
+          "id": "love25",
+          "text": "In the end we discover that to love and let ourselves be loved by others is all that really matters.",
+          "author": "Paulo Coelho",
+          "source": "The Alchemist",
+          "topics": ["meaning", "vulnerability", "acceptance"],
+          "year": 1988
         }
       ]
     },
