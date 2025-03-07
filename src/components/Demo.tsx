@@ -479,6 +479,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for category quotes
   const [categoryQuotes, setCategoryQuotes] = useState<{text: string; author: string; source: string}[]>([]);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState<number>(0);
+  const [hasUserSwiped, setHasUserSwiped] = useState(false);
 
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
@@ -1894,6 +1895,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         if (Math.abs(swipe) > threshold) {
                           setIsQuoteTransitioning(true);
                           setSwipeDirection(swipe > 0 ? 'right' : 'left');
+                          setHasUserSwiped(true); // Set to true when user swipes
                           
                           // Calculate new index
                           const newIndex = swipe > 0
@@ -2009,7 +2011,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               </AnimatePresence>
               
               {/* Swipe Indicator */}
-              {categoryQuotes.length > 0 && (
+              {categoryQuotes.length > 0 && !hasUserSwiped && (
                 <motion.div 
                   className="flex items-center justify-center mt-4 mb-8"
                   initial={{ opacity: 0 }}
@@ -3473,6 +3475,7 @@ export default function Demo({ title = "Fun Quotes" }) {
             onSelectCategory={(quotes, initialIndex) => {
               setCategoryQuotes(quotes);
               setCurrentQuoteIndex(initialIndex);
+              setHasUserSwiped(false); // Reset when new category is selected
             }}
             onToggleFavorite={(quote: CategoryQuote) => {
               const quoteItem: QuoteHistoryItem = {
