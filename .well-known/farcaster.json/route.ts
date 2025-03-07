@@ -20,7 +20,7 @@ export async function GET() {
       buttonTitle: "Create FunQuotes",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#F9C001",
-      webhookUrl: `${appUrl}/api/webhook`,
+      webhookUrl: `https://api.neynar.com/f/app/355d80b9-972b-4427-89d2-bdd2d6e83b6d/event`,
     },
   };
 
