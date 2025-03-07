@@ -1895,7 +1895,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                         if (Math.abs(swipe) > threshold) {
                           setIsQuoteTransitioning(true);
                           setSwipeDirection(swipe > 0 ? 'right' : 'left');
-                          setHasUserSwiped(true); // Set to true when user swipes
+                          
+                          // Set hasUserSwiped with a slight delay to allow the fade-out animation
+                          setTimeout(() => {
+                            setHasUserSwiped(true);
+                          }, 100);
                           
                           // Calculate new index
                           const newIndex = swipe > 0
@@ -2011,42 +2015,48 @@ export default function Demo({ title = "Fun Quotes" }) {
               </AnimatePresence>
               
               {/* Swipe Indicator */}
-              {categoryQuotes.length > 0 && !hasUserSwiped && (
-                <motion.div 
-                  className="flex items-center justify-center mt-4 mb-8"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <motion.div 
-                      className="text-white/60 text-sm flex items-center"
-                      animate={{ x: [-5, 0, -5] }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M15 18l-6-6 6-6" />
-                      </svg>
-                    </motion.div>
-                    
-                    <div className="bg-white/20 rounded-full px-3 py-1">
-                      <span className="text-white text-xs">
-                        Swipe to browse quotes ({currentQuoteIndex + 1}/{categoryQuotes.length})
-                      </span>
+              <AnimatePresence>
+                {categoryQuotes.length > 0 && !hasUserSwiped && (
+                  <motion.div 
+                    className="flex items-center justify-center mt-4 mb-8"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ 
+                      duration: 0.5,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <motion.div 
+                        className="text-white/60 text-sm flex items-center"
+                        animate={{ x: [-5, 0, -5] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                      </motion.div>
+                      
+                      <div className="bg-white/20 rounded-full px-3 py-1">
+                        <span className="text-white text-xs">
+                          Swipe to browse quotes ({currentQuoteIndex + 1}/{categoryQuotes.length})
+                        </span>
+                      </div>
+                      
+                      <motion.div 
+                        className="text-white/60 text-sm flex items-center"
+                        animate={{ x: [5, 0, 5] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
+                      </motion.div>
                     </div>
-                    
-                    <motion.div 
-                      className="text-white/60 text-sm flex items-center"
-                      animate={{ x: [5, 0, 5] }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 18l6-6-6-6" />
-                      </svg>
-                    </motion.div>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Card Component */}
               {categoryQuotes.length > 0 ? (
