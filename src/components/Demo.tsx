@@ -1709,6 +1709,36 @@ export default function Demo({ title = "Fun Quotes" }) {
     };
   }, [context?.user?.fid]);
 
+  // Function to navigate to previous or next quote
+  const navigateQuote = async (direction: 'prev' | 'next') => {
+    if (categoryQuotes.length === 0) return;
+    
+    setIsQuoteTransitioning(true);
+    setSwipeDirection(direction === 'prev' ? 'right' : 'left');
+    
+    // Set hasUserSwiped with a slight delay to allow the fade-out animation
+    setTimeout(() => {
+      setHasUserSwiped(true);
+    }, 100);
+    
+    // Calculate new index
+    const newIndex = direction === 'prev'
+      ? (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length
+      : (currentQuoteIndex + 1) % categoryQuotes.length;
+    
+    // Get new quote data
+    const { text, author, source } = categoryQuotes[newIndex];
+    const newQuote = `${text}\n\n- ${author}\n${source}`;
+    
+    // Update everything at once
+    setCurrentQuoteIndex(newIndex);
+    setQuote(newQuote);
+    setGifUrl(null);
+    
+    // Wait for animation to complete
+    await sleep(300);
+    setIsQuoteTransitioning(false);
+  };
 
   return (
       <div className="relative min-h-screen">
@@ -2019,11 +2049,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                 <div className="flex items-center justify-center mt-2 mb-4">
                   {/* Left Arrow - Always Visible */}
                   <motion.div 
-                    className="text-white/60 text-sm flex items-center"
+                    className="text-white/60 text-sm flex items-center cursor-pointer p-2 hover:text-white/90 transition-colors"
                     animate={{ x: [-5, 0, -5] }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                    onClick={() => navigateQuote('prev')}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M15 18l-6-6 6-6" />
                     </svg>
                   </motion.div>
@@ -2032,7 +2064,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <AnimatePresence>
                     {!hasUserSwiped && (
                       <motion.div 
-                        className="mx-2"
+                        className="mx-6"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -2052,11 +2084,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                   
                   {/* Right Arrow - Always Visible */}
                   <motion.div 
-                    className="text-white/60 text-sm flex items-center"
+                    className="text-white/60 text-sm flex items-center cursor-pointer p-2 hover:text-white/90 transition-colors"
                     animate={{ x: [5, 0, 5] }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                    onClick={() => navigateQuote('next')}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M9 18l6-6-6-6" />
                     </svg>
                   </motion.div>
