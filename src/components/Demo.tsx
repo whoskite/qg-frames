@@ -1874,7 +1874,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <motion.div
                     className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 ${
                       categoryQuotes.length > 0 ? 'mt-20' : 'mt-4'
-                    } mb-32 ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                    } ${categoryQuotes.length > 0 ? 'mb-4' : 'mb-32'} ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
                     {...(categoryQuotes.length > 0 ? {
                       drag: "x",
                       dragConstraints: { left: 0, right: 0 },
@@ -2016,7 +2016,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               
               {/* Swipe Indicator */}
               {categoryQuotes.length > 0 && (
-                <div className="flex items-center justify-center mt-4 mb-8">
+                <div className="flex items-center justify-center mt-2 mb-4">
                   {/* Left Arrow - Always Visible */}
                   <motion.div 
                     className="text-white/60 text-sm flex items-center"
