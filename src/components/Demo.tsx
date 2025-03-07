@@ -2170,7 +2170,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }}
                           className="relative"
                         >
-                          <Share2 className="w-6 h-6 text-white hover:text-blue-200 cursor-pointer transition-all duration-300" />
+                          <Upload className="w-6 h-6 cursor-pointer text-white hover:text-green-200 transition-all duration-300" />
                         </motion.button>
                       </div>
                     </motion.div>
