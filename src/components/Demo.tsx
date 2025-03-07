@@ -479,6 +479,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   // Add new state for category quotes
   const [categoryQuotes, setCategoryQuotes] = useState<{text: string; author: string; source: string}[]>([]);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState<number>(0);
+  const [hasUserSwiped, setHasUserSwiped] = useState(false);
 
   // Add new state for music
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
@@ -1873,7 +1874,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <motion.div
                     className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 ${
                       categoryQuotes.length > 0 ? 'mt-20' : 'mt-4'
-                    } mb-32 ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                    } ${categoryQuotes.length > 0 ? 'mb-4' : 'mb-32'} ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
                     {...(categoryQuotes.length > 0 ? {
                       drag: "x",
                       dragConstraints: { left: 0, right: 0 },
@@ -1895,6 +1896,11 @@ export default function Demo({ title = "Fun Quotes" }) {
                           setIsQuoteTransitioning(true);
                           setSwipeDirection(swipe > 0 ? 'right' : 'left');
                           
+                          // Set hasUserSwiped with a slight delay to allow the fade-out animation
+                          setTimeout(() => {
+                            setHasUserSwiped(true);
+                          }, 100);
+                          
                           // Calculate new index
                           const newIndex = swipe > 0
                             ? (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length
@@ -1909,14 +1915,16 @@ export default function Demo({ title = "Fun Quotes" }) {
                           setQuote(newQuote);
                           setGifUrl(null);
                           
-                          // Reset animation states after transition
-                          setTimeout(() => {
-                            setIsQuoteTransitioning(false);
-                            setSwipeDirection(null);
-                          }, 8000); // Increased to match the new longest animation duration (8s)
+                          // Wait for animation to complete
+                          await sleep(300);
+                          setIsQuoteTransitioning(false);
                         }
                       }
                     } : {})}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
                   >
                     <motion.div 
                       key={`${quote}-${currentQuoteIndex}`}
@@ -2005,6 +2013,55 @@ export default function Demo({ title = "Fun Quotes" }) {
                   </motion.div>
                 )}
               </AnimatePresence>
+              
+              {/* Swipe Indicator */}
+              {categoryQuotes.length > 0 && (
+                <div className="flex items-center justify-center mt-2 mb-4">
+                  {/* Left Arrow - Always Visible */}
+                  <motion.div 
+                    className="text-white/60 text-sm flex items-center"
+                    animate={{ x: [-5, 0, -5] }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </motion.div>
+                  
+                  {/* Center Text - Fades Out */}
+                  <AnimatePresence>
+                    {!hasUserSwiped && (
+                      <motion.div 
+                        className="mx-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ 
+                          duration: 0.5,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <div className="bg-white/20 rounded-full px-3 py-1">
+                          <span className="text-white text-xs">
+                            Swipe to browse quotes
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Right Arrow - Always Visible */}
+                  <motion.div 
+                    className="text-white/60 text-sm flex items-center"
+                    animate={{ x: [5, 0, 5] }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </motion.div>
+                </div>
+              )}
 
               {/* Card Component */}
               {categoryQuotes.length > 0 ? (
@@ -3433,6 +3490,7 @@ export default function Demo({ title = "Fun Quotes" }) {
             onSelectCategory={(quotes, initialIndex) => {
               setCategoryQuotes(quotes);
               setCurrentQuoteIndex(initialIndex);
+              setHasUserSwiped(false); // Reset when new category is selected
             }}
             onToggleFavorite={(quote: CategoryQuote) => {
               const quoteItem: QuoteHistoryItem = {
