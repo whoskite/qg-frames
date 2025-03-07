@@ -9,7 +9,10 @@ import {
   Timestamp,
   serverTimestamp,
   type Firestore,
-  deleteField
+  deleteField,
+  query,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { getFirebaseInstance } from './firebase';
 import type { QuoteHistoryItem, FavoriteQuote } from '../types/quotes';
@@ -37,7 +40,9 @@ export async function saveQuoteToHistory(userId: number, quote: QuoteHistoryItem
 export async function getUserQuoteHistory(userId: number): Promise<QuoteHistoryItem[]> {
   const db = await getDb();
   const userHistoryRef = collection(db, 'users', userId.toString(), 'history');
-  const historySnapshot = await getDocs(userHistoryRef);
+  // Limit to 30 quotes and order by timestamp in descending order
+  const q = query(userHistoryRef, orderBy('timestamp', 'desc'), limit(30));
+  const historySnapshot = await getDocs(q);
   
   return historySnapshot.docs.map(doc => {
     const data = doc.data();
