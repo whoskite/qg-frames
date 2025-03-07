@@ -2772,7 +2772,7 @@ export default function Demo({ title = "Fun Quotes" }) {
           {/* Share Preview Modal */}
           {showPreview && (
             <div 
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50"
               onClick={() => {
                 setShowPreview(false);
                 setPreviewImage(null);
@@ -2782,37 +2782,40 @@ export default function Demo({ title = "Fun Quotes" }) {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-xl p-6 max-w-lg w-full m-4"
+                className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full m-4 shadow-lg border border-white/20"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    Preview Share
+                <div className="flex justify-between items-center mb-5">
+                  <h2 className="text-xl font-medium text-white">
+                    Share Your Quote
                   </h2>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      className="rounded-full h-7 w-7 p-0"
-                      onClick={() => {
-                        setShowPreview(false);
-                        setPreviewImage(null);
-                      }}
-                    >
-                      <X className="h-4 w-4 text-black" />
-                    </Button>
-                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="rounded-full h-8 w-8 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
+                    onClick={() => {
+                      setShowPreview(false);
+                      setPreviewImage(null);
+                    }}
+                  >
+                    <X className="h-4 w-4 text-white" />
+                  </motion.button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {/* Preview Area */}
-                  <div className="rounded-lg overflow-hidden bg-gray-100 aspect-[2/1] relative">
+                  <div className="rounded-xl overflow-hidden bg-black/20 aspect-[2/1] relative border border-white/10">
                     {isGeneratingPreview ? (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <motion.div
                           animate={{ opacity: [0.5, 1, 0.5] }}
                           transition={{ duration: 1.5, repeat: Infinity }}
-                          className="text-purple-600 text-sm"
+                          className="text-white/80 text-sm"
                         >
-                          Generating preview...
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="animate-spin h-6 w-6 border-2 border-white/60 border-t-transparent rounded-full" />
+                            <span>Generating preview...</span>
+                          </div>
                         </motion.div>
                       </div>
                     ) : previewImage ? (
@@ -2836,9 +2839,9 @@ export default function Demo({ title = "Fun Quotes" }) {
                     ) : null}
                   </div>
 
-                  {/* Share Button */}
+                  {/* Share Buttons */}
                   <div className="flex justify-end">
-                    <div className="flex gap-2 w-full">
+                    <div className="flex gap-3 w-full">
                       <Button
                         onClick={async () => {
                           try {
@@ -2873,7 +2876,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }
                         }}
                         disabled={!gifUrl || isCasting}
-                        className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
+                        className="!flex-1 !bg-white/20 !text-white py-2 rounded-xl transition-all flex items-center justify-center gap-2 !hover:bg-white/30 !disabled:opacity-30 !disabled:bg-white/10"
                       >
                         {isCasting ? (
                           <motion.span
@@ -2885,7 +2888,7 @@ export default function Demo({ title = "Fun Quotes" }) {
                         ) : (
                           <>
                             <Sparkles className="w-4 h-4" />
-                            Share GIF
+                            Share with GIF
                           </>
                         )}
                       </Button>
@@ -3037,24 +3040,27 @@ export default function Demo({ title = "Fun Quotes" }) {
                           }
                         }}
                         disabled={isCasting}
-                        className="!flex-1 !bg-purple-600 !text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-2 !hover:scale-100 !hover:bg-purple-700 !hover:bg-opacity-100 !hover:bg-purple-700"
+                        className="!flex-1 !bg-white/20 !text-white py-2 rounded-xl transition-all flex items-center justify-center gap-2 !hover:bg-white/30 !disabled:opacity-30 !disabled:bg-white/10"
                       >
                         {isCasting ? (
-                          <motion.span
-                            animate={{ opacity: [0, 1, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                          >
-                            •••
-                          </motion.span>
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                            <span>Processing...</span>
+                          </div>
                         ) : (
                           <>
                             <Frame className="w-4 h-4" />
-                            Share Image
+                            Share as Image
                           </>
                         )}
                       </Button>
                     </div>
                   </div>
+                  
+                  {/* Help text */}
+                  <p className="text-xs text-center text-white/60 mt-2">
+                    Your quote will be shared to Warpcast
+                  </p>
                 </div>
               </motion.div>
             </div>
