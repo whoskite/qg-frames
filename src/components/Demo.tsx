@@ -3,7 +3,7 @@
 "use client";
 
 // 1. Imports
-import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft, Quote } from 'lucide-react';
+import { Share2, Sparkles, Heart, History, X, Palette, Check, Settings, ChevronDown, Frame, Shuffle, Upload, Dice3, ChevronRight, ChevronLeft, Quote, Edit } from 'lucide-react';
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -441,6 +441,8 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [showHistory, setShowHistory] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [isEditingQuote, setIsEditingQuote] = useState(false);
+  const [editedQuote, setEditedQuote] = useState('');
 
   // Frame-specific state
   const [added, setAdded] = useState(false);
@@ -1565,6 +1567,9 @@ export default function Demo({ title = "Fun Quotes" }) {
           id: Date.now().toString()
         };
         toggleFavorite(currentQuote);
+      } else if (e.key === 'e' && quote) {
+        setEditedQuote(quote);
+        setIsEditingQuote(true);
       }
     };
 
@@ -2314,6 +2319,15 @@ export default function Demo({ title = "Fun Quotes" }) {
                     className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white hover:text-green-200"
                   />
                 )}
+                {quote && (
+                  <Edit
+                    onClick={() => {
+                      setEditedQuote(quote);
+                      setIsEditingQuote(true);
+                    }}
+                    className="w-6 h-6 cursor-pointer hover:scale-125 transition-transform text-white hover:text-blue-200"
+                  />
+                )}
               </motion.div>
 
               {/* Input Field */}
@@ -3061,6 +3075,74 @@ export default function Demo({ title = "Fun Quotes" }) {
                   <p className="text-xs text-center text-white/60 mt-2">
                     Your quote will be shared to Warpcast
                   </p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Edit Quote Modal */}
+          {isEditingQuote && (
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50"
+              onClick={() => {
+                setIsEditingQuote(false);
+              }}
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full m-4 shadow-lg border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-5">
+                  <h2 className="text-xl font-medium text-white">
+                    Edit Your Quote
+                  </h2>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="rounded-full h-8 w-8 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
+                    onClick={() => {
+                      setIsEditingQuote(false);
+                    }}
+                  >
+                    <X className="h-4 w-4 text-white" />
+                  </motion.button>
+                </div>
+
+                <div className="space-y-5">
+                  {/* Edit Area */}
+                  <textarea
+                    value={editedQuote}
+                    onChange={(e) => setEditedQuote(e.target.value)}
+                    className="w-full h-40 bg-black/20 text-white border border-white/20 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-white/30"
+                    placeholder="Edit your quote here..."
+                  />
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end">
+                    <div className="flex gap-3 w-full">
+                      <Button
+                        onClick={() => {
+                          setIsEditingQuote(false);
+                        }}
+                        className="!flex-1 !bg-white/10 !text-white py-2 rounded-xl transition-all flex items-center justify-center gap-2 !hover:bg-white/20"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setQuote(editedQuote);
+                          setIsEditingQuote(false);
+                          toast.success('Quote updated successfully');
+                        }}
+                        className="!flex-1 !bg-white/20 !text-white py-2 rounded-xl transition-all flex items-center justify-center gap-2 !hover:bg-white/30"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </div>
