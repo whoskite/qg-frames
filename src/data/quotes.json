@@ -1359,6 +1359,126 @@
           "source": "Design, Form, and Chaos",
           "topics": ["branding", "communication", "representation"],
           "year": 1993
+        },
+        {
+          "id": "des11",
+          "text": "Graphic design will save the world right after rock and roll does.",
+          "author": "David Carson",
+          "source": "The End of Print",
+          "topics": ["graphic design", "impact", "cultural influence"],
+          "year": 1995
+        },
+        {
+          "id": "des12",
+          "text": "Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.",
+          "author": "Don Norman",
+          "source": "The Design of Everyday Things",
+          "topics": ["usability", "invisibility", "user needs"],
+          "year": 1988
+        },
+        {
+          "id": "des13",
+          "text": "Design is the intermediary between information and understanding.",
+          "author": "Hans Hofmann",
+          "source": "Design Lectures",
+          "topics": ["information", "understanding", "communication"],
+          "year": 1952
+        },
+        {
+          "id": "des14",
+          "text": "Design is thinking made visual.",
+          "author": "Saul Bass",
+          "source": "Bass on Titles",
+          "topics": ["thinking", "visualization", "expression"],
+          "year": 1977
+        },
+        {
+          "id": "des15",
+          "text": "People ignore design that ignores people.",
+          "author": "Frank Chimero",
+          "source": "The Shape of Design",
+          "topics": ["human-centered", "relevance", "empathy"],
+          "year": 2012
+        },
+        {
+          "id": "des16",
+          "text": "Content precedes design. Design in the absence of content is not design, it's decoration.",
+          "author": "Jeffrey Zeldman",
+          "source": "A List Apart",
+          "topics": ["content", "purpose", "decoration"],
+          "year": 2008
+        },
+        {
+          "id": "des17",
+          "text": "Design is as much an act of spacing as an act of marking.",
+          "author": "Ellen Lupton",
+          "source": "Thinking with Type",
+          "topics": ["spacing", "balance", "negative space"],
+          "year": 2004
+        },
+        {
+          "id": "des18",
+          "text": "Form follows function - that has been misunderstood. Form and function should be one, joined in a spiritual union.",
+          "author": "Frank Lloyd Wright",
+          "source": "Architectural Principles",
+          "topics": ["form", "function", "unity"],
+          "year": 1908
+        },
+        {
+          "id": "des19",
+          "text": "The details are not the details. They make the design.",
+          "author": "Charles Eames",
+          "source": "Design Q&A",
+          "topics": ["details", "craftsmanship", "precision"],
+          "year": 1972
+        },
+        {
+          "id": "des20",
+          "text": "Design should never say, 'Look at me.' It should always say, 'Look at this.'",
+          "author": "David Craib",
+          "source": "Design Philosophy",
+          "topics": ["humility", "focus", "attention"],
+          "year": 1995
+        },
+        {
+          "id": "des21",
+          "text": "Simplicity is about subtracting the obvious and adding the meaningful.",
+          "author": "John Maeda",
+          "source": "The Laws of Simplicity",
+          "topics": ["simplicity", "meaning", "essence"],
+          "year": 2006
+        },
+        {
+          "id": "des22",
+          "text": "Good design goes to heaven; bad design goes everywhere.",
+          "author": "Mieke Gerritzen",
+          "source": "Everyone is a Designer",
+          "topics": ["quality", "ubiquity", "standards"],
+          "year": 2001
+        },
+        {
+          "id": "des23",
+          "text": "Design is the conscious effort to impose a meaningful order.",
+          "author": "Victor Papanek",
+          "source": "Design for the Real World",
+          "topics": ["order", "meaning", "intention"],
+          "year": 1971
+        },
+        {
+          "id": "des24",
+          "text": "Every great design begins with an even better story.",
+          "author": "Lorinda Mamo",
+          "source": "Design Perspectives",
+          "topics": ["storytelling", "foundations", "inspiration"],
+          "year": 2014
+        },
+        {
+          "id": "des25",
+          "text": "Design is not what you see, but what you make others see.",
+          "author": "Edgar Degas",
+          "source": "Art & Design Conversations",
+          "topics": ["perception", "influence", "vision"],
+          "year": 1889
         }
       ]
     },
