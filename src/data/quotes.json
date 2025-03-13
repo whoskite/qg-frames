@@ -1276,6 +1276,93 @@
       ]
     },
     {
+      "id": "design",
+      "name": "Design",
+      "description": "Quotes about design principles, aesthetics, and functional beauty",
+      "quotes": [
+        {
+          "id": "des1",
+          "text": "Design is not just what it looks like and feels like. Design is how it works.",
+          "author": "Steve Jobs",
+          "source": "New York Times Interview",
+          "topics": ["functionality", "aesthetics", "user experience"],
+          "year": 2003
+        },
+        {
+          "id": "des2",
+          "text": "Good design is obvious. Great design is transparent.",
+          "author": "Joe Sparano",
+          "source": "Design Lectures",
+          "topics": ["simplicity", "effectiveness", "invisibility"],
+          "year": 2010
+        },
+        {
+          "id": "des3",
+          "text": "Design is intelligence made visible.",
+          "author": "Alina Wheeler",
+          "source": "Designing Brand Identity",
+          "topics": ["intelligence", "visibility", "communication"],
+          "year": 2009
+        },
+        {
+          "id": "des4",
+          "text": "Design creates culture. Culture shapes values. Values determine the future.",
+          "author": "Robert L. Peters",
+          "source": "Design Thinking",
+          "topics": ["culture", "values", "future"],
+          "year": 2005
+        },
+        {
+          "id": "des5",
+          "text": "Everything is designed. Few things are designed well.",
+          "author": "Brian Reed",
+          "source": "Design Principles",
+          "topics": ["quality", "ubiquity", "standards"],
+          "year": null
+        },
+        {
+          "id": "des6",
+          "text": "Design is where science and art break even.",
+          "author": "Robin Mathew",
+          "source": "Design Philosophy",
+          "topics": ["science", "art", "balance"],
+          "year": 2012
+        },
+        {
+          "id": "des7",
+          "text": "A designer knows he has achieved perfection not when there is nothing left to add, but when there is nothing left to take away.",
+          "author": "Antoine de Saint-Exupéry",
+          "source": "Wind, Sand and Stars",
+          "topics": ["minimalism", "perfection", "simplicity"],
+          "year": 1939
+        },
+        {
+          "id": "des8",
+          "text": "Design is not a single object or dimension. Design is messy and complex.",
+          "author": "Natasha Jen",
+          "source": "Design Indaba Conference",
+          "topics": ["complexity", "process", "multidimensionality"],
+          "year": 2017
+        },
+        {
+          "id": "des9",
+          "text": "Good design is a lot like clear thinking made visual.",
+          "author": "Edward Tufte",
+          "source": "Envisioning Information",
+          "topics": ["clarity", "thinking", "visualization"],
+          "year": 1990
+        },
+        {
+          "id": "des10",
+          "text": "Design is the silent ambassador of your brand.",
+          "author": "Paul Rand",
+          "source": "Design, Form, and Chaos",
+          "topics": ["branding", "communication", "representation"],
+          "year": 1993
+        }
+      ]
+    },
+    {
       "id": "love",
       "name": "Love",
       "description": "Heartfelt quotes about love, relationships, and affection",
