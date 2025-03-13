@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import { Card } from './ui/card';
 import type { Category, QuotesData, CategoryQuote } from '../types/quotes';
 import quotesData from '../data/quotes.json';
-import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, FaLeaf, FaBrain, FaPaintBrush, FaFeather, FaTrophy, FaDove, FaHandsHelping } from 'react-icons/fa';
+import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, FaLeaf, FaBrain, FaPaintBrush, FaFeather, FaTrophy, FaDove, FaHandsHelping, FaRulerCombined } from 'react-icons/fa';
 import { GiMeditation } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
 import type { QuoteHistoryItem } from '../types/quotes';
@@ -28,6 +28,7 @@ const categoryIcons: { [key: string]: IconType } = {
   'Life': FaLeaf,
   'Mindfulness': GiMeditation,
   'Creativity': FaPaintBrush,
+  'Design': FaRulerCombined,
   'Philosophy': FaBrain,
   'Poetry': FaFeather,
   'Achievement': FaTrophy,
