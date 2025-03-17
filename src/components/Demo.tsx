@@ -595,11 +595,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         setShowCategories(false);
         setShowHistory(false);
         break;
-      case 'history':
-        setShowHistory(true);
-        setShowCategories(false);
-        setShowFavorites(false);
-        break;
     }
   };
 
@@ -1810,6 +1805,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                         >
                           <Sparkles className="w-4 h-4" />
                           <span>User Preferences</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
+                          onClick={() => setShowHistory(true)}
+                        >
+                          <History className="w-4 h-4" />
+                          <span>History</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="flex items-center gap-2"
@@ -3209,6 +3211,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               favorites={favorites}
               quoteHistory={quoteHistory}
               sessionStartTime={sessionStartTime}
+              setShowHistory={setShowHistory}
             />
           )}
 
@@ -3715,6 +3718,7 @@ interface ProfileModalProps {
   favorites: FavoriteQuote[];
   quoteHistory: QuoteHistoryItem[];
   sessionStartTime: number;
+  setShowHistory: (show: boolean) => void;
 }
 
 // Update the ProfileModal component
@@ -3723,7 +3727,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
   context, 
   favorites, 
   quoteHistory, 
-  sessionStartTime
+  sessionStartTime,
+  setShowHistory
 }) => (
   <div 
     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"

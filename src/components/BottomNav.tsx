@@ -1,4 +1,4 @@
-import { Sparkles, Heart, History, Book } from 'lucide-react';
+import { Sparkles, Heart, Book } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
@@ -36,12 +36,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       id: 'favorites', 
       icon: Heart,
       tooltip: 'View your favorite quotes'
-    },
-    { 
-      name: 'History', 
-      id: 'history', 
-      icon: History,
-      tooltip: 'See your quote history'
     }
   ];
 
