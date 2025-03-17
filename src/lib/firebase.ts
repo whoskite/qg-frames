@@ -26,6 +26,12 @@ async function initializeFirebase() {
     return initializationPromise;
   }
 
+  // Check if we're in a server-side rendering context
+  if (typeof window === 'undefined') {
+    console.warn('Firebase initialization skipped in server-side rendering context');
+    throw new Error('Firebase cannot be initialized in server-side rendering context');
+  }
+
   initializationPromise = (async () => {
     try {
       // Check if Firebase is already initialized
@@ -61,6 +67,7 @@ async function initializeFirebase() {
               break;
             } catch (error) {
               lastError = error;
+              console.warn(`Attempt ${i+1}/${maxRetries} to fetch Firebase config failed:`, error);
               if (i < maxRetries - 1) {
                 await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
               }
@@ -106,11 +113,123 @@ async function initializeFirebase() {
 
 // Helper function to get Firebase instances
 async function getFirebaseInstance() {
-  const instances = await initializeFirebase();
-  if (!instances.db) {
-    throw new Error('Firestore not initialized');
+  try {
+    // Check if we're in a server-side rendering context
+    if (typeof window === 'undefined') {
+      console.warn('Firebase cannot be initialized in server-side rendering context');
+      throw new Error('Firebase cannot be initialized in server-side rendering context');
+    }
+    
+    const instances = await initializeFirebase();
+    if (!instances.db) {
+      throw new Error('Firestore not initialized');
+    }
+    return instances;
+  } catch (error) {
+    console.error('Error getting Firebase instance:', error);
+    
+    // Return a mock instance for development/testing or when in SSR
+    if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
+      console.warn('Using mock Firebase instance');
+      return {
+        app: undefined,
+        db: createMockFirestore(),
+        storage: undefined,
+        analytics: undefined
+      };
+    }
+    
+    // In production, we still want to throw the error
+    throw error;
   }
-  return instances;
+}
+
+// Create a mock Firestore for development/testing
+function createMockFirestore() {
+  // This is a very simple mock that just logs operations
+  // It doesn't actually store or retrieve data
+  console.warn('Using mock Firestore - no data will be saved or retrieved');
+  
+  // In-memory storage for mock data
+  const collections: Record<string, Record<string, unknown>> = {};
+  
+  return {
+    collection: (collectionPath: string) => {
+      // Initialize collection if it doesn't exist
+      if (!collections[collectionPath]) {
+        collections[collectionPath] = {};
+      }
+      
+      return {
+        // Mock query method
+        query: () => ({
+          orderBy: () => ({
+            limit: () => ({
+              get: async () => ({
+                docs: [],
+                forEach: () => { /* Empty function */ }
+              }),
+              getDocs: async () => ({
+                docs: [],
+                forEach: () => { /* Empty function */ }
+              })
+            })
+          })
+        }),
+        // Other collection methods as needed
+      };
+    },
+    doc: (collectionPath: string, docId: string) => {
+      // Initialize collection if it doesn't exist
+      if (!collections[collectionPath]) {
+        collections[collectionPath] = {};
+      }
+      
+      return {
+        get: async () => ({
+          exists: () => false,
+          data: () => null
+        }),
+        getDoc: async () => ({
+          exists: () => false,
+          data: () => null
+        }),
+        set: async (data: unknown) => {
+          console.log(`Mock Firestore: set data for ${collectionPath}/${docId}`);
+          collections[collectionPath][docId] = data;
+          return true;
+        },
+        setDoc: async (data: unknown) => {
+          console.log(`Mock Firestore: setDoc data for ${collectionPath}/${docId}`);
+          collections[collectionPath][docId] = data;
+          return true;
+        },
+        update: async (data: unknown) => {
+          console.log(`Mock Firestore: update data for ${collectionPath}/${docId}`);
+          if (!collections[collectionPath][docId]) {
+            collections[collectionPath][docId] = {};
+          }
+          collections[collectionPath][docId] = {
+            ...collections[collectionPath][docId] as Record<string, unknown>,
+            ...data as Record<string, unknown>
+          };
+          return true;
+        },
+        updateDoc: async (data: unknown) => {
+          console.log(`Mock Firestore: updateDoc data for ${collectionPath}/${docId}`);
+          if (!collections[collectionPath][docId]) {
+            collections[collectionPath][docId] = {};
+          }
+          collections[collectionPath][docId] = {
+            ...collections[collectionPath][docId] as Record<string, unknown>,
+            ...data as Record<string, unknown>
+          };
+          return true;
+        }
+      };
+    },
+    // Add other Firestore methods as needed
+  } as unknown as Firestore;
 }
 
 export { initializeFirebase, getFirebaseInstance, app, analytics, db, storage, isInitialized }; 

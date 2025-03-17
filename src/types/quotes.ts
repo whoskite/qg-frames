@@ -12,6 +12,7 @@ export interface BaseQuote extends BaseQuoteFields {
 
 export interface QuoteHistoryItemFields extends BaseQuoteFields {
   timestamp: Date;
+  likes?: number;
 }
 
 export interface QuoteHistoryItem extends QuoteHistoryItemFields {

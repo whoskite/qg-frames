@@ -1,4 +1,4 @@
-import { Sparkles, Heart, Book } from 'lucide-react';
+import { Sparkles, Heart, Book, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
@@ -36,6 +36,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       id: 'favorites', 
       icon: Heart,
       tooltip: 'View your favorite quotes'
+    },
+    { 
+      name: 'Leaderboard', 
+      id: 'leaderboard', 
+      icon: Trophy,
+      tooltip: 'View top quotes'
     }
   ];
 

@@ -50,6 +50,8 @@ import type { QuoteHistoryItem, FavoriteQuote, CategoryQuote } from '../types/qu
 import { logAnalyticsEvent, logUserAction, setAnalyticsUser } from '../lib/analytics';
 import { BottomNav } from './BottomNav';
 import { Categories } from './Categories';
+import { Leaderboard } from './Leaderboard';
+import { trackQuoteCreation, trackQuoteLike, trackQuoteShare, initializeUserInLeaderboard } from '../services/leaderboardService';
 
 // UI Components
 import { Input } from "../components/ui/input";
@@ -525,6 +527,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [tempQuoteStyles, setTempQuoteStyles] = useState<string | undefined>(undefined);
 
   const [showCategories, setShowCategories] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   useEffect(() => {
     const initializeTooltips = async () => {
@@ -576,6 +579,7 @@ export default function Demo({ title = "Fun Quotes" }) {
         setShowCategories(false);
         setShowFavorites(false);
         setShowHistory(false);
+        setShowLeaderboard(false);
         // Clear category quotes and current quote when switching to generate
         setCategoryQuotes([]);
         setCurrentQuoteIndex(0);
@@ -589,9 +593,17 @@ export default function Demo({ title = "Fun Quotes" }) {
         setShowCategories(true);
         setShowFavorites(false);
         setShowHistory(false);
+        setShowLeaderboard(false);
         break;
       case 'favorites':
         setShowFavorites(true);
+        setShowCategories(false);
+        setShowHistory(false);
+        setShowLeaderboard(false);
+        break;
+      case 'leaderboard':
+        setShowLeaderboard(true);
+        setShowFavorites(false);
         setShowCategories(false);
         setShowHistory(false);
         break;
@@ -888,6 +900,13 @@ export default function Demo({ title = "Fun Quotes" }) {
     } finally {
       setIsGenerating(false);
     }
+
+    // Track quote creation for leaderboard
+    if (context?.user?.fid) {
+      trackQuoteCreation(context.user.fid).catch(error => {
+        console.error('Error tracking quote creation:', error);
+      });
+    }
   }, [isLoading, userPrompt, onboarding, gifEnabled, context?.user?.fid, isFirebaseInitialized]);
 
   // 8. Effect Hooks
@@ -1100,6 +1119,13 @@ export default function Demo({ title = "Fun Quotes" }) {
       }
 
       logUserAction('toggle_favorite', 'quote_interaction', isAlreadyFavorited ? 'remove' : 'add');
+
+      // If adding to favorites, track like for leaderboard
+      if (!isAlreadyFavorited && context?.user?.fid) {
+        trackQuoteLike(context.user.fid).catch(error => {
+          console.error('Error tracking quote like:', error);
+        });
+      }
     } catch (error) {
       console.error('Error in toggleFavorite:', error);
       toast.error('Failed to update favorites');
@@ -1594,27 +1620,34 @@ export default function Demo({ title = "Fun Quotes" }) {
   useEffect(() => {
     const initializeUser = async () => {
       if (context?.user?.fid) {
-        // Set analytics user
-        await setAnalyticsUser(context.user.fid, {
-          username: context.user.username || 'unknown',
-          displayName: context.user.displayName || 'unknown',
-          pfpUrl: context.user.pfpUrl || 'none'
-        });
-        
-        // Log app loaded event
-        logAnalyticsEvent('app_loaded', {
-          timestamp: Date.now(),
-          user_logged_in: true,
-          screen_width: window.innerWidth,
-          screen_height: window.innerHeight
-        });
-      } else {
-        logAnalyticsEvent('app_loaded', {
-          timestamp: Date.now(),
-          user_logged_in: false,
-          screen_width: window.innerWidth,
-          screen_height: window.innerHeight
-        });
+        try {
+          // Set analytics user
+          await setAnalyticsUser(context.user.fid, {
+            username: context.user.username || 'unknown',
+            displayName: context.user.displayName || 'unknown',
+            pfpUrl: context.user.pfpUrl || 'none'
+          });
+          
+          try {
+            // Initialize user in leaderboard
+            await initializeUserInLeaderboard(
+              context.user.fid,
+              context.user.username || `user${context.user.fid}`,
+              context.user.displayName || `User ${context.user.fid}`,
+              context.user.pfpUrl || null
+            );
+          } catch (leaderboardError) {
+            console.error('Error initializing user in leaderboard:', leaderboardError);
+            // Continue execution even if leaderboard initialization fails
+          }
+          
+          // Log app loaded event
+          logAnalyticsEvent('app_loaded', {
+            timestamp: Date.now(),
+          });
+        } catch (error) {
+          console.error('Error in user initialization:', error);
+        }
       }
     };
 
@@ -1739,6 +1772,160 @@ export default function Demo({ title = "Fun Quotes" }) {
     await sleep(300);
     setIsQuoteTransitioning(false);
   };
+
+  // Handle sharing
+  const handleShare = useCallback(async () => {
+    try {
+      setIsGeneratingPreview(true);
+      const dataUrl = await generateQuoteImage(quote, bgImage, true);
+      setPreviewImage(dataUrl);
+      setIsCasting(true);
+
+      // Convert data URL to blob
+      const base64Data = dataUrl.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      
+      for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+        const slice = byteCharacters.slice(offset, offset + 1024);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      
+      const blob = new Blob(byteArrays, { type: 'image/png' });
+
+      // Upload to Firebase Storage
+      const storage = getStorage();
+      const fileName = `quotes/${Date.now()}-${context?.user?.username || 'user'}.png`;
+      const storageRef = ref(storage, fileName);
+      
+      const metadata = {
+        contentType: 'image/png',
+        cacheControl: 'public, max-age=31536000',
+        customMetadata: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Expose-Headers': 'Content-Length, Content-Type',
+          'Cache-Control': 'public, max-age=31536000'
+        }
+      };
+
+      // Upload and get URL
+      const uploadTask = await uploadBytes(storageRef, blob, metadata);
+      
+      // Get a clean, properly formatted download URL
+      // Setting custom authorization null will return a URL that doesn't require auth
+      const imageUrl = await getDownloadURL(uploadTask.ref);
+      console.log('Original Firebase URL:', imageUrl);
+      
+      // Generate a tokenless URL for maximum compatibility with Warpcast
+      // Firebase URLs typically follow this format: https://firebasestorage.googleapis.com/v0/b/[PROJECT_ID].appspot.com/o/[FILE_PATH]?[TOKEN_PARAMS]
+      // We'll strip query parameters for cleaner embedding
+      // Generate a tokenless URL for maximum compatibility
+      // This can help avoid issues with social media platforms that might strip tokens
+      // The Firebase Storage URL format may vary, but this helps ensure it's clean
+      const firebaseStorageBaseUrl = imageUrl.split('?')[0]; // Remove any query params
+      console.log('Clean Firebase URL (no tokens):', firebaseStorageBaseUrl);
+      
+      // IMPORTANT: Keep the full Firebase URL with token for Warpcast
+      // Previous attempt to clean the URL was incorrect - we need the token
+      const warpcastOptimizedUrl = imageUrl; // Use the complete URL with token
+      
+      // Test direct image URL access - this helps diagnose issues
+      console.log('Testing direct image URL access...');
+      try {
+        // Create a test image element to verify the URL works
+        const testImg = document.createElement('img');
+        testImg.onload = () => console.log('✅ Image URL loads successfully');
+        testImg.onerror = () => console.error('❌ Image URL failed to load');
+        testImg.src = imageUrl;
+        
+        // Also log a direct access link for testing
+        console.log('Direct image access link (for testing):', 
+          `<a href="${imageUrl}" target="_blank">Test Direct Image Access</a>`);
+      } catch (imgTestErr) {
+        console.error('Image test error:', imgTestErr);
+      }
+      
+      // Create the share text and URL to Compose Message in Farcaster
+      const quoteParts = quote.split('\n\n');
+      const quoteText = quoteParts[0];
+      const shareText = `${quoteText}\n\nJoin the Farcaster community /funquotes`;
+
+      // Build Warpcast URL with both embeds
+      const params = new URLSearchParams();
+      params.append('text', shareText);
+
+      try {
+        // Simplest possible approach - minimal encoding
+        const baseUrl = 'https://warpcast.com/~/compose';
+        const textParam = `text=${encodeURIComponent(shareText)}`;
+        
+        // IMPORTANT: We need the full Firebase URL with the token for it to work
+        // The path part of the Firebase URL must keep its encoding (e.g., %2F instead of /)
+        
+        // Mobile vs Desktop Compatibility Issue:
+        // - Desktop processes URLs one way
+        // - Mobile app processes URLs differently (giving 404 errors)
+        console.log('Original Firebase URL:', imageUrl);
+        
+        // Multi-platform compatibility solution:
+        // 1. Parse the URL to understand its parts
+        // 2. Create a version that's resilient to different platform handling
+        
+        // BREAKTHROUGH: The GIF sharing works perfectly on both platforms!
+        // Let's simplify this to match the working GIF approach
+        
+        // The GIF approach just uses simple encodeURIComponent - nothing fancy
+        console.log('Original Firebase URL:', imageUrl);
+        
+        // Simple approach - just like the working GIF code
+        const imageParam = `embeds[]=${encodeURIComponent(imageUrl)}`;
+        const appParam = `embeds[]=${encodeURIComponent('https://qg-frames.vercel.app')}`;
+        
+        // Construct a simple URL just like the GIF version
+        const url = `${baseUrl}?${textParam}&${imageParam}&${appParam}`;
+        console.log('Final Warpcast URL (simple approach):', url);
+        
+        sdk.actions.openUrl(url);
+        
+        // For troubleshooting, log URLs for comparison
+        console.log('Original Firebase URL:', imageUrl);
+        console.log('Final URL sent to Warpcast:', url);
+      } catch (error) {
+        console.error('Error creating share URL:', error);
+        toast.error('Error creating share URL. Please try again.');
+      }
+      
+      logAnalyticsEvent('cast_created', {
+        quote: quote,
+        hasMedia: !!gifUrl,
+        mediaType: 'gif'
+      });
+      
+      setShowPreview(false);
+      setPreviewImage(null);
+      setIsCasting(false);
+      
+      // Track share for leaderboard
+      if (context?.user?.fid) {
+        trackQuoteShare(context.user.fid).catch(error => {
+          console.error('Error tracking quote share:', error);
+        });
+      }
+    } catch (error) {
+      console.error('Error in share process:', error);
+      toast.error('Failed to share. Please try again.');
+      setIsCasting(false);
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  }, [context?.user?.fid, quote, bgImage, gifUrl, gifEnabled, onboarding, isFirebaseInitialized]);
 
   return (
       <div className="relative min-h-screen">
@@ -3691,6 +3878,9 @@ export default function Demo({ title = "Fun Quotes" }) {
             }}
             favorites={favorites}
           />
+        )}
+        {showLeaderboard && (
+          <Leaderboard context={context} />
         )}
         <BottomNav 
           activeSection={activeSection} 
