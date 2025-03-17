@@ -595,11 +595,6 @@ export default function Demo({ title = "Fun Quotes" }) {
         setShowCategories(false);
         setShowHistory(false);
         break;
-      case 'history':
-        setShowHistory(true);
-        setShowCategories(false);
-        setShowFavorites(false);
-        break;
     }
   };
 
@@ -1813,6 +1808,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="flex items-center gap-2"
+                          onClick={() => setShowHistory(true)}
+                        >
+                          <History className="w-4 h-4" />
+                          <span>History</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
                           onClick={() => setShowThemeMenu(true)}
                         >
                           <Palette className="w-4 h-4" />
@@ -1903,300 +1905,353 @@ export default function Demo({ title = "Fun Quotes" }) {
                 )}
               </AnimatePresence>
 
-              {/* Quote Display */}
-              <AnimatePresence mode="wait">
-                {quote && !isInitialState && (
-                  <motion.div
-                    className={`w-[95%] max-w-[500px] sm:max-w-sm overflow-hidden relative z-10 ${
-                      categoryQuotes.length > 0 ? 'mt-20' : 'mt-4'
-                    } ${categoryQuotes.length > 0 ? 'mb-4' : 'mb-32'} ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
-                    {...(categoryQuotes.length > 0 ? {
-                      drag: "x",
-                      dragConstraints: { left: 0, right: 0 },
-                      dragElastic: 0.3,
-                      whileDrag: { 
-                        scale: 0.98,
-                        boxShadow: "0 20px 40px rgba(255,255,255,0.2)"
-                      },
-                      dragTransition: { 
-                        bounceStiffness: 400, 
-                        bounceDamping: 30,
-                        power: 0.2
-                      },
-                      onDragEnd: async (_, info) => {
-                        const swipe = info.offset.x;
-                        const threshold = 50;
-                        
-                        if (Math.abs(swipe) > threshold) {
-                          setIsQuoteTransitioning(true);
-                          setSwipeDirection(swipe > 0 ? 'right' : 'left');
-                          
-                          // Set hasUserSwiped with a slight delay to allow the fade-out animation
-                          setTimeout(() => {
-                            setHasUserSwiped(true);
-                          }, 100);
-                          
-                          // Calculate new index
-                          const newIndex = swipe > 0
-                            ? (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length
-                            : (currentQuoteIndex + 1) % categoryQuotes.length;
-                          
-                          // Get new quote data
-                          const { text, author, source } = categoryQuotes[newIndex];
-                          const newQuote = `${text}\n\n- ${author}\n${source}`;
-                          
-                          // Update everything at once
-                          setCurrentQuoteIndex(newIndex);
-                          setQuote(newQuote);
-                          setGifUrl(null);
-                          
-                          // Wait for animation to complete
-                          await sleep(300);
-                          setIsQuoteTransitioning(false);
-                        }
-                      }
-                    } : {})}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div 
-                      key={`${quote}-${currentQuoteIndex}`}
-                      initial={{ 
-                        opacity: 0, 
-                        x: isQuoteTransitioning ? (swipeDirection === 'right' ? 50 : -50) : 0 
-                      }}
-                      animate={{ 
-                        opacity: 1, 
-                        x: 0
-                      }}
-                      exit={{ 
-                        opacity: 0, 
-                        x: isQuoteTransitioning ? (swipeDirection === 'right' ? -50 : 50) : 0
-                      }}
-                      transition={{ 
-                        duration: 0.8,
-                        ease: "easeInOut"
-                      }}
-                      className="w-full max-w-md mx-auto rounded-lg p-6 shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-sm"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                        backdropFilter: 'blur(4px)',
-                        WebkitBackdropFilter: 'blur(4px)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)'
-                      }}
+              {/* Content Container */}
+              <div className="mb-32">
+                {/* GIF Display */}
+                <AnimatePresence mode="wait">
+                  {gifEnabled && gifUrl && !isInitialState && !categoryQuotes.length && (
+                    <motion.div
+                      className="w-full max-w-md mx-auto mt-4 mb-4 overflow-hidden relative z-10"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
                     >
-                      <div className="flex flex-col items-center gap-2 w-full">
-                        {quote.split('\n\n').map((part, index) => {
-                          if (part.startsWith('- ')) {
-                            return (
-                              <motion.p 
-                                key={`author-${index}-${currentQuoteIndex}`}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ 
-                                  duration: 8.0,  // Increased from 4.0 to 8.0 seconds
-                                  delay: 1.0,     // Kept same delay
-                                  ease: "easeInOut"
-                                }}
-                                className="text-center text-white text-xl font-medium select-none break-words w-full"
-                              >
-                                {part}
-                              </motion.p>
-                            );
-                          } else if (part.includes('\n')) {
-                            return (
-                              <motion.p 
-                                key={`source-${index}-${currentQuoteIndex}`}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ 
-                                  duration: 2.0, // Increased from 1.2
-                                  delay: 1.4,    // Adjusted delay
-                                  ease: "easeInOut"
-                                }}
-                                className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
-                              >
-                                {part}
-                              </motion.p>
-                            );
-                          } else {
-                            return (
-                              <motion.p 
-                                key={`quote-${index}-${currentQuoteIndex}`}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ 
-                                  duration: 5.0, // Increased from 1.0 to 5.0 seconds
-                                  delay: 0.4,    // Kept same delay
-                                  ease: "easeInOut"
-                                }}
-                                className="text-center text-white text-2xl font-medium select-none break-words w-full"
-                              >
-                                {part}
-                              </motion.p>
-                            );
-                          }
-                        })}
-                      </div>
+                      <motion.div
+                        className="w-full rounded-lg overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-sm cursor-pointer"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                          backdropFilter: 'blur(4px)',
+                          WebkitBackdropFilter: 'blur(4px)',
+                          border: '1px solid rgba(255, 255, 255, 0.18)'
+                        }}
+                        onClick={handleRegenerateGif}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {isLoadingGif ? (
+                          <div className="flex items-center justify-center h-[300px]">
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="animate-spin h-8 w-8 border-3 border-white/60 border-t-transparent rounded-full" />
+                              <span className="text-white/80 text-sm">Loading GIF...</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <Image
+                              src={gifUrl}
+                              alt="Quote GIF (click to regenerate)"
+                              width={500}
+                              height={300}
+                              className="w-full h-auto object-contain"
+                              unoptimized
+                            />
+                            <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 text-xs text-white/80">
+                              Click to regenerate
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              
-              {/* Swipe Indicator */}
-              {categoryQuotes.length > 0 && (
-                <div className="flex items-center justify-center mt-2 mb-4">
-                  {/* Left Arrow - Always Visible */}
-                  <motion.div 
-                    className="text-white/60 text-sm flex items-center cursor-pointer p-2 hover:text-white/90 transition-colors"
-                    animate={{ x: [-5, 0, -5] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    onClick={() => navigateQuote('prev')}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                  </motion.div>
-                  
-                  {/* Center Text - Fades Out */}
-                  <AnimatePresence>
-                    {!hasUserSwiped && (
+                  )}
+                </AnimatePresence>
+
+                {/* Quote Display */}
+                <AnimatePresence mode="wait">
+                  {quote && !isInitialState && (
+                    <motion.div
+                      className={`w-full max-w-md overflow-hidden relative z-10 ${
+                        categoryQuotes.length > 0 ? 'mt-20' : 'mt-4'
+                      } ${categoryQuotes.length > 0 ? 'mb-4' : 'mb-4'} ${categoryQuotes.length > 0 ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                      {...(categoryQuotes.length > 0 ? {
+                        drag: "x",
+                        dragConstraints: { left: 0, right: 0 },
+                        dragElastic: 0.3,
+                        whileDrag: { 
+                          scale: 0.98,
+                          boxShadow: "0 20px 40px rgba(255,255,255,0.2)"
+                        },
+                        dragTransition: { 
+                          bounceStiffness: 400, 
+                          bounceDamping: 30,
+                          power: 0.2
+                        },
+                        onDragEnd: async (_, info) => {
+                          const swipe = info.offset.x;
+                          const threshold = 50;
+                          
+                          if (Math.abs(swipe) > threshold) {
+                            setIsQuoteTransitioning(true);
+                            setSwipeDirection(swipe > 0 ? 'right' : 'left');
+                            
+                            // Set hasUserSwiped with a slight delay to allow the fade-out animation
+                            setTimeout(() => {
+                              setHasUserSwiped(true);
+                            }, 100);
+                            
+                            // Calculate new index
+                            const newIndex = swipe > 0
+                              ? (currentQuoteIndex - 1 + categoryQuotes.length) % categoryQuotes.length
+                              : (currentQuoteIndex + 1) % categoryQuotes.length;
+                            
+                            // Get new quote data
+                            const { text, author, source } = categoryQuotes[newIndex];
+                            const newQuote = `${text}\n\n- ${author}\n${source}`;
+                            
+                            // Update everything at once
+                            setCurrentQuoteIndex(newIndex);
+                            setQuote(newQuote);
+                            setGifUrl(null);
+                            
+                            // Wait for animation to complete
+                            await sleep(300);
+                            setIsQuoteTransitioning(false);
+                          }
+                        }
+                      } : {})}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       <motion.div 
-                        className="mx-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        key={`${quote}-${currentQuoteIndex}`}
+                        initial={{ 
+                          opacity: 0, 
+                          x: isQuoteTransitioning ? (swipeDirection === 'right' ? 50 : -50) : 0 
+                        }}
+                        animate={{ 
+                          opacity: 1, 
+                          x: 0
+                        }}
+                        exit={{ 
+                          opacity: 0, 
+                          x: isQuoteTransitioning ? (swipeDirection === 'right' ? -50 : 50) : 0
+                        }}
                         transition={{ 
-                          duration: 0.5,
+                          duration: 0.8,
                           ease: "easeInOut"
                         }}
+                        className="w-full max-w-md mx-auto rounded-lg p-6 shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-sm"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                          backdropFilter: 'blur(4px)',
+                          WebkitBackdropFilter: 'blur(4px)',
+                          border: '1px solid rgba(255, 255, 255, 0.18)'
+                        }}
                       >
-                        <div className="bg-white/20 rounded-full px-3 py-1">
-                          <span className="text-white text-xs">
-                            Swipe to browse quotes
-                          </span>
+                        <div className="flex flex-col items-center gap-2 w-full">
+                          {quote.split('\n\n').map((part, index) => {
+                            if (part.startsWith('- ')) {
+                              return (
+                                <motion.p 
+                                  key={`author-${index}-${currentQuoteIndex}`}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ 
+                                    duration: 8.0,  // Increased from 4.0 to 8.0 seconds
+                                    delay: 1.0,     // Kept same delay
+                                    ease: "easeInOut"
+                                  }}
+                                  className="text-center text-white text-xl font-medium select-none break-words w-full"
+                                >
+                                  {part}
+                                </motion.p>
+                              );
+                            } else if (part.includes('\n')) {
+                              return (
+                                <motion.p 
+                                  key={`source-${index}-${currentQuoteIndex}`}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ 
+                                    duration: 2.0, // Increased from 1.2
+                                    delay: 1.4,    // Adjusted delay
+                                    ease: "easeInOut"
+                                  }}
+                                  className="text-center text-white text-sm font-medium select-none break-words w-full opacity-80"
+                                >
+                                  {part}
+                                </motion.p>
+                              );
+                            } else {
+                              return (
+                                <motion.p 
+                                  key={`quote-${index}-${currentQuoteIndex}`}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ 
+                                    duration: 5.0, // Increased from 1.0 to 5.0 seconds
+                                    delay: 0.4,    // Kept same delay
+                                    ease: "easeInOut"
+                                  }}
+                                  className="text-center text-white text-2xl font-medium select-none break-words w-full"
+                                >
+                                  {part}
+                                </motion.p>
+                              );
+                            }
+                          })}
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Swipe Indicator */}
+                {categoryQuotes.length > 0 && (
+                  <div className="flex items-center justify-center mt-2 mb-4">
+                    {/* Left Arrow - Always Visible */}
+                    <motion.div 
+                      className="text-white/60 text-sm flex items-center cursor-pointer p-2 hover:text-white/90 transition-colors"
+                      animate={{ x: [-5, 0, -5] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                      onClick={() => navigateQuote('prev')}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 18l-6-6 6-6" />
+                      </svg>
+                    </motion.div>
+                    
+                    {/* Center Text - Fades Out */}
+                    <AnimatePresence>
+                      {!hasUserSwiped && (
+                        <motion.div 
+                          className="mx-6"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ 
+                            duration: 0.5,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          <div className="bg-white/20 rounded-full px-3 py-1">
+                            <span className="text-white text-xs">
+                              Swipe to browse quotes
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    
+                    {/* Right Arrow - Always Visible */}
+                    <motion.div 
+                      className="text-white/60 text-sm flex items-center cursor-pointer p-2 hover:text-white/90 transition-colors"
+                      animate={{ x: [5, 0, 5] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                      onClick={() => navigateQuote('next')}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </motion.div>
+                  </div>
+                )}
+
+                {/* Card Component */}
+                {categoryQuotes.length > 0 ? (
+                  <div className="w-full flex flex-col items-center">
+                    <div className="fixed top-[3px] left-0 right-0 z-30 backdrop-blur-sm border-b border-white/10">
+                      <div className="max-w-7xl mx-auto px-4">
+                        <motion.button
+                          onClick={() => {
+                            setShowCategories(true);
+                            setCategoryQuotes([]);
+                            setCurrentQuoteIndex(0);
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="text-white flex items-center gap-2 py-3"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                          <span>Back to Categories</span>
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    {/* Interactive Buttons - Now fixed at bottom */}
+                    {categoryQuotes.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="fixed bottom-[72px] left-0 right-0 z-30 flex justify-center items-center p-4"
+                      >
+                        <div className="flex justify-center items-center gap-6 bg-black/30 backdrop-blur-sm py-2 px-6 rounded-full">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              const quoteItem: QuoteHistoryItem = {
+                                text: quote,
+                                style: 'default',
+                                gifUrl,
+                                timestamp: new Date(),
+                                bgColor,
+                                id: Date.now().toString()
+                              };
+                              toggleFavorite(quoteItem);
+                              setShowHeartAnimation(true);
+                              setTimeout(() => setShowHeartAnimation(false), 1000);
+                            }}
+                            className="relative"
+                          >
+                            <Heart 
+                              className={`w-6 h-6 cursor-pointer transition-all duration-300 ${
+                                favorites.some(fav => fav.text === quote)
+                                  ? 'fill-pink-500 text-pink-500' 
+                                  : 'text-white hover:text-pink-200'
+                              }`}
+                            />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={async () => {
+                              try {
+                                setIsGeneratingPreview(true);
+                                const dataUrl = await generateQuoteImage(quote, bgImage, true);
+                                setPreviewImage(dataUrl);
+                                setShowPreview(true);
+                              } catch (error) {
+                                console.error('Error generating preview:', error);
+                                toast.error('Failed to generate preview');
+                              } finally {
+                                setIsGeneratingPreview(false);
+                              }
+                            }}
+                            className="relative"
+                          >
+                            <Upload className="w-6 h-6 cursor-pointer text-white hover:text-green-200 transition-all duration-300" />
+                          </motion.button>
                         </div>
                       </motion.div>
                     )}
-                  </AnimatePresence>
-                  
-                  {/* Right Arrow - Always Visible */}
-                  <motion.div 
-                    className="text-white/60 text-sm flex items-center cursor-pointer p-2 hover:text-white/90 transition-colors"
-                    animate={{ x: [5, 0, 5] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    onClick={() => navigateQuote('next')}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </motion.div>
-                </div>
-              )}
 
-              {/* Card Component */}
-              {categoryQuotes.length > 0 ? (
-                <div className="w-full flex flex-col items-center">
-                  <div className="fixed top-[3px] left-0 right-0 z-30 backdrop-blur-sm border-b border-white/10">
-                    <div className="max-w-7xl mx-auto px-4">
-                      <motion.button
-                        onClick={() => {
-                          setShowCategories(true);
-                          setCategoryQuotes([]);
-                          setCurrentQuoteIndex(0);
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="text-white flex items-center gap-2 py-3"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                        <span>Back to Categories</span>
-                      </motion.button>
-                    </div>
+                    {/* Heart Animation */}
+                    <AnimatePresence>
+                      {showHeartAnimation && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1.5, opacity: 1 }}
+                          exit={{ scale: 0.5, opacity: 0 }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                        >
+                          <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-
-                  {/* Interactive Buttons - Now fixed at bottom */}
-                  {categoryQuotes.length > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="fixed bottom-[72px] left-0 right-0 z-30 flex justify-center items-center p-4"
-                    >
-                      <div className="flex justify-center items-center gap-6 bg-black/30 backdrop-blur-sm py-2 px-6 rounded-full">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            const quoteItem: QuoteHistoryItem = {
-                              text: quote,
-                              style: 'default',
-                              gifUrl,
-                              timestamp: new Date(),
-                              bgColor,
-                              id: Date.now().toString()
-                            };
-                            toggleFavorite(quoteItem);
-                            setShowHeartAnimation(true);
-                            setTimeout(() => setShowHeartAnimation(false), 1000);
-                          }}
-                          className="relative"
-                        >
-                          <Heart 
-                            className={`w-6 h-6 cursor-pointer transition-all duration-300 ${
-                              favorites.some(fav => fav.text === quote)
-                                ? 'fill-pink-500 text-pink-500' 
-                                : 'text-white hover:text-pink-200'
-                            }`}
-                          />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={async () => {
-                            try {
-                              setIsGeneratingPreview(true);
-                              const dataUrl = await generateQuoteImage(quote, bgImage, true);
-                              setPreviewImage(dataUrl);
-                              setShowPreview(true);
-                            } catch (error) {
-                              console.error('Error generating preview:', error);
-                              toast.error('Failed to generate preview');
-                            } finally {
-                              setIsGeneratingPreview(false);
-                            }
-                          }}
-                          className="relative"
-                        >
-                          <Upload className="w-6 h-6 cursor-pointer text-white hover:text-green-200 transition-all duration-300" />
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Heart Animation */}
-                  <AnimatePresence>
-                    {showHeartAnimation && (
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1.5, opacity: 1 }}
-                        exit={{ scale: 0.5, opacity: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                      >
-                        <Heart className="w-24 h-24 text-pink-500 fill-pink-500" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
           </main>
 
@@ -3156,6 +3211,7 @@ export default function Demo({ title = "Fun Quotes" }) {
               favorites={favorites}
               quoteHistory={quoteHistory}
               sessionStartTime={sessionStartTime}
+              setShowHistory={setShowHistory}
             />
           )}
 
@@ -3662,6 +3718,7 @@ interface ProfileModalProps {
   favorites: FavoriteQuote[];
   quoteHistory: QuoteHistoryItem[];
   sessionStartTime: number;
+  setShowHistory: (show: boolean) => void;
 }
 
 // Update the ProfileModal component
@@ -3670,7 +3727,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
   context, 
   favorites, 
   quoteHistory, 
-  sessionStartTime
+  sessionStartTime,
+  setShowHistory
 }) => (
   <div 
     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
