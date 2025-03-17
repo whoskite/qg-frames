@@ -41,7 +41,8 @@ import {
   saveOnboardingData,
   getOnboardingData,
   saveNotificationDetails,
-  removeNotificationDetails
+  removeNotificationDetails,
+  saveCommunityQuote
 } from '../lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -2958,12 +2959,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                                   author: context.user.username || "Farcaster User",
                                   source: "Community Submission",
                                   topics: [],
-                                  year: new Date().getFullYear()
+                                  year: new Date().getFullYear(),
+                                  userId: context.user.fid,
+                                  username: context.user.username
                                 };
                                 
                                 // Save to Firebase community collection
-                                // This is a placeholder - you'll need to implement the actual Firebase function
-                                console.log('Saving to community quotes:', communityQuote);
+                                await saveCommunityQuote(communityQuote);
                                 toast.success('Your quote has been shared with the community!');
                               } catch (error) {
                                 console.error('Error saving to community:', error);
@@ -3150,12 +3152,13 @@ export default function Demo({ title = "Fun Quotes" }) {
                                   author: context.user.username || "Farcaster User",
                                   source: "Community Submission",
                                   topics: [],
-                                  year: new Date().getFullYear()
+                                  year: new Date().getFullYear(),
+                                  userId: context.user.fid,
+                                  username: context.user.username
                                 };
                                 
                                 // Save to Firebase community collection
-                                // This is a placeholder - you'll need to implement the actual Firebase function
-                                console.log('Saving to community quotes:', communityQuote);
+                                await saveCommunityQuote(communityQuote);
                                 toast.success('Your quote has been shared with the community!');
                               } catch (error) {
                                 console.error('Error saving to community:', error);

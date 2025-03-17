@@ -432,4 +432,133 @@ export const updateUserStreak = async (userId: number, data: StreakUpdate): Prom
     console.error('Error updating user streak:', error);
     throw error;
   }
-}; 
+};
+
+// Community Quotes Functions
+
+// Save a quote to the community collection
+export async function saveCommunityQuote(quote: {
+  text: string;
+  author: string;
+  source: string;
+  topics: string[];
+  year: number;
+  userId?: number;
+  username?: string;
+  timestamp?: Date;
+}) {
+  try {
+    const db = await getDb();
+    const quoteId = `comm_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const communityQuoteRef = doc(db, 'community_quotes', quoteId);
+    
+    const quoteData = {
+      ...quote,
+      id: quoteId,
+      timestamp: Timestamp.fromDate(quote.timestamp || new Date()),
+      approved: true, // Auto-approve for now, could be changed to false if moderation is needed
+      likes: 0,
+      shares: 0
+    };
+
+    await setDoc(communityQuoteRef, quoteData);
+    return quoteId;
+  } catch (error) {
+    console.error('Error saving community quote:', error);
+    throw error;
+  }
+}
+
+// Get all community quotes
+export async function getCommunityQuotes(maxLimit = 20) {
+  try {
+    const db = await getDb();
+    const communityQuotesRef = collection(db, 'community_quotes');
+    const q = query(
+      communityQuotesRef, 
+      orderBy('timestamp', 'desc'),
+      limit(maxLimit)
+    );
+    
+    const quotesSnapshot = await getDocs(q);
+    
+    return quotesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        text: data.text,
+        author: data.author,
+        source: data.source,
+        topics: data.topics || [],
+        year: data.year,
+        timestamp: data.timestamp?.toDate() || new Date(),
+        likes: data.likes || 0,
+        shares: data.shares || 0
+      };
+    });
+  } catch (error) {
+    console.error('Error getting community quotes:', error);
+    return [];
+  }
+}
+
+// Like a community quote
+export async function likeCommunityQuote(quoteId: string, userId: number) {
+  try {
+    const db = await getDb();
+    const quoteRef = doc(db, 'community_quotes', quoteId);
+    const userLikeRef = doc(db, 'community_quotes', quoteId, 'likes', userId.toString());
+    
+    // Check if user already liked this quote
+    const userLikeDoc = await getDoc(userLikeRef);
+    
+    if (!userLikeDoc.exists()) {
+      // Add user to likes subcollection
+      await setDoc(userLikeRef, {
+        userId,
+        timestamp: serverTimestamp()
+      });
+      
+      // Increment likes count
+      const quoteDoc = await getDoc(quoteRef);
+      if (quoteDoc.exists()) {
+        const currentLikes = quoteDoc.data().likes || 0;
+        await updateDoc(quoteRef, {
+          likes: currentLikes + 1
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error liking community quote:', error);
+    throw error;
+  }
+}
+
+// Unlike a community quote
+export async function unlikeCommunityQuote(quoteId: string, userId: number) {
+  try {
+    const db = await getDb();
+    const quoteRef = doc(db, 'community_quotes', quoteId);
+    const userLikeRef = doc(db, 'community_quotes', quoteId, 'likes', userId.toString());
+    
+    // Check if user already liked this quote
+    const userLikeDoc = await getDoc(userLikeRef);
+    
+    if (userLikeDoc.exists()) {
+      // Remove user from likes subcollection
+      await deleteDoc(userLikeRef);
+      
+      // Decrement likes count
+      const quoteDoc = await getDoc(quoteRef);
+      if (quoteDoc.exists()) {
+        const currentLikes = quoteDoc.data().likes || 0;
+        await updateDoc(quoteRef, {
+          likes: Math.max(0, currentLikes - 1)
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error unliking community quote:', error);
+    throw error;
+  }
+} 

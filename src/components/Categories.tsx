@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, ChevronRight, ChevronLeft, Heart, Lock } from 'lucide-react';
 import { Card } from './ui/card';
@@ -8,6 +8,7 @@ import { FaLightbulb, FaHeart, FaLaugh, FaBook, FaStar, FaBriefcase, FaUsers, Fa
 import { GiMeditation } from 'react-icons/gi';
 import type { IconType } from 'react-icons';
 import type { QuoteHistoryItem } from '../types/quotes';
+import { getCommunityQuotes } from '../lib/firestore';
 
 interface CategoriesProps {
   onSelectQuote: (text: string, author: string, source: string, gifUrl: string | null) => void;
@@ -37,8 +38,8 @@ const categoryIcons: { [key: string]: IconType } = {
   'Compassion': FaHandsHelping
 };
 
-// Sample community quotes - in a real app, these would come from a database
-const communityQuotes: CategoryQuote[] = [
+// Sample community quotes as fallback
+const sampleCommunityQuotes: CategoryQuote[] = [
   {
     id: "comm1",
     text: "The best way to predict the future is to create it.",
@@ -85,8 +86,41 @@ export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectC
   const data = quotesData as QuotesData;
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
+  const [communityQuotes, setCommunityQuotes] = useState<CategoryQuote[]>(sampleCommunityQuotes);
+  const [isLoadingCommunityQuotes, setIsLoadingCommunityQuotes] = useState(true);
 
   const filteredCategories = data.categories;
+
+  // Fetch community quotes from Firebase
+  useEffect(() => {
+    const fetchCommunityQuotes = async () => {
+      try {
+        setIsLoadingCommunityQuotes(true);
+        const quotes = await getCommunityQuotes(10); // Get up to 10 community quotes
+        
+        if (quotes && quotes.length > 0) {
+          // Convert to CategoryQuote format
+          const formattedQuotes: CategoryQuote[] = quotes.map(quote => ({
+            id: quote.id,
+            text: quote.text,
+            author: quote.author,
+            source: "Community Submission",
+            topics: quote.topics || [],
+            year: quote.year || new Date().getFullYear()
+          }));
+          
+          setCommunityQuotes(formattedQuotes);
+        }
+      } catch (error) {
+        console.error('Error fetching community quotes:', error);
+        // Keep the sample quotes as fallback
+      } finally {
+        setIsLoadingCommunityQuotes(false);
+      }
+    };
+
+    fetchCommunityQuotes();
+  }, []);
 
   const handleQuoteSelection = (quotes: CategoryQuote[]) => {
     const initialIndex = Math.floor(Math.random() * quotes.length);
@@ -188,83 +222,101 @@ export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectC
                 </div>
                 
                 <div className="relative mb-4">
-                  <motion.div 
-                    key={currentQuoteIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white/15 rounded-lg p-4 min-h-[100px] relative"
-                  >
-                    <p className="text-white text-sm italic mb-3 leading-relaxed">&ldquo;{communityQuotes[currentQuoteIndex].text}&rdquo;</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-5 h-5 rounded-full bg-blue-500/40 flex items-center justify-center mr-2">
-                          <Users size={10} className="text-white" />
-                        </div>
-                        <p className="text-white/95 text-xs">{communityQuotes[currentQuoteIndex].author}</p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={(e) => handleFavoriteQuote(e, communityQuotes[currentQuoteIndex])}
-                          className="p-1.5 rounded-full hover:bg-white/15 transition-colors"
-                        >
-                          <Heart size={14} className="text-pink-400" />
-                        </button>
-                        <div className="relative">
-                          <button 
-                            onClick={(e) => handleShareQuote(e, communityQuotes[currentQuoteIndex])}
-                            className="p-1.5 rounded-full hover:bg-white/15 transition-colors opacity-50"
-                          >
-                            <Lock size={14} className="text-gray-400" />
-                          </button>
-                          {showShareTooltip && (
-                            <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-black/80 text-white text-xs rounded shadow-lg z-50">
-                              Sharing is disabled for community quotes as they aren&apos;t your own content.
-                              <div className="absolute bottom-0 right-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-black/80"></div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                  {isLoadingCommunityQuotes ? (
+                    <div className="bg-white/15 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
+                      <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full"></div>
                     </div>
-                    
-                    {/* Navigation arrows inside the content */}
-                    <button 
-                      onClick={handlePrevQuote}
-                      className="absolute top-1/2 left-2 transform -translate-y-1/2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  ) : communityQuotes.length > 0 ? (
+                    <motion.div 
+                      key={currentQuoteIndex}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white/15 rounded-lg p-4 min-h-[100px] relative"
                     >
-                      <ChevronLeft size={14} className="text-white" />
-                    </button>
-                    
-                    <button 
-                      onClick={handleNextQuote}
-                      className="absolute top-1/2 right-2 transform -translate-y-1/2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                    >
-                      <ChevronRight size={14} className="text-white" />
-                    </button>
-                  </motion.div>
+                      <p className="text-white text-sm italic mb-3 leading-relaxed">&ldquo;{communityQuotes[currentQuoteIndex].text}&rdquo;</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-5 h-5 rounded-full bg-blue-500/40 flex items-center justify-center mr-2">
+                            <Users size={10} className="text-white" />
+                          </div>
+                          <p className="text-white/95 text-xs">{communityQuotes[currentQuoteIndex].author}</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={(e) => handleFavoriteQuote(e, communityQuotes[currentQuoteIndex])}
+                            className="p-1.5 rounded-full hover:bg-white/15 transition-colors"
+                          >
+                            <Heart size={14} className="text-pink-400" />
+                          </button>
+                          <div className="relative">
+                            <button 
+                              onClick={(e) => handleShareQuote(e, communityQuotes[currentQuoteIndex])}
+                              className="p-1.5 rounded-full hover:bg-white/15 transition-colors opacity-50"
+                            >
+                              <Lock size={14} className="text-gray-400" />
+                            </button>
+                            {showShareTooltip && (
+                              <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-black/80 text-white text-xs rounded shadow-lg z-50">
+                                Sharing is disabled for community quotes as they aren&apos;t your own content.
+                                <div className="absolute bottom-0 right-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-black/80"></div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Navigation arrows inside the content */}
+                      {communityQuotes.length > 1 && (
+                        <>
+                          <button 
+                            onClick={handlePrevQuote}
+                            className="absolute top-1/2 left-2 transform -translate-y-1/2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                          >
+                            <ChevronLeft size={14} className="text-white" />
+                          </button>
+                          
+                          <button 
+                            onClick={handleNextQuote}
+                            className="absolute top-1/2 right-2 transform -translate-y-1/2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                          >
+                            <ChevronRight size={14} className="text-white" />
+                          </button>
+                        </>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <div className="bg-white/15 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
+                      <p className="text-white/70 text-sm text-center">No community quotes yet. Be the first to share!</p>
+                    </div>
+                  )}
                   
-                  <div className="flex justify-center mt-3 space-x-1">
-                    {communityQuotes.map((_, index) => (
-                      <div 
-                        key={index}
-                        className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-200 ${index === currentQuoteIndex ? 'bg-blue-400' : 'bg-white/40 hover:bg-white/60'}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentQuoteIndex(index);
-                        }}
-                      />
-                    ))}
-                  </div>
+                  {communityQuotes.length > 1 && (
+                    <div className="flex justify-center mt-3 space-x-1">
+                      {communityQuotes.map((_, index) => (
+                        <div 
+                          key={index}
+                          className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-200 ${index === currentQuoteIndex ? 'bg-blue-400' : 'bg-white/40 hover:bg-white/60'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentQuoteIndex(index);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div 
-                className="flex justify-center items-center bg-white/15 hover:bg-white/20 transition-colors duration-200 py-2 rounded-lg text-center"
-              >
-                <span className="text-white text-xs font-medium mr-1">Browse all community quotes</span>
-                <ChevronRight className="w-3.5 h-3.5 text-white" />
-              </div>
+              {communityQuotes.length > 0 && (
+                <div 
+                  className="flex justify-center items-center bg-white/15 hover:bg-white/20 transition-colors duration-200 py-2 rounded-lg text-center"
+                >
+                  <span className="text-white text-xs font-medium mr-1">Browse all community quotes</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-white" />
+                </div>
+              )}
             </div>
           </Card>
         </motion.div>
