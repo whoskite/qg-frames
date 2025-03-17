@@ -41,7 +41,8 @@ import {
   saveOnboardingData,
   getOnboardingData,
   saveNotificationDetails,
-  removeNotificationDetails
+  removeNotificationDetails,
+  saveCommunityQuote
 } from '../lib/firestore';
 import type { OnboardingState } from '../types/onboarding';
 import { OnboardingFlow } from './OnboardingFlow';
@@ -443,6 +444,7 @@ export default function Demo({ title = "Fun Quotes" }) {
   const [isClearing, setIsClearing] = useState(false);
   const [isEditingQuote, setIsEditingQuote] = useState(false);
   const [editedQuote, setEditedQuote] = useState('');
+  const [enableCommunitySharing, setEnableCommunitySharing] = useState(false);
 
   // Frame-specific state
   const [added, setAdded] = useState(false);
@@ -2908,6 +2910,20 @@ export default function Demo({ title = "Fun Quotes" }) {
                     ) : null}
                   </div>
 
+                  {/* Enable Community Sharing Option */}
+                  <div className="bg-white/10 rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white text-sm font-medium">Enable Community Sharing</h3>
+                      <p className="text-white/60 text-xs mt-1">Allow others to share this quote in the Community section</p>
+                    </div>
+                    <button
+                      onClick={() => setEnableCommunitySharing(!enableCommunitySharing)}
+                      className={`rounded-full h-8 w-8 flex items-center justify-center transition-colors ${enableCommunitySharing ? 'bg-green-500 text-white' : 'bg-white/10 text-white/50'}`}
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                  </div>
+
                   {/* Share Buttons */}
                   <div className="flex justify-end">
                     <div className="flex gap-3 w-full">
@@ -2931,10 +2947,37 @@ export default function Demo({ title = "Fun Quotes" }) {
                             
                             sdk.actions.openUrl(url);
                             
+                            // If community sharing is enabled, save this quote to community quotes
+                            if (enableCommunitySharing && context?.user?.fid && isFirebaseInitialized) {
+                              try {
+                                // Extract the quote text without author attribution
+                                const quoteText = quote.split('\n\n')[0];
+                                
+                                // Create a community quote object
+                                const communityQuote = {
+                                  text: quoteText,
+                                  author: context.user.username || "Farcaster User",
+                                  source: "Community Submission",
+                                  topics: [],
+                                  year: new Date().getFullYear(),
+                                  userId: context.user.fid,
+                                  username: context.user.username
+                                };
+                                
+                                // Save to Firebase community collection
+                                await saveCommunityQuote(communityQuote);
+                                toast.success('Your quote has been shared with the community!');
+                              } catch (error) {
+                                console.error('Error saving to community:', error);
+                                toast.error('Failed to share with community');
+                              }
+                            }
+                            
                             logAnalyticsEvent('cast_created', {
                               quote: quote,
                               hasMedia: !!gifUrl,
-                              mediaType: 'gif'
+                              mediaType: 'gif',
+                              sharedWithCommunity: enableCommunitySharing
                             });
                             
                             setShowPreview(false);
@@ -3093,8 +3136,35 @@ export default function Demo({ title = "Fun Quotes" }) {
                             logAnalyticsEvent('cast_created', {
                               quote: quote,
                               hasMedia: true,
-                              mediaType: 'canvas'
+                              mediaType: 'canvas',
+                              sharedWithCommunity: enableCommunitySharing
                             });
+                            
+                            // If community sharing is enabled, save this quote to community quotes
+                            if (enableCommunitySharing && context?.user?.fid && isFirebaseInitialized) {
+                              try {
+                                // Extract the quote text without author attribution
+                                const quoteText = quote.split('\n\n')[0];
+                                
+                                // Create a community quote object
+                                const communityQuote = {
+                                  text: quoteText,
+                                  author: context.user.username || "Farcaster User",
+                                  source: "Community Submission",
+                                  topics: [],
+                                  year: new Date().getFullYear(),
+                                  userId: context.user.fid,
+                                  username: context.user.username
+                                };
+                                
+                                // Save to Firebase community collection
+                                await saveCommunityQuote(communityQuote);
+                                toast.success('Your quote has been shared with the community!');
+                              } catch (error) {
+                                console.error('Error saving to community:', error);
+                                toast.error('Failed to share with community');
+                              }
+                            }
                             
                             setShowPreview(false);
                             setPreviewImage(null);
@@ -3658,39 +3728,41 @@ export default function Demo({ title = "Fun Quotes" }) {
         </main>
         {/* Categories Page */}
         {showCategories && (
-          <Categories 
-            onSelectQuote={(text, author, source, gifUrl) => {
-              setIsInitialState(false);
-              setQuote(`${text}\n\n- ${author}\n${source}`);
-              setGifUrl(gifUrl);
-              setShowCategories(false);
-            }}
-            onSelectCategory={(quotes, initialIndex) => {
-              setCategoryQuotes(quotes);
-              setCurrentQuoteIndex(initialIndex);
-              setHasUserSwiped(false); // Reset when new category is selected
-            }}
-            onToggleFavorite={(quote: CategoryQuote) => {
-              const quoteItem: QuoteHistoryItem = {
-                text: `${quote.text}\n\n- ${quote.author}\n${quote.source}`,
-                style: 'default',
-                gifUrl: null,
-                timestamp: new Date(),
-                bgColor,
-                id: Date.now().toString()
-              };
-              toggleFavorite(quoteItem);
-              setShowHeartAnimation(true);
-              setTimeout(() => setShowHeartAnimation(false), 1000);
-            }}
-            onShare={(quote: CategoryQuote) => {
-              setIsInitialState(false);
-              setQuote(`${quote.text}\n\n- ${quote.author}\n${quote.source}`);
-              setGifUrl(null);
-              setShowPreview(true);
-            }}
-            favorites={favorites}
-          />
+          <div className="fixed inset-0 z-40 bg-black/90">
+            <Categories 
+              onSelectQuote={(text, author, source, gifUrl) => {
+                setIsInitialState(false);
+                setQuote(`${text}\n\n- ${author}\n${source}`);
+                setGifUrl(gifUrl);
+                setShowCategories(false);
+              }}
+              onSelectCategory={(quotes, initialIndex) => {
+                setCategoryQuotes(quotes);
+                setCurrentQuoteIndex(initialIndex);
+                setHasUserSwiped(false); // Reset when new category is selected
+              }}
+              onToggleFavorite={(quote: CategoryQuote) => {
+                const quoteItem: QuoteHistoryItem = {
+                  text: `${quote.text}\n\n- ${quote.author}\n${quote.source}`,
+                  style: 'default',
+                  gifUrl: null,
+                  timestamp: new Date(),
+                  bgColor,
+                  id: Date.now().toString()
+                };
+                toggleFavorite(quoteItem);
+                setShowHeartAnimation(true);
+                setTimeout(() => setShowHeartAnimation(false), 1000);
+              }}
+              onShare={(quote: CategoryQuote) => {
+                setIsInitialState(false);
+                setQuote(`${quote.text}\n\n- ${quote.author}\n${quote.source}`);
+                setGifUrl(null);
+                setShowPreview(true);
+              }}
+              favorites={favorites}
+            />
+          </div>
         )}
         <BottomNav 
           activeSection={activeSection} 
