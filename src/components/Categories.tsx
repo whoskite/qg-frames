@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Users, ChevronRight, ChevronLeft, Heart, Lock } from 'lucide-react';
 import { Card } from './ui/card';
 import type { Category, QuotesData, CategoryQuote } from '../types/quotes';
 import quotesData from '../data/quotes.json';
@@ -37,14 +37,56 @@ const categoryIcons: { [key: string]: IconType } = {
   'Compassion': FaHandsHelping
 };
 
-export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectCategory }) => {
-  const data = quotesData as QuotesData;
-  const [searchQuery, setSearchQuery] = useState('');
+// Sample community quotes - in a real app, these would come from a database
+const communityQuotes: CategoryQuote[] = [
+  {
+    id: "comm1",
+    text: "The best way to predict the future is to create it.",
+    author: "Community Member",
+    source: "Community Submission",
+    topics: ["inspiration", "future", "creativity"],
+    year: 2023
+  },
+  {
+    id: "comm2",
+    text: "Every moment is a fresh beginning.",
+    author: "Community Member",
+    source: "Community Submission",
+    topics: ["beginnings", "hope", "opportunity"],
+    year: 2023
+  },
+  {
+    id: "comm3",
+    text: "Your perspective is unique. It's important and it counts.",
+    author: "Community Member",
+    source: "Community Submission",
+    topics: ["perspective", "uniqueness", "value"],
+    year: 2023
+  },
+  {
+    id: "comm4",
+    text: "The only limit to our realization of tomorrow will be our doubts of today.",
+    author: "Community Member",
+    source: "Community Submission",
+    topics: ["doubt", "future", "possibility"],
+    year: 2023
+  },
+  {
+    id: "comm5",
+    text: "Creativity is intelligence having fun.",
+    author: "Community Member",
+    source: "Community Submission",
+    topics: ["creativity", "intelligence", "fun"],
+    year: 2023
+  }
+];
 
-  const filteredCategories = data.categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectCategory, onToggleFavorite, onShare }) => {
+  const data = quotesData as QuotesData;
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [showShareTooltip, setShowShareTooltip] = useState(false);
+
+  const filteredCategories = data.categories;
 
   const handleQuoteSelection = (quotes: CategoryQuote[]) => {
     const initialIndex = Math.floor(Math.random() * quotes.length);
@@ -70,61 +112,192 @@ export const Categories: React.FC<CategoriesProps> = ({ onSelectQuote, onSelectC
     }
   };
 
+  const handlePrevQuote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentQuoteIndex((prev) => 
+      prev === 0 ? communityQuotes.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextQuote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentQuoteIndex((prev) => 
+      prev === communityQuotes.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const handleShareQuote = (e: React.MouseEvent, quote: CategoryQuote) => {
+    e.stopPropagation();
+    
+    // Check if it's a community quote
+    if (quote.source === "Community Submission") {
+      // Show tooltip explaining why sharing is disabled
+      setShowShareTooltip(true);
+      setTimeout(() => setShowShareTooltip(false), 3000);
+      return;
+    }
+    
+    if (onShare) {
+      onShare(quote);
+    }
+  };
+
+  const handleFavoriteQuote = (e: React.MouseEvent, quote: CategoryQuote) => {
+    e.stopPropagation();
+    if (onToggleFavorite) {
+      onToggleFavorite(quote);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bottom-16 bg-black z-40">
-      <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="flex items-center p-4 border-b border-white/10">
-          <h2 className="text-xl font-semibold text-white">Categories</h2>
-        </div>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center p-4 border-b border-white/15 bg-black/20">
+        <h2 className="text-xl font-semibold text-white">Categories</h2>
+      </div>
 
-        {/* Search Bar */}
-        <div className="p-4 border-b border-white/10">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        {/* Community Category Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-6"
+        >
+          <div className="flex items-center mb-3">
+            <h3 className="text-white text-base font-medium flex items-center">
+              <Users className="mr-2 text-blue-400" size={18} />
+              Community Quotes
+            </h3>
           </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          
+          <Card 
+            className="bg-white/20 hover:bg-white/25 transition-all duration-300 border border-white/15 cursor-pointer p-4 w-full rounded-xl"
+            onClick={() => handleQuoteSelection(communityQuotes)}
           >
-            {filteredCategories.map((category: Category) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Card 
-                  className="bg-white/10 hover:bg-white/20 transition-colors border-none cursor-pointer group p-4 flex flex-col items-center gap-3"
-                  onClick={() => handleQuoteSelection(category.quotes)}
-                >
-                  {categoryIcons[category.name] && (
-                    <div className="p-3 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                      {React.createElement(categoryIcons[category.name], {
-                        className: "w-6 h-6 text-blue-400"
-                      })}
+            <div className="flex flex-col h-full relative">
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="bg-white/15 rounded-full px-3 py-1 text-xs text-white font-medium">
+                    Community Picks
+                  </div>
+                  <div className="text-white/80 text-xs font-medium">
+                    {communityQuotes.length} quotes
+                  </div>
+                </div>
+                
+                <div className="relative mb-4">
+                  <motion.div 
+                    key={currentQuoteIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white/15 rounded-lg p-4 min-h-[100px] relative"
+                  >
+                    <p className="text-white text-sm italic mb-3 leading-relaxed">&ldquo;{communityQuotes[currentQuoteIndex].text}&rdquo;</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 rounded-full bg-blue-500/40 flex items-center justify-center mr-2">
+                          <Users size={10} className="text-white" />
+                        </div>
+                        <p className="text-white/95 text-xs">{communityQuotes[currentQuoteIndex].author}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={(e) => handleFavoriteQuote(e, communityQuotes[currentQuoteIndex])}
+                          className="p-1.5 rounded-full hover:bg-white/15 transition-colors"
+                        >
+                          <Heart size={14} className="text-pink-400" />
+                        </button>
+                        <div className="relative">
+                          <button 
+                            onClick={(e) => handleShareQuote(e, communityQuotes[currentQuoteIndex])}
+                            className="p-1.5 rounded-full hover:bg-white/15 transition-colors opacity-50"
+                          >
+                            <Lock size={14} className="text-gray-400" />
+                          </button>
+                          {showShareTooltip && (
+                            <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-black/80 text-white text-xs rounded shadow-lg z-50">
+                              Sharing is disabled for community quotes as they aren&apos;t your own content.
+                              <div className="absolute bottom-0 right-3 transform translate-y-1/2 rotate-45 w-2 h-2 bg-black/80"></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  <h3 className="text-white text-center font-medium">{category.name}</h3>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+                    
+                    {/* Navigation arrows inside the content */}
+                    <button 
+                      onClick={handlePrevQuote}
+                      className="absolute top-1/2 left-2 transform -translate-y-1/2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                    >
+                      <ChevronLeft size={14} className="text-white" />
+                    </button>
+                    
+                    <button 
+                      onClick={handleNextQuote}
+                      className="absolute top-1/2 right-2 transform -translate-y-1/2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                    >
+                      <ChevronRight size={14} className="text-white" />
+                    </button>
+                  </motion.div>
+                  
+                  <div className="flex justify-center mt-3 space-x-1">
+                    {communityQuotes.map((_, index) => (
+                      <div 
+                        key={index}
+                        className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-200 ${index === currentQuoteIndex ? 'bg-blue-400' : 'bg-white/40 hover:bg-white/60'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentQuoteIndex(index);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div 
+                className="flex justify-center items-center bg-white/15 hover:bg-white/20 transition-colors duration-200 py-2 rounded-lg text-center"
+              >
+                <span className="text-white text-xs font-medium mr-1">Browse all community quotes</span>
+                <ChevronRight className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Regular Categories Grid */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        >
+          {filteredCategories.map((category: Category) => (
+            <motion.div
+              key={category.id}
+              whileHover={{ scale: 1.03 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card 
+                className="bg-white/20 hover:bg-white/25 transition-colors border border-white/15 cursor-pointer group p-4 flex flex-col items-center gap-2 rounded-xl"
+                onClick={() => handleQuoteSelection(category.quotes)}
+              >
+                {categoryIcons[category.name] && (
+                  <div className="p-2.5 rounded-full bg-white/15 group-hover:bg-white/20 transition-colors">
+                    {React.createElement(categoryIcons[category.name], {
+                      className: "w-5 h-5 text-blue-400"
+                    })}
+                  </div>
+                )}
+                <h3 className="text-white text-sm text-center font-medium">{category.name}</h3>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </div>
   );
