@@ -24,5 +24,17 @@ service cloud.firestore {
     match /users/{userId}/favorites/{favoriteId} {
       allow read, write: if isValidUser(userId);
     }
+    
+    // Community quotes rules
+    match /community_quotes/{quoteId} {
+      allow read: if true;  // Anyone can read community quotes
+      allow write: if isAuthenticated();  // Only authenticated users can write
+      
+      // Allow access to subcollections like likes
+      match /likes/{userId} {
+        allow read: if true;
+        allow write: if isAuthenticated() && isValidUser(userId);
+      }
+    }
   }
 } 
